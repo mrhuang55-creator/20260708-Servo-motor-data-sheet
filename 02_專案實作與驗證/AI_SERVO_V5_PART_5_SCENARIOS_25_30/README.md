@@ -1,38 +1,43 @@
-# AI SERVO Platform Enterprise V5 — Part 5
+# AI SERVO 伺服平台企業版 V5 — Part 5
 
-Scenario 25–30
+故障場景 25–30
 
-## Modules
-- AI Engine
-- Performance Optimizer
-- MR Configurator2 Workflow Engine
-- MR-J5 parameter feedback matrix
-- Mechanical diagnosis matrix
+## 核心模組
+- AI 診斷引擎 (`ai_engine.py`)
+- 性能尋優器 (`performance_optimizer.py`)
+- MR Configurator2 工作流引擎 (`mr_configurator2_workflow_engine.py`)
+- MR-J5 參數回饋矩陣 (`mr_j5_parameter_feedback_matrix.csv`)
+- 機械診斷決策矩陣 (`mechanical_diagnosis_matrix.csv`)
 
-## Workflow
-MR-J5 / PLC / Sensor Log → AI Engine → Root Cause Diagnosis → Performance Optimizer → MR-J5 Parameter Proposal → MR Configurator2 Workflow → Set → Trial → KPI Compare → Save
+## 工作流程
+MR-J5 / PLC / 感測器日誌 → AI 診斷引擎 → 根本原因分析 → 性能尋優器 → MR-J5 參數變更提案 → MR Configurator2 工作流 → 設定參數 → 試運轉 → KPI 對比評估 → 存檔
 
-## Environment Setup
+## 環境建置 (Environment Setup)
 > [!NOTE]
-> The `venv` directory is excluded from Git to prevent cross-platform binary compatibility issues and absolute path conflicts. Please set up your local environment using the following steps:
+> `venv` 目錄已被排除於 Git 版本控制之外，以避免跨平台二進位檔相容性問題與絕對路徑衝突。請按照以下步驟建立您的本地環境：
 
 ```bash
-# 1. Create a virtual environment
+# 1. 建立虛擬環境
 python -m venv venv
 
-# 2. Activate the virtual environment
+# 2. 啟用虛擬環境
 # Windows:
 .\venv\Scripts\activate
 # Linux/macOS:
 source venv/bin/activate
 
-# 3. Install required packages
+# 3. 安裝相依套件
 pip install -r requirements.txt
 ```
 
-## Usage
+## 使用方式
 ```bash
+# 1. 執行 AI 診斷引擎進行根本原因分析
 python ai_engine.py --csv sample_servo_log.csv --out ai_engine_result.json
+
+# 2. 執行性能尋優器產生參數調整提案
 python performance_optimizer.py --ai_result ai_engine_result.json --out optimizer_recommendation.json
+
+# 3. 執行工作流引擎產出符合 MR Configurator2 的設定檔
 python mr_configurator2_workflow_engine.py --recommendation optimizer_recommendation.json --out mr_configurator2_workflow.json
 ```
