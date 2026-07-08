@@ -1,0 +1,17 @@
+{
+  "package": "AI_SERVO_PLATFORM_V5_PART_5",
+  "scenarios": [
+    25,
+    26,
+    27,
+    28,
+    29,
+    30
+  ],
+  "modules": [
+    "AI Engine",
+    "Performance Optimizer",
+    "MR Configurator2 Workflow Engine"
+  ],
+  "mr_j5_focus": true
+}

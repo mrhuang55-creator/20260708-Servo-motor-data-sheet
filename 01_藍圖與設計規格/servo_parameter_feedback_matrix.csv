@@ -1,0 +1,18 @@
+Parameter Group,Example Mitsubishi-style Parameter,Purpose,AI Trigger,Direction of Change,Risk,Validation
+Backup / restore,"Parameter backup, amplifier copy, project version",Create rollback point before tuning,Any AI write recommendation,"Backup first, no tuning yet",Low,Compare checksum and parameter export
+Auto tuning,Real-time auto tuning / quick tuning / one-touch tuning,Estimate inertia and basic gains,"New equipment, changed load, high following error",Run tuning routine under safe mode,Medium,Dry run at low speed
+Response level,Machine response / auto tuning response,Improve settling time,"Long settling, low vibration",Increase gradually,Medium,Check overshoot and current margin
+Position loop gain,Position gain / model loop gain,Reduce position error,High following_error_abs_pulse,Increase small step,High,Check oscillation and encoder noise
+Speed loop gain,Speed gain,Reduce speed tracking error,speed_error_rpm high,Increase small step,High,Check vibration_rms_g and current
+Speed integral compensation,Speed integral time constant,Improve low-speed tracking,low speed error / drift,Decrease carefully for faster response,Medium,Check hunting at stop
+Feed-forward,Position / speed feed-forward gain,Reduce lag during acceleration,accel_error and position_error rise together,Increase gradually,Medium,Check overshoot on decel
+Torque limit,Forward/reverse torque limit,Protect mechanism and reduce current trip,current_limit_pct high / jam risk,Lower limit for protection or raise if undersized after review,High,Confirm mechanical capacity
+Current filter,Current command filter / low-pass filter,Reduce current ripple/noise,current ripple and vibration noise,Increase filtering carefully,Medium,Check response delay
+Notch filter,Machine resonance suppression filter,Suppress resonance frequency,resonance_amp high / FFT peak,Enable/tune notch around detected frequency,Medium,FFT before/after comparison
+Vibration suppression,Vibration suppression control,Reduce settling vibration,vibration_rms_g high after move,Enable suppression and tune frequency,Medium,Measure settling time
+Load inertia ratio,Load to motor inertia ratio,Improve model accuracy,AI inertia estimate changes,Update estimated ratio,Medium,Retune gains after change
+In-position range,In-position width,Avoid false complete or slow cycle,motion_complete mismatch,Tighten or relax based on process tolerance,Low,Vision/AOI quality check
+Following error limit,Excessive error threshold,Early protection,position_error rising before alarm,Set warning/trip limits,High,Verify no nuisance trips
+Soft limit,Positive/negative software limits,Prevent collision,near limit / overtravel risk,Set according to stroke,High,Slow jog validation
+Brake timing,Brake release/hold timing,Protect vertical Z axis,brake failure or slip detected,Adjust release/hold delay,High,Vertical load safety test
+Forced stop decel,Emergency/forced stop deceleration,Safety stop behavior,E-stop or STO events,Set safe decel profile,High,Risk assessment and safety validation

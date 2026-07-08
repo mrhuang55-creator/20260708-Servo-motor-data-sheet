@@ -1,0 +1,7 @@
+scenario_id,scenario_name,equipment_profile,fault,diagnosis_focus
+25,Servo Gain Instability,Precision Settling Axis,Gain instability,oscillation from excessive gain
+26,Resonance,Resonance Test Axis,Mechanical resonance,resonance frequency peak
+27,Brake Failure,Vertical Z Axis,Brake failure,brake release/hold abnormal
+28,Emergency Stop,Production Line E-Stop,E-stop,STO/E-stop event
+29,Combined Fault,Factory Multi-Failure Axis,Multi fault,thermal vibration overload
+30,Progressive Failure + Shutdown,Predictive Maintenance Demo Axis,Progressive failure,degradation to trip

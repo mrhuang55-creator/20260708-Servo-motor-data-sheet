@@ -1,0 +1,31 @@
+# ── Python 虛擬環境 ──
+**/venv/
+**/.venv/
+**/env/
+**/myenv/
+
+# ── Python 編譯快取 ──
+**/__pycache__/
+**/*.pyc
+**/*.pyo
+**/*.pyd
+**/.pytest_cache/
+**/.ipynb_checkpoints/
+
+# ── 大數據集 (Snappy Parquet) ──
+**/*.parquet
+
+# ── IDE 設定與系統暫存 ──
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+*.log
+*.tmp
+
+# ── 暫存模型與測試輸出 ──
+**/*.npz
+
+# ── 對話紀錄與自動化腳本 ──
+**/對話紀錄.md
+**/update_dialogue_history.py
