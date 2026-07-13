@@ -1,0 +1,59 @@
+{
+  "workflow_name": "MR-J5 AI Servo Parameter Set-Trial-Save",
+  "created_at": "2026-07-13T09:44:59",
+  "steps": [
+    {
+      "step": 1,
+      "name": "Read current MR-J5 parameters",
+      "output": "parameter_backup_before.json"
+    },
+    {
+      "step": 2,
+      "name": "Apply AI recommended trial parameters",
+      "parameter_group": [
+        "Machine resonance suppression filter",
+        "Command notch filter",
+        "Vibration suppression control"
+      ],
+      "parameter_writes": {
+        "PA18": 290,
+        "PB12": 435
+      },
+      "mode": "trial"
+    },
+    {
+      "step": 3,
+      "name": "Run low-speed verification",
+      "condition": "stable motion, no trip, check current spike and following error"
+    },
+    {
+      "step": 4,
+      "name": "Run production-speed verification",
+      "condition": "KPI improved and takt time acceptable"
+    },
+    {
+      "step": 5,
+      "name": "Collect after-tuning data",
+      "kpi": [
+        "vibration_rms_g",
+        "frequency_response_100hz_db",
+        "torque_error_nm"
+      ]
+    },
+    {
+      "step": 6,
+      "name": "Compare before/after KPI",
+      "save_condition": "Save when KPI improvement >= 10% and no new alarm/trip is detected."
+    },
+    {
+      "step": 7,
+      "name": "Save MR-J5 parameters / Rollback if failed",
+      "tool": "MR Configurator2 parameter write/save"
+    },
+    {
+      "step": 8,
+      "name": "Generate tuning report",
+      "output": "ai_servo_tuning_report.md"
+    }
+  ]
+}

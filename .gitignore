@@ -1,0 +1,20 @@
+# Ignore huge Parquet databases
+*.parquet
+*.csv
+
+# Ignore compiled python code and cache
+__pycache__/
+*.pyc
+
+# Ignore binary datasets to avoid github limits
+*.mat
+*.pdf
+*.zip
+*.tar.gz
+*.pkl
+
+# Ignore local agent and gemini workspace folders
+.agents/
+.gemini/
+scratch/
+*.log
