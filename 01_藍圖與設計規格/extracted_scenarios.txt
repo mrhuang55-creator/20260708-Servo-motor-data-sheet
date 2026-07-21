@@ -1,0 +1,103 @@
+Sheets: ['工作表1']
+
+=== Sheet: 工作表1 ===
+                                                 Unnamed: 0                                                                                  Unnamed: 1
+0                                        01 - 10 位置定位與運動軌跡類                                                                                         NaN
+1                                          運轉問題分析的Scenarios                                                                   TAG/LOG--Future Selection
+2                                01 Pick & Place (定位到位時間優化)                              time, rod_demand_pos, rod_actual_pos, Following Error,Velocity
+3                                                       NaN                                                                                         NaN
+4                               02 Press Axis (重載配合/繞組溫升估算)                             torque, Electrical Power, Winding Temperature,Motor Temperature
+5                                                       NaN                                                                                         NaN
+6                               03 Tray Loader (高速搬運/溫升率警告)                        rotor_speed, Electrical Power, Winding Temperature,Motor Temperature
+7                                                       NaN                                                                                         NaN
+8                            04 XY Gantry (長行程定位/雙軸同步與反向補償)                                    rod_demand_pos, rod_actual_pos, Following Error,Backlash
+9                                                       NaN                                                                                         NaN
+10                          05 Vision Stage (微對位定位/編碼器高頻震動)                                                       rod_actual_pos, Velocity,Position RMS
+11                                                      NaN                                                                                         NaN
+12                                06 Conveyor (高速往返輸送/皮帶抖動)                                                Velocity, Acceleration, Jerk,Following Error
+13                                                      NaN                                                                                         NaN
+14                            07 Robot Joint (高速加減速/軌跡追隨錯誤)                                                          Following Error, Acceleration,Jerk
+15                                                      NaN                                                                                         NaN
+16                             08 Spindle (高速旋轉主軸/軸心擺動速度過高)                                                         rotor_speed, Velocity,Torque Ripple
+17                                                      NaN                                                                                         NaN
+18                               09 Indexer (S曲線旋轉/轉換點過沖抑制)                                      rod_actual_pos, Velocity, Acceleration,Following Error
+19                                                      NaN                                                                                         NaN
+20                             10 Inspection (短行程幾何/減速殘留震動)                                                 rod_actual_pos, Velocity, Acceleration,Jerk
+21                                                      NaN                                                                                         NaN
+22                                                      NaN                                                                                         NaN
+23                                       11 - 20 負載扭矩與機械結構類                                                                                         NaN
+24                                         運轉問題分析的Scenarios                                                                   TAG/LOG--Future Selection
+25                               11 Press Fit (精密壓入/峰值電流限制)                              i_3p_a, i_3p_b, i_3p_c, Current RMS, Current Magnitude, torque
+26                                                      NaN                                                                                         NaN
+27                                12 Clamp (扭矩夾緊與維持/時間與扭矩和)                                                                    time, torque, Torque RMS
+28                                                      NaN                                                                                         NaN
+29                             13 Transfer Arm (卡檢/卡死扭矩變動率)                                                           torque, Torque RMS, Torque Ripple
+30                                                      NaN                                                                                         NaN
+31                       14 Rotary Table (軸承狀態/BPFO特徵幅值與震動)                                     rotor_speed, torque, Torque Ripple, Bearing Temperature
+32                                                      NaN                                                                                         NaN
+33                           15 Linear Stage (導軌/潤滑老化摩擦力估算)                          torque, rotor_speed, Friction, Lubrication Index, Coulomb Friction
+34                                                      NaN                                                                                         NaN
+35                                16 Rotor (轉子不平衡旋轉/擺動震動位移)                                            rotor_speed, torque, Torque Ripple, Position RMS
+36                                                      NaN                                                                                         NaN
+37                             17 Coupling (聯軸器偏差/角度偏差高頻共振)                                     rotor_speed, torque, Torque Ripple, Gearbox Temperature
+38                                                      NaN                                                                                         NaN
+39                            18 Ball Screw (滾珠絲槓/磨損導致反向間隙)                        rod_demand_pos, rod_actual_pos, Following Error, Backlash, Stiffness
+40                                                      NaN                                                                                         NaN
+41                            19 Index Table (分度盤/空程間隙多重分類)                                   rod_demand_pos, rod_actual_pos, Following Error, Backlash
+42                                                      NaN                                                                                         NaN
+43                               20 Scanner (結構低頻震動/結構共振頻率)                                                      rod_actual_pos, Velocity, Acceleration
+44                                                      NaN                                                                                         NaN
+45                                                      NaN                                                                                         NaN
+46                                      21 - 30 電網、通訊與運維壽命類                                                                                         NaN
+47                                         運轉問題分析的Scenarios                                                                   TAG/LOG--Future Selection
+48                             21 Power Test (電網電源/母線電壓紋波比)                                Electrical Power, i_3p_a, i_3p_b, i_3p_c, direct, quadrature
+49                                                      NaN                                                                                         NaN
+50                           22 Peak Load (加速母線欠壓/電流限制與跌落值)                                    Electrical Power, Current RMS, Current Magnitude, torque
+51                                                      NaN                                                                                         NaN
+52                                23 PLC Sync (通訊同步超時/時基抖動)                                                                time, run_index, transitions
+53                                                      NaN                                                                                         NaN
+54                              24 EtherCAT (數據表/網路丟包與中斷時間)                                                                time, run_index, transitions
+55                                                      NaN                                                                                         NaN
+56                         25 Precision Axis (高精密/位置高頻自激嘯叫)                                    rod_actual_pos, Velocity, Following Error, Torque Ripple
+57                                                      NaN                                                                                         NaN
+58                            26 Resonance (共振激振/機械台板主共振頻率)                                                         torque, Torque Ripple, Acceleration
+59                                                      NaN                                                                                         NaN
+60                           27 Vertical Z (垂直軸防下滑/煞車釋放下滑量)                                              time, rod_actual_pos, Following Error, del_pos
+61                                                      NaN                                                                                         NaN
+62                          28 Prod Line (生產線急停/制動最大減速阻尼扭矩)                                                      torque, Torque RMS, Acceleration, Jerk
+63                                                      NaN                                                                                         NaN
+64                            29 Factory (多重故障失效/溫升與性能併發退化)                        DV, ylabel, Motor Temperature, Winding Temperature, Efficiency Index
+65                                                      NaN                                                                                         NaN
+66                           30 Pred Maint (預測壽命/RUL剩餘壽命估算)                            time, run_index, DV, ylabel, Efficiency Index, Lubrication Index
+67                                                      NaN                                                                                         NaN
+68                                                      NaN                                                                                         NaN
+69          機械與傳動劣化進階類(Mechanical & Transmission Evolution)                                                                                         NaN
+70                                         運轉問題分析的Scenarios                                                                   TAG/LOG--Future Selection
+71                         31 Belt Slackness (皮帶鬆弛/長時間張力下滑)                                     Velocity, Acceleration, Jerk, Following Error,Stiffness
+72                                                      NaN                                                                                         NaN
+73                  32 Gear Tooth Breakage (減速機齒輪斷齒/嚙合局部損傷)                        rotor_speed, torque, Torque Ripple, Gearbox Temperature,Position RMS
+74                                                      NaN                                                                                         NaN
+75                    33 Guide Rail Jamming (導軌異物卡阻/局部阻力突變)                            rod_actual_pos, torque, Torque Ripple, Friction,Coulomb Friction
+76                                                      NaN                                                                                         NaN
+77         二、 馬達內部電氣與磁路故障類 (Electrical & Magnetic Failures)                                                                                         NaN
+78                                         運轉問題分析的Scenarios                                                                   TAG/LOG--Future Selection
+79                     34 Rotor Demagnetization (轉子永磁體高溫退磁)          torque, i_3p_a, i_3p_b, i_3p_c, Current RMS, direct, quadrature, Motor Temperature
+80                                                      NaN                                                                                         NaN
+81    35 Phase Open Circuit / Unbalance (定子線圈不對稱/單相局部短路或開路)  i_3p_a, i_3p_b, i_3p_c, Current RMS, Current Magnitude, Torque Ripple, Winding Temperature
+82                                                      NaN                                                                                         NaN
+83                                                      NaN                                                                                         NaN
+84   三、 動態環境與控制過載類 (Dynamic Environment & Control Overload)                                                                                         NaN
+85                                         運轉問題分析的Scenarios                                                                   TAG/LOG--Future Selection
+86          36 External Collision Detection (外部突發碰撞/防撞安全保護)                             time, Velocity, Acceleration, torque, Torque Ripple, Torque RMS
+87                                                      NaN                                                                                         NaN
+88               37 Load Inertia Mismatch (負載慣量嚴重失配/過大工件誤換)            rod_demand_pos, rod_actual_pos, Following Error, torque, Load Inertia, Stiffness
+89                                                      NaN                                                                                         NaN
+90       38 Continuous Micro-Oscillation (微幅持續抖動/伺服回路過增益自激)                                       rod_actual_pos, Velocity, Position RMS, Torque Ripple
+91                                                      NaN                                                                                         NaN
+92                                                      NaN                                                                                         NaN
+93    四、 感測器與回授訊號線劣化類 (Feedback Sensor & Cable Degradation)                                                                                         NaN
+94                                         運轉問題分析的Scenarios                                                                   TAG/LOG--Future Selection
+95                  39 Encoder Pulse Drop (編碼器訊號偶發丟脈衝/光柵髒污)                              time, rod_demand_pos, rod_actual_pos, Following Error, del_pos
+96                                                      NaN                                                                                         NaN
+97  40 Power Cable Intermittent Contact (馬達動力線高彈性拖鏈斷芯/接觸不良)                      run_index, i_3p_a, i_3p_b, i_3p_c, Current Magnitude, Electrical Power
+

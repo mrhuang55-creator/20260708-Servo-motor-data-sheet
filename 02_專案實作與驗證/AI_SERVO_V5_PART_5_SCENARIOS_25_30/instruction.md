@@ -12,4 +12,4 @@
 *   當遇到 OOM (記憶體溢位) 錯誤時，僅針對「變數釋放與 Batch 大小」提供解決建議。
 
 ## 執行目標
-針對 Part 5 (Scenario 25-30) 執行 10M 資料生成，並確保 Parquet 輸出。
+針對 Part 5 (Scenario 01-40) 執行 10M 資料生成，並確保 Parquet 輸出。

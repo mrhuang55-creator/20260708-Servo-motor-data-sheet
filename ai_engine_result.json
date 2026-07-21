@@ -1,7 +1,0 @@
-{
-  "root_cause": "resonance",
-  "confidence": 0.98,
-  "fft_resonance_peak": 290.0,
-  "health_index_mean": 62.0,
-  "rul_sec_min": 3000.0
-}

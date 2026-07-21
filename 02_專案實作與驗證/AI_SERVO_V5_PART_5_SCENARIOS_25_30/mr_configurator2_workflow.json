@@ -1,6 +1,6 @@
 {
   "workflow_name": "MR-J5 AI Servo Parameter Set-Trial-Save",
-  "created_at": "2026-07-07T15:09:26",
+  "created_at": "2026-07-16T09:34:02",
   "steps": [
     {
       "step": 1,
@@ -11,13 +11,12 @@
       "step": 2,
       "name": "Apply AI recommended trial parameters",
       "parameter_group": [
-        "Machine resonance suppression filter",
-        "Command notch filter",
-        "Vibration suppression control"
+        "PB13",
+        "PB15"
       ],
       "parameter_writes": {
-        "PA18": 290,
-        "PB12": 435
+        "PB13": 1,
+        "PB15": 290
       },
       "mode": "trial"
     },
@@ -36,8 +35,7 @@
       "name": "Collect after-tuning data",
       "kpi": [
         "vibration_rms_g",
-        "frequency_response_100hz_db",
-        "torque_error_nm"
+        "frequency_response_100hz_db"
       ]
     },
     {

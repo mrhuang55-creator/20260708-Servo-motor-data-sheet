@@ -1,0 +1,19 @@
+# 三菱 MR-J5 AI Servo PHM 專案環境相依套件檔 (requirements.txt)
+
+# 1. 核心數值計算與訊號處理 (Core Numerical & DSP)
+numpy>=1.22.0
+pandas>=1.4.0
+pyarrow>=8.0.0
+scipy>=1.8.0
+
+# 2. FastAPI Web API 與 WebSocket 伺服器 (Backend & Streaming)
+fastapi>=0.95.0
+uvicorn>=0.20.0
+pydantic>=1.10.0
+websockets>=10.4
+
+# 3. 機器學習與儀表板元件 (Machine Learning & Dashboard)
+scikit-learn>=1.0.0
+lightgbm>=3.3.0
+streamlit>=1.20.0
+altair>=4.2.0

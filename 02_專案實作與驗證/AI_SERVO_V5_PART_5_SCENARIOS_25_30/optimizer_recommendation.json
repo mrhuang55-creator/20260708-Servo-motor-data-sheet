@@ -2,11 +2,10 @@
   "ai_root_cause": "resonance",
   "confidence": 0.98,
   "mr_j5_parameter_group": [
-    "Machine resonance suppression filter",
-    "Command notch filter",
-    "Vibration suppression control"
+    "PB13",
+    "PB15"
   ],
-  "recommended_action": "Apply notch filters to suppress mechanical resonance peak (>100Hz).",
+  "recommended_action": "Configure notch filters around resonance peak.",
   "trial_plan": [
     "Read parameters",
     "Set trial parameters",
@@ -17,13 +16,16 @@
     "Save parameters"
   ],
   "mr_j5_parameter_writes": {
-    "PA18": 290,
-    "PB12": 435
+    "PB13": 1,
+    "PB15": 290
   },
   "target_kpi": [
     "vibration_rms_g",
-    "frequency_response_100hz_db",
-    "torque_error_nm"
+    "frequency_response_100hz_db"
   ],
-  "save_condition": "Save when KPI improvement >= 10% and no new alarm/trip is detected."
+  "save_condition": "Save when KPI improvement >= 10% and no new alarm/trip is detected.",
+  "security": {
+    "crc32": "0x20A5E1A2",
+    "sha256": "a604d91ff71a3ca68fa44050366059dd1f19f3671489f8b7eb61a5cc4a3632a0"
+  }
 }

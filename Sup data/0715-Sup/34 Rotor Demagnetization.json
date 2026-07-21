@@ -1,0 +1,55 @@
+
+// D:\AI\TOPIC\FMCRD_Data\40scenarios對應的Tag_含採集優先級.xlsx
+// Scenario 34: Rotor Demagnetization - 轉子去磁 / 磁鋼高溫退磁
+
+{
+  "scenario_id": "34_Rotor_Demagnetization",
+  "scenario_name": "轉子去磁與磁鋼高溫退磁",
+  "raw_tags": ["torque", "i_3p_a", "i_3p_b", "i_3p_c", "Current RMS", "direct", "quadrature", "Motor Temperature"],
+  "feature_groups": [
+    {
+      "feature_name": "Current_Signature_Harmonics",
+      "based_on": ["i_3p_a", "i_3p_b", "i_3p_c"],
+      "derived_features": [
+        {"function": "fft_harmonic_amplitudes", "output": "CS_HarmonicAmp"},
+        {"function": "sideband_energy_ratio", "output": "CS_SidebandRatio"},
+        {"function": "current_total_harmonic_distortion", "output": "CS_THD"},
+        {"function": "phase_imbalance_index", "output": "CS_PhaseImbalance"}
+      ]
+    },
+    {
+      "feature_name": "DQ_Axis_Characteristics",
+      "based_on": ["direct", "quadrature", "torque"],
+      "derived_features": [
+        {"function": "id_iq_trajectory_area", "output": "DQ_TrajectoryArea"},
+        {"function": "iq_to_torque_ratio", "output": "DQ_IqTorqueRatio"},
+        {"function": "id_mean_shift", "output": "DQ_IdShift"},
+        {"function": "field_weakening_depth", "output": "DQ_FWDepth"}
+      ]
+    },
+    {
+      "feature_name": "Torque_Ripple_Analysis",
+      "based_on": ["torque", "Current RMS"],
+      "derived_features": [
+        {"function": "torque_ripple_factor", "output": "TR_RippleFactor"},
+        {"function": "cogging_torque_freq", "output": "TR_CoggingFreq"},
+        {"function": "torque_current_phase_delay", "output": "TR_PhaseDelay"}
+      ]
+    },
+    {
+      "feature_name": "Thermal_Magnetic_Coupling",
+      "based_on": ["Motor Temperature", "torque", "Current RMS"],
+      "derived_features": [
+        {"function": "torque_degradation_vs_temp", "output": "TH_TorqueTempSlope"},
+        {"function": "current_increase_vs_temp", "output": "TH_CurrentTempSlope"},
+        {"function": "thermal_recovery_time_constant", "output": "TH_RecoveryTC"}
+      ]
+    }
+  ],
+  "selected_features_for_model": [
+    "CS_SidebandRatio", "CS_THD", "CS_PhaseImbalance",
+    "DQ_TrajectoryArea", "DQ_IqTorqueRatio", "DQ_IdShift", "DQ_FWDepth",
+    "TR_RippleFactor", "TR_CoggingFreq",
+    "TH_TorqueTempSlope", "TH_CurrentTempSlope"
+  ]
+}

@@ -1,0 +1,14 @@
+[Unit]
+Description=MITSUBISHI MR-J5 AI Servo PHM FastAPI Service
+After=network.target
+
+[Service]
+User=root
+WorkingDirectory=/opt/phm_system
+ExecStart=/usr/bin/python3 -m uvicorn server:app --host 0.0.0.0 --port 8000 --workers 2
+Restart=always
+RestartSec=3s
+Nice=-10
+
+[Install]
+WantedBy=multi-user.target

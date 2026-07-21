@@ -1,0 +1,344 @@
+[
+  {
+    "timestamp": "2026-07-16T09:32:49.196278",
+    "event_type": "MODEL_FINE_TUNED",
+    "details": "Fine-tuned last 2 layers of neural network compensation model.",
+    "compliance": [
+      "ISO 9001",
+      "IEC 61508"
+    ]
+  },
+  {
+    "timestamp": "2026-07-16T09:32:49.397622",
+    "event_type": "EXPERT_INTERVENTION_REQUIRED",
+    "details": "Similarity 0.00% below threshold 20.00%",
+    "compliance": [
+      "ISO 9001",
+      "IEC 61508"
+    ]
+  },
+  {
+    "timestamp": "2026-07-16T09:32:49.401367",
+    "event_type": "EXPERT_SCENARIO_ADDED",
+    "details": "Added scenario 41: High Friction Slide Rail Backlash Anomaly with tags ['Friction', 'Backlash', 'Following Error']",
+    "compliance": [
+      "ISO 9001",
+      "IEC 61508"
+    ]
+  },
+  {
+    "timestamp": "2026-07-16T09:32:49.401951",
+    "event_type": "AUTOML_MATRIX_TRAINED",
+    "details": "Full retraining complete. Model upgraded to version v2.0.0",
+    "compliance": [
+      "ISO 9001",
+      "IEC 61508"
+    ]
+  },
+  {
+    "timestamp": "2026-07-16T09:32:49.408782",
+    "event_type": "SHADOW_MODE_SWITCH",
+    "details": "New model accepted. RMSE improved from 1.2252 to 0.8087",
+    "compliance": [
+      "ISO 9001",
+      "IEC 61508"
+    ]
+  },
+  {
+    "timestamp": "2026-07-16T09:32:49.409090",
+    "event_type": "ENSEMBLE_LEARNING_ACTIVATED",
+    "details": "Dynamically enabled Ensemble Learning for the current cycle.",
+    "compliance": [
+      "ISO 9001",
+      "IEC 61508"
+    ]
+  },
+  {
+    "timestamp": "2026-07-16T09:32:49.610918",
+    "event_type": "RETRAIN_TRIGGERED",
+    "details": "Residual continuously exceeded threshold (current: 7.6923)",
+    "compliance": [
+      "ISO 9001",
+      "IEC 61508"
+    ]
+  },
+  {
+    "timestamp": "2026-07-16T09:32:49.612015",
+    "event_type": "AUTOML_MATRIX_TRAINED",
+    "details": "Full retraining complete. Model upgraded to version v3.0.0",
+    "compliance": [
+      "ISO 9001",
+      "IEC 61508"
+    ]
+  },
+  {
+    "timestamp": "2026-07-16T09:32:49.615003",
+    "event_type": "SHADOW_MODE_SWITCH",
+    "details": "New model accepted. RMSE improved from 1.2094 to 0.8146",
+    "compliance": [
+      "ISO 9001",
+      "IEC 61508"
+    ]
+  },
+  {
+    "timestamp": "2026-07-16T09:32:49.615393",
+    "event_type": "ENSEMBLE_LEARNING_ACTIVATED",
+    "details": "Dynamically enabled Ensemble Learning for the current cycle.",
+    "compliance": [
+      "ISO 9001",
+      "IEC 61508"
+    ]
+  },
+  {
+    "timestamp": "2026-07-16T09:32:49.616105",
+    "event_type": "STATE_TRANSITION",
+    "details": "NORMAL -> DIAGNOSTIC due to high residual (3 consecutive cycles).",
+    "compliance": [
+      "ISO 9001",
+      "IEC 61508"
+    ]
+  },
+  {
+    "timestamp": "2026-07-16T09:32:49.819087",
+    "event_type": "MODEL_FINE_TUNED",
+    "details": "Fine-tuned last 2 layers of neural network compensation model.",
+    "compliance": [
+      "ISO 9001",
+      "IEC 61508"
+    ]
+  },
+  {
+    "timestamp": "2026-07-16T09:32:49.820694",
+    "event_type": "ENSEMBLE_LEARNING_ACTIVATED",
+    "details": "Dynamically enabled Ensemble Learning for the current cycle.",
+    "compliance": [
+      "ISO 9001",
+      "IEC 61508"
+    ]
+  },
+  {
+    "timestamp": "2026-07-16T09:32:49.821943",
+    "event_type": "STATE_TRANSITION",
+    "details": "DIAGNOSTIC -> PERFORMANCE_FINE_TUNING (Operator requested optimization).",
+    "compliance": [
+      "ISO 9001",
+      "IEC 61508"
+    ]
+  },
+  {
+    "timestamp": "2026-07-16T09:32:50.024541",
+    "event_type": "MODEL_FINE_TUNED",
+    "details": "Fine-tuned last 2 layers of neural network compensation model.",
+    "compliance": [
+      "ISO 9001",
+      "IEC 61508"
+    ]
+  },
+  {
+    "timestamp": "2026-07-16T09:32:50.525818",
+    "event_type": "STATE_TRANSITION",
+    "details": "PERFORMANCE_FINE_TUNING -> NORMAL (Optimization complete).",
+    "compliance": [
+      "ISO 9001",
+      "IEC 61508"
+    ]
+  },
+  {
+    "timestamp": "2026-07-16T09:32:50.729532",
+    "event_type": "RETRAIN_TRIGGERED",
+    "details": "Residual continuously exceeded threshold (current: 22.8347)",
+    "compliance": [
+      "ISO 9001",
+      "IEC 61508"
+    ]
+  },
+  {
+    "timestamp": "2026-07-16T09:32:50.730759",
+    "event_type": "AUTOML_MATRIX_TRAINED",
+    "details": "Full retraining complete. Model upgraded to version v4.0.0",
+    "compliance": [
+      "ISO 9001",
+      "IEC 61508"
+    ]
+  },
+  {
+    "timestamp": "2026-07-16T09:32:50.733910",
+    "event_type": "SHADOW_MODE_SWITCH",
+    "details": "New model accepted. RMSE improved from 1.2269 to 0.8048",
+    "compliance": [
+      "ISO 9001",
+      "IEC 61508"
+    ]
+  },
+  {
+    "timestamp": "2026-07-16T14:51:59.404023",
+    "event_type": "MODEL_FINE_TUNED",
+    "details": "Fine-tuned last 2 layers of neural network compensation model.",
+    "compliance": [
+      "ISO 9001",
+      "IEC 61508"
+    ]
+  },
+  {
+    "timestamp": "2026-07-16T14:51:59.605490",
+    "event_type": "EXPERT_INTERVENTION_REQUIRED",
+    "details": "Similarity 0.00% below threshold 20.00%",
+    "compliance": [
+      "ISO 9001",
+      "IEC 61508"
+    ]
+  },
+  {
+    "timestamp": "2026-07-16T14:51:59.606218",
+    "event_type": "EXPERT_SCENARIO_ADDED",
+    "details": "Added scenario 41: High Friction Slide Rail Backlash Anomaly with tags ['Friction', 'Backlash', 'Following Error']",
+    "compliance": [
+      "ISO 9001",
+      "IEC 61508"
+    ]
+  },
+  {
+    "timestamp": "2026-07-16T14:51:59.606583",
+    "event_type": "AUTOML_MATRIX_TRAINED",
+    "details": "Full retraining complete. Model upgraded to version v2.0.0",
+    "compliance": [
+      "ISO 9001",
+      "IEC 61508"
+    ]
+  },
+  {
+    "timestamp": "2026-07-16T14:51:59.607756",
+    "event_type": "SHADOW_MODE_SWITCH",
+    "details": "New model accepted. RMSE improved from 1.2172 to 0.8053",
+    "compliance": [
+      "ISO 9001",
+      "IEC 61508"
+    ]
+  },
+  {
+    "timestamp": "2026-07-16T14:51:59.608113",
+    "event_type": "ENSEMBLE_LEARNING_ACTIVATED",
+    "details": "Dynamically enabled Ensemble Learning for the current cycle.",
+    "compliance": [
+      "ISO 9001",
+      "IEC 61508"
+    ]
+  },
+  {
+    "timestamp": "2026-07-16T14:51:59.809527",
+    "event_type": "RETRAIN_TRIGGERED",
+    "details": "Residual continuously exceeded threshold (current: 3.5183)",
+    "compliance": [
+      "ISO 9001",
+      "IEC 61508"
+    ]
+  },
+  {
+    "timestamp": "2026-07-16T14:51:59.810023",
+    "event_type": "AUTOML_MATRIX_TRAINED",
+    "details": "Full retraining complete. Model upgraded to version v3.0.0",
+    "compliance": [
+      "ISO 9001",
+      "IEC 61508"
+    ]
+  },
+  {
+    "timestamp": "2026-07-16T14:51:59.811291",
+    "event_type": "SHADOW_MODE_SWITCH",
+    "details": "New model accepted. RMSE improved from 1.2169 to 0.8073",
+    "compliance": [
+      "ISO 9001",
+      "IEC 61508"
+    ]
+  },
+  {
+    "timestamp": "2026-07-16T14:51:59.811716",
+    "event_type": "ENSEMBLE_LEARNING_ACTIVATED",
+    "details": "Dynamically enabled Ensemble Learning for the current cycle.",
+    "compliance": [
+      "ISO 9001",
+      "IEC 61508"
+    ]
+  },
+  {
+    "timestamp": "2026-07-16T14:51:59.812113",
+    "event_type": "STATE_TRANSITION",
+    "details": "NORMAL -> DIAGNOSTIC due to high residual (3 consecutive cycles).",
+    "compliance": [
+      "ISO 9001",
+      "IEC 61508"
+    ]
+  },
+  {
+    "timestamp": "2026-07-16T14:52:00.013987",
+    "event_type": "MODEL_FINE_TUNED",
+    "details": "Fine-tuned last 2 layers of neural network compensation model.",
+    "compliance": [
+      "ISO 9001",
+      "IEC 61508"
+    ]
+  },
+  {
+    "timestamp": "2026-07-16T14:52:00.014690",
+    "event_type": "ENSEMBLE_LEARNING_ACTIVATED",
+    "details": "Dynamically enabled Ensemble Learning for the current cycle.",
+    "compliance": [
+      "ISO 9001",
+      "IEC 61508"
+    ]
+  },
+  {
+    "timestamp": "2026-07-16T14:52:00.015273",
+    "event_type": "STATE_TRANSITION",
+    "details": "DIAGNOSTIC -> PERFORMANCE_FINE_TUNING (Operator requested optimization).",
+    "compliance": [
+      "ISO 9001",
+      "IEC 61508"
+    ]
+  },
+  {
+    "timestamp": "2026-07-16T14:52:00.217458",
+    "event_type": "MODEL_FINE_TUNED",
+    "details": "Fine-tuned last 2 layers of neural network compensation model.",
+    "compliance": [
+      "ISO 9001",
+      "IEC 61508"
+    ]
+  },
+  {
+    "timestamp": "2026-07-16T14:52:00.718659",
+    "event_type": "STATE_TRANSITION",
+    "details": "PERFORMANCE_FINE_TUNING -> NORMAL (Optimization complete).",
+    "compliance": [
+      "ISO 9001",
+      "IEC 61508"
+    ]
+  },
+  {
+    "timestamp": "2026-07-16T14:52:00.920445",
+    "event_type": "RETRAIN_TRIGGERED",
+    "details": "Residual continuously exceeded threshold (current: 9.1244)",
+    "compliance": [
+      "ISO 9001",
+      "IEC 61508"
+    ]
+  },
+  {
+    "timestamp": "2026-07-16T14:52:00.920957",
+    "event_type": "AUTOML_MATRIX_TRAINED",
+    "details": "Full retraining complete. Model upgraded to version v4.0.0",
+    "compliance": [
+      "ISO 9001",
+      "IEC 61508"
+    ]
+  },
+  {
+    "timestamp": "2026-07-16T14:52:00.922291",
+    "event_type": "SHADOW_MODE_SWITCH",
+    "details": "New model accepted. RMSE improved from 1.2126 to 0.8209",
+    "compliance": [
+      "ISO 9001",
+      "IEC 61508"
+    ]
+  }
+]

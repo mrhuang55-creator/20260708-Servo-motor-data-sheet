@@ -1,0 +1,41 @@
+{
+  "root_cause": "network_packet_loss",
+  "confidence": 1.0,
+  "scores": {
+    "following_error": 0.9170616317471398,
+    "thermal_motor": 0.6681377195423477,
+    "thermal_drive": 0.6121778583211811,
+    "vibration": 0.5141909260848806,
+    "bearing": 0.37580174630486896,
+    "torque_ripple": 0.586480905637245,
+    "current_load": 0.6667860779463219,
+    "network": 1.0,
+    "digital_twin_error": 0.6005864011986013,
+    "encoder_drift": 0.0,
+    "encoder_noise": 0.0,
+    "encoder_signal_loss": 0.0
+  },
+  "health_index_mean": 64.85981239471849,
+  "rul_sec_min": 85.79892159071309,
+  "fft_resonance_peak": null,
+  "advanced_diagnostics": {
+    "scenario_id": 24,
+    "scenario_name": "Network Packet Loss (總線數據丟包)",
+    "frequency_domain": {
+      "max_harmonic_db": 15.65,
+      "has_high_frequency_harmonics": true
+    },
+    "time_window": {
+      "state_transitions": [
+        "early_degradation"
+      ],
+      "current_state": "early_degradation"
+    },
+    "cross_correlation": {
+      "sync_error_vs_torque_load_max_corr": 0.1145,
+      "sync_error_vs_torque_load_optimal_lag": -1,
+      "is_communication_driving_torque": false
+    },
+    "logical_assertion_triggered": true
+  }
+}

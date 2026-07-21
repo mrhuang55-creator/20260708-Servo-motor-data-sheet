@@ -1,0 +1,552 @@
+/* 
+   三菱 MR-J5 AI Servo PHM System — 工控深色玻璃擬態 UI 樣式表 (style.css)
+*/
+
+:root {
+    --bg-dark: #0a0e17;
+    --card-bg: rgba(19, 25, 39, 0.85);
+    --card-border: rgba(255, 255, 255, 0.08);
+    --text-main: #f0f4f8;
+    --text-muted: #8a99ad;
+    --cyan-accent: #00e5ff;
+    --green-normal: #00ff9d;
+    --yellow-warning: #ffb700;
+    --orange-critical: #ff7700;
+    --red-trip: #ff3b30;
+    --blue-info: #007aff;
+    --shadow-color: rgba(0, 0, 0, 0.5);
+    --font-family: 'Segoe UI', system-ui, -apple-system, BlinkMacSystemFont, Roboto, sans-serif;
+}
+
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+body {
+    background-color: var(--bg-dark);
+    background-image: 
+        radial-gradient(circle at 10% 20%, rgba(0, 229, 255, 0.05) 0%, transparent 40%),
+        radial-gradient(circle at 90% 80%, rgba(0, 255, 157, 0.05) 0%, transparent 40%);
+    color: var(--text-main);
+    font-family: var(--font-family);
+    min-height: 100vh;
+    padding: 20px;
+    line-height: 1.5;
+}
+
+.app-container {
+    max-width: 1440px;
+    margin: 0 auto;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+/* 頂部導覽列 (Header Bar) */
+.header-bar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: var(--card-bg);
+    border: 1px solid var(--card-border);
+    backdrop-filter: blur(12px);
+    padding: 16px 24px;
+    border-radius: 14px;
+    box-shadow: 0 8px 24px var(--shadow-color);
+}
+
+.logo-area {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+}
+
+.logo-icon {
+    font-size: 32px;
+    color: var(--cyan-accent);
+    filter: drop-shadow(0 0 8px rgba(0, 229, 255, 0.6));
+}
+
+.logo-text h1 {
+    font-size: 20px;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+}
+
+.logo-text h1 span {
+    color: var(--cyan-accent);
+}
+
+.logo-text p {
+    font-size: 12px;
+    color: var(--text-muted);
+}
+
+.system-status {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 4px;
+}
+
+.status-indicator {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--green-normal);
+}
+
+.shadow-mode-badge {
+    background: rgba(0, 229, 255, 0.1);
+    color: var(--cyan-accent);
+    border: 1px dashed var(--cyan-accent);
+    padding: 2px 8px;
+    border-radius: 4px;
+    font-size: 11px;
+    font-weight: 700;
+}
+
+.dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+}
+
+.pulse-green {
+    background-color: var(--green-normal);
+    box-shadow: 0 0 10px var(--green-normal);
+    animation: pulse 1.5s infinite;
+}
+
+@keyframes pulse {
+    0% { transform: scale(0.95); opacity: 0.8; }
+    50% { transform: scale(1.15); opacity: 1; }
+    100% { transform: scale(0.95); opacity: 0.8; }
+}
+
+.time-display {
+    font-size: 12px;
+    color: var(--text-muted);
+    font-family: monospace;
+}
+
+/* 經典標竿切換列與 ISO 匯出 */
+.benchmark-bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: var(--card-bg);
+    border: 1px solid var(--card-border);
+    padding: 12px 20px;
+    border-radius: 12px;
+}
+
+.benchmark-left {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.benchmark-label {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--cyan-accent);
+}
+
+.button-group {
+    display: flex;
+    gap: 12px;
+}
+
+.btn-scenario {
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    color: var(--text-main);
+    padding: 8px 16px;
+    border-radius: 8px;
+    font-size: 13px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.btn-scenario:hover {
+    background: rgba(0, 229, 255, 0.15);
+    border-color: var(--cyan-accent);
+}
+
+.btn-scenario.active {
+    background: var(--cyan-accent);
+    color: #000;
+    font-weight: 700;
+    border-color: var(--cyan-accent);
+    box-shadow: 0 0 12px rgba(0, 229, 255, 0.4);
+}
+
+.btn-export-iso {
+    background: rgba(0, 255, 157, 0.15);
+    color: var(--green-normal);
+    border: 1px solid var(--green-normal);
+    padding: 8px 16px;
+    border-radius: 8px;
+    font-size: 13px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.btn-export-iso:hover {
+    background: var(--green-normal);
+    color: #000;
+    box-shadow: 0 0 12px rgba(0, 255, 157, 0.4);
+}
+
+/* 主儀表板 Grid */
+.dashboard-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    grid-template-rows: auto auto;
+    gap: 20px;
+}
+
+/* 通用 Card 樣式 */
+.card {
+    background: var(--card-bg);
+    border: 1px solid var(--card-border);
+    border-radius: 14px;
+    backdrop-filter: blur(12px);
+    box-shadow: 0 8px 24px var(--shadow-color);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
+
+.card-header {
+    padding: 16px 20px;
+    border-bottom: 1px solid var(--card-border);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: rgba(0, 0, 0, 0.2);
+}
+
+.card-header h3 {
+    font-size: 15px;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: var(--text-main);
+}
+
+.card-body {
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    flex: 1;
+}
+
+/* Risk Badges */
+.risk-badge, .badge-blue, .badge-green {
+    padding: 4px 10px;
+    border-radius: 6px;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+}
+
+.badge-normal { background: rgba(0, 255, 157, 0.2); color: var(--green-normal); border: 1px solid var(--green-normal); }
+.badge-warning { background: rgba(255, 183, 0, 0.2); color: var(--yellow-warning); border: 1px solid var(--yellow-warning); }
+.badge-critical { background: rgba(255, 119, 0, 0.2); color: var(--orange-critical); border: 1px solid var(--orange-critical); }
+.badge-trip { background: rgba(255, 59, 48, 0.2); color: var(--red-trip); border: 1px solid var(--red-trip); }
+
+.badge-blue { background: rgba(0, 122, 255, 0.2); color: var(--blue-info); border: 1px solid var(--blue-info); }
+.badge-green { background: rgba(0, 255, 157, 0.2); color: var(--green-normal); border: 1px solid var(--green-normal); }
+
+/* 卡片 1：健康度顯示 */
+.gauge-wrapper {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 16px 0;
+    border-bottom: 1px dashed var(--card-border);
+}
+
+.score-num {
+    font-size: 48px;
+    font-weight: 800;
+    color: var(--green-normal);
+    text-shadow: 0 0 16px rgba(0, 255, 157, 0.3);
+}
+
+.score-unit {
+    font-size: 16px;
+    color: var(--text-muted);
+}
+
+.health-label {
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 1px;
+    color: var(--text-muted);
+    margin-top: 4px;
+}
+
+.info-list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    font-size: 13px;
+}
+
+.info-item {
+    display: flex;
+    justify-content: space-between;
+}
+
+.info-label { color: var(--text-muted); }
+.info-val { font-weight: 600; color: var(--text-main); }
+
+/* 卡片 2：閉環對策 */
+.action-box {
+    background: rgba(0, 0, 0, 0.3);
+    border-left: 3px solid var(--cyan-accent);
+    padding: 12px;
+    border-radius: 6px;
+}
+
+.action-title {
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--cyan-accent);
+    margin-bottom: 4px;
+}
+
+.action-desc {
+    font-size: 13px;
+    color: var(--text-main);
+}
+
+.params-section {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.params-label {
+    font-size: 12px;
+    color: var(--text-muted);
+}
+
+.params-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.tag-chip {
+    background: rgba(0, 229, 255, 0.15);
+    color: var(--cyan-accent);
+    border: 1px solid rgba(0, 229, 255, 0.4);
+    padding: 4px 10px;
+    border-radius: 6px;
+    font-size: 12px;
+    font-weight: 600;
+}
+
+.apply-button-area {
+    margin-top: auto;
+}
+
+.btn-apply-params {
+    width: 100%;
+    background: linear-gradient(135deg, #00e5ff 0%, #007aff 100%);
+    color: #000;
+    border: none;
+    padding: 12px;
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    box-shadow: 0 4px 12px rgba(0, 229, 255, 0.3);
+}
+
+.btn-apply-params:hover:not(:disabled) {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 18px rgba(0, 229, 255, 0.5);
+}
+
+.btn-apply-params:disabled {
+    background: rgba(255, 255, 255, 0.1);
+    color: var(--text-muted);
+    cursor: not-allowed;
+    box-shadow: none;
+}
+
+/* 卡片 3：部件熱力圖 (Component Heatmap Grid) */
+.component-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+}
+
+.comp-item {
+    background: rgba(0, 0, 0, 0.3);
+    border: 1px solid var(--card-border);
+    padding: 10px;
+    border-radius: 8px;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.comp-name {
+    font-size: 11px;
+    color: var(--text-muted);
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.comp-val {
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--green-normal);
+}
+
+.assertion-box {
+    background: rgba(0, 0, 0, 0.3);
+    border-left: 3px solid var(--green-normal);
+    padding: 10px;
+    border-radius: 6px;
+}
+
+.assertion-title {
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--green-normal);
+    margin-bottom: 2px;
+}
+
+.assertion-desc {
+    font-size: 11px;
+    color: var(--text-main);
+}
+
+/* 卡片 4：實時圖表 */
+.chart-card {
+    grid-column: 1 / -1;
+}
+
+.chart-legend {
+    display: flex;
+    gap: 16px;
+    font-size: 12px;
+}
+
+.legend-item { display: flex; align-items: center; gap: 6px; }
+.text-cyan { color: var(--cyan-accent); }
+.text-orange { color: var(--yellow-warning); }
+.text-red { color: var(--red-trip); }
+.text-yellow { color: var(--yellow-warning); }
+
+.chart-container {
+    height: 240px;
+    width: 100%;
+    position: relative;
+}
+
+/* Modal 彈窗樣式 */
+.modal-overlay {
+    position: fixed;
+    top: 0; left: 0; width: 100%; height: 100%;
+    background: rgba(0, 0, 0, 0.75);
+    backdrop-filter: blur(8px);
+    display: none;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+}
+
+.modal-overlay.active { display: flex; }
+
+.modal-content {
+    background: #131927;
+    border: 1px solid var(--cyan-accent);
+    border-radius: 14px;
+    width: 90%;
+    max-width: 520px;
+    box-shadow: 0 12px 36px rgba(0, 229, 255, 0.3);
+    overflow: hidden;
+}
+
+.modal-header {
+    padding: 16px 20px;
+    background: rgba(0, 0, 0, 0.4);
+    border-bottom: 1px solid var(--card-border);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.modal-header h3 { font-size: 16px; font-weight: 700; color: var(--text-main); }
+
+.btn-close-modal {
+    background: none; border: none; color: var(--text-muted);
+    font-size: 24px; cursor: pointer;
+}
+
+.modal-body {
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    font-size: 14px;
+}
+
+.modal-params-summary {
+    background: rgba(0, 229, 255, 0.05);
+    border: 1px solid rgba(0, 229, 255, 0.2);
+    border-radius: 8px;
+    padding: 12px;
+}
+
+.alert-info-box {
+    background: rgba(255, 183, 0, 0.1);
+    border-left: 3px solid var(--yellow-warning);
+    padding: 10px;
+    font-size: 12px;
+    color: var(--yellow-warning);
+}
+
+.modal-footer {
+    padding: 16px 20px;
+    background: rgba(0, 0, 0, 0.3);
+    display: flex;
+    justify-content: flex-end;
+    gap: 12px;
+}
+
+.btn-cancel {
+    background: rgba(255, 255, 255, 0.1);
+    color: var(--text-main);
+    border: none; padding: 10px 18px; border-radius: 6px; cursor: pointer;
+}
+
+.btn-confirm-submit {
+    background: var(--cyan-accent);
+    color: #000; font-weight: 700;
+    border: none; padding: 10px 18px; border-radius: 6px; cursor: pointer;
+}

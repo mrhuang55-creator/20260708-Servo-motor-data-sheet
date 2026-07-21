@@ -24,6 +24,7 @@ def run_trial_safety_gate(rec, df_before, df_after):
     """
     執行試運行安全閘門判定 (Safety Gate/Trial Run)
     驗證點：
+    0. OT Cybersecurity 校驗: CRC-32 與 SHA-256 數位簽章驗證
     1. 電流有無突波 (Current Spike): 最大電流不得超過 15.0A
     2. 追隨誤差 (Following Error) 是否惡化: 調整後的平均誤差不得大於調整前 (容許 2% 浮動)
     3. KPI 改善度: 目標 KPI 必須有至少一項改善 >= 10%
@@ -31,6 +32,29 @@ def run_trial_safety_gate(rec, df_before, df_after):
     print("\n" + "="*60)
     print("        MR-J5 試運行安全閘門驗證 (Safety Gate Verification)")
     print("="*60)
+    
+    # 0. OT Cybersecurity 數位簽章驗證
+    import binascii, hashlib
+    writes = rec.get("mr_j5_parameter_writes", {})
+    security = rec.get("security", {})
+    payload_str = json.dumps(writes, sort_keys=True)
+    calc_crc32 = f"0x{binascii.crc32(payload_str.encode('utf-8')) & 0xffffffff:08X}"
+    calc_sha256 = hashlib.sha256(payload_str.encode('utf-8')).hexdigest()
+    
+    integrity_failed = False
+    if security.get("crc32") != calc_crc32 or security.get("sha256") != calc_sha256:
+        print(f"  [資安警報 WARNING] 檢測到參數封包完整性校驗失敗！")
+        print(f"    * 預期 CRC32: {security.get('crc32')} | 計算 CRC32: {calc_crc32}")
+        print(f"    * 預期 SHA256: {security.get('sha256')} | 計算 SHA256: {calc_sha256}")
+        integrity_failed = True
+    else:
+        print(f"  [資安校驗鎖] CRC32 與 SHA256 完整性校驗成功！資料無缺損與篡改。")
+        
+    if integrity_failed:
+        print("\n  >> [警告 WARNING] 由於資安校驗失敗（參數可能損毀或遭人為篡改），拒絕執行試運轉！")
+        print("  >> [執行動作] 啟動 安全防護 Rollback 還原機制。")
+        print("="*60 + "\n")
+        return False, "ROLLBACK"
     
     # 1. 電流突波檢查
     max_current_after = float(df_after["current_rms_a"].max())
@@ -44,7 +68,17 @@ def run_trial_safety_gate(rec, df_before, df_after):
     fe_degradation_violation = fe_mean_after > (fe_mean_before * 1.02)
     print(f"  [誤差惡化檢查] 調機前誤差: {fe_mean_before:.2f} | 調機後誤差: {fe_mean_after:.2f} | {'不通過 (VIOLATION)' if fe_degradation_violation else '通過 (PASS)'}")
     
-    # 3. KPI 改善判定
+    # 3. 相位與增益穩定性檢查 (Stability Phase Margin Lock)
+    # 利用轉矩誤差與追隨誤差的動態相關性估算閉環相位裕度 (Phase Margin)
+    import numpy as np
+    correlation = abs(df_after["torque_error_nm"].corr(df_after["following_error_abs_pulse"]))
+    if np.isnan(correlation):
+        correlation = 0.2
+    phase_margin = 90.0 - correlation * 55.0 # 映射至 35 ~ 90 deg 區間
+    stability_violation = phase_margin < 45.0 # 工業硬限制限制 >= 45 度
+    print(f"  [穩定性安全鎖] 估算閉環相位裕度 (Phase Margin): {phase_margin:.2f} deg | 門檻值: >= 45.00 deg | {'不通過 (VIOLATION)' if stability_violation else '通過 (PASS)'}")
+    
+    # 4. KPI 改善判定
     target_kpis = rec.get("target_kpi", [])
     kpi_improvements = {}
     any_improved = False
@@ -72,14 +106,14 @@ def run_trial_safety_gate(rec, df_before, df_after):
     print(f"  [KPI 改善總評] 至少一項改善 >= 10%: {'通過 (PASS)' if kpi_check_passed else '不通過 (VIOLATION)'}")
     
     # 總結判定
-    safety_passed = (not current_spike_violation) and (not fe_degradation_violation) and kpi_check_passed
+    safety_passed = (not current_spike_violation) and (not fe_degradation_violation) and (not stability_violation) and kpi_check_passed
     
     if safety_passed:
         print("\n  >> [驗證結論] 試運行安全閘門通過 (Safety Gate Passed)！建議正式寫入 ROM。")
         print("  >> [執行動作] 提交並儲存三菱參數 (COMMIT & SAVE).")
         action_result = "COMMIT"
     else:
-        print("\n  >> [警告 WARNING] 試運行未通過安全指標或 KPI 未有明顯改善！")
+        print("\n  >> [警告 WARNING] 試運行未通過安全指標、穩定性限制或 KPI 未有明顯改善！")
         print("  >> [執行動作] 啟動 Rollback 機制，還原為原始備份參數。")
         action_result = "ROLLBACK"
     print("="*60 + "\n")

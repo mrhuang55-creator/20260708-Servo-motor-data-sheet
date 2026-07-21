@@ -1,6 +1,6 @@
 {
   "root_cause": "resonance",
-  "confidence": 0.3,
+  "confidence": 1.0,
   "scores": {
     "following_error": 0.20833333333333334,
     "thermal_motor": 0.6111111111111112,
@@ -18,10 +18,6 @@
   "health_index_mean": 62.0,
   "rul_sec_min": 3000.0,
   "fft_resonance_peak": 290.0,
-  "data_provenance_warning": [
-    "vibration_rms_g (unavailable)",
-    "frequency_response_100hz_db (fabricated_not_in_dataset)"
-  ],
   "advanced_diagnostics": {
     "scenario_id": 26,
     "scenario_name": "Mechanical Resonance (共振激振)",

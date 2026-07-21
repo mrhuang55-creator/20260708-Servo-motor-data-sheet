@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>三菱 MR-J5 伺服馬達 AI 智慧健康診斷系統 (ISO 55000 工業落地版)</title>
+    <!-- Chart.js 視覺化繪圖庫 -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- FontAwesome 工控圖示庫 -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- 現代深色工控樣式表 -->
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="app-container">
+        <!-- 頂部導覽列 (Header Bar) -->
+        <header class="header-bar">
+            <div class="logo-area">
+                <i class="fa-solid fa-microchip logo-icon"></i>
+                <div class="logo-text">
+                    <h1>MITSUBISHI ELECTRIC <span>MR-J5 AI SERVO PHM</span></h1>
+                    <p>符合 ISO 55000 / ISO 13374 標準之工業級自適應閉環優化平台</p>
+                </div>
+            </div>
+            <div class="system-status">
+                <div class="status-indicator">
+                    <span class="dot pulse-green"></span>
+                    <span id="connection-status">TSN ONLINE (100ms)</span>
+                </div>
+                <div class="shadow-mode-badge" id="shadow-mode-badge">
+                    <i class="fa-solid fa-ghost"></i> SHADOW MODE: RMSE -14.8% (READY)
+                </div>
+                <div class="time-display" id="clock-display">2026-07-21 20:00:00</div>
+            </div>
+        </header>
+
+        <!-- 經典 3 大標竿工況切換與 ISO 匯出工具列 -->
+        <div class="benchmark-bar">
+            <div class="benchmark-left">
+                <span class="benchmark-label"><i class="fa-solid fa-flask"></i> 經典標竿工況切換：</span>
+                <div class="button-group">
+                    <button class="btn-scenario active" data-id="1">
+                        <i class="fa-solid fa-circle-check"></i> Scenario 01: 定位正常 (Pick & Place)
+                    </button>
+                    <button class="btn-scenario" data-id="18">
+                        <i class="fa-solid fa-triangle-exclamation"></i> Scenario 18: 滾珠螺桿磨損 (Ball Screw)
+                    </button>
+                    <button class="btn-scenario" data-id="34">
+                        <i class="fa-solid fa-radiation"></i> Scenario 34: 轉子高溫退磁 (Rotor Demag)
+                    </button>
+                </div>
+            </div>
+            <div class="benchmark-right">
+                <button class="btn-export-iso" id="btn-export-iso-report">
+                    <i class="fa-solid fa-file-contract"></i> 一鍵匯出 ISO 稽核報告 (JSON)
+                </button>
+            </div>
+        </div>
+
+        <!-- 主儀表板卡片區 -->
+        <main class="dashboard-grid">
+            
+            <!-- 卡片 1：健康狀態與風險級別 -->
+            <section class="card health-card">
+                <div class="card-header">
+                    <h3><i class="fa-solid fa-heart-pulse"></i> 診斷狀態與風險等級</h3>
+                    <span class="risk-badge badge-normal" id="risk-badge">NORMAL</span>
+                </div>
+                <div class="card-body">
+                    <div class="gauge-wrapper">
+                        <div class="health-score-display">
+                            <span class="score-num" id="health-index-val">95.0</span>
+                            <span class="score-unit">/ 100</span>
+                        </div>
+                        <div class="health-label">HEALTH INDEX</div>
+                    </div>
+                    <div class="info-list">
+                        <div class="info-item">
+                            <span class="info-label">當前診斷場景：</span>
+                            <span class="info-val" id="scenario-title">Scenario 01: 正常定位基線</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">剩餘壽命預估 (RUL)：</span>
+                            <span class="info-val" id="rul-val">999,999 秒 (正常運轉)</span>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- 卡片 2：建議調整參數與閉環控制 -->
+            <section class="card action-card">
+                <div class="card-header">
+                    <h3><i class="fa-solid fa-gears"></i> 建議調整參數 (閉環控制)</h3>
+                    <span class="badge-blue"><i class="fa-solid fa-network-wired"></i> SLMP MC 3E</span>
+                </div>
+                <div class="card-body">
+                    <div class="action-box">
+                        <div class="action-title"><i class="fa-solid fa-lightbulb"></i> AI 調參建議處置：</div>
+                        <div class="action-desc" id="action-desc-val">系統運作良好，控制迴路處於 3σ 正常分佈內，無須調整參數。</div>
+                    </div>
+
+                    <div class="params-section">
+                        <div class="params-label">推薦三菱 MR-J5 實體暫存器：</div>
+                        <div class="params-tags" id="params-tags-container">
+                            <span class="tag-chip">無須變更</span>
+                        </div>
+                    </div>
+
+                    <div class="apply-button-area">
+                        <button class="btn-apply-params" id="btn-apply-parameters" disabled>
+                            <i class="fa-solid fa-bolt"></i> ⚡ 一鍵套用調參 (Apply Parameters)
+                        </button>
+                    </div>
+                </div>
+            </section>
+
+            <!-- 卡片 3：馬達實體部件健康熱力陣列 (Component Heatmap) -->
+            <section class="card component-card">
+                <div class="card-header">
+                    <h3><i class="fa-solid fa-layer-group"></i> 實態馬達部件健康熱力 (Component Heatmap)</h3>
+                    <span class="badge-green">PHYSICAL REALITY</span>
+                </div>
+                <div class="card-body">
+                    <div class="component-grid">
+                        <div class="comp-item">
+                            <div class="comp-name"><i class="fa-solid fa-dharmachakra"></i> 馬達軸承 (Bearing)</div>
+                            <div class="comp-val" id="comp-bearing-val">95.0%</div>
+                        </div>
+                        <div class="comp-item">
+                            <div class="comp-name"><i class="fa-solid fa-plug-circle-bolt"></i> 定子繞組 (Stator Winding)</div>
+                            <div class="comp-val" id="comp-winding-val">93.5%</div>
+                        </div>
+                        <div class="comp-item">
+                            <div class="comp-name"><i class="fa-solid fa-gauge"></i> 編碼器 (Encoder)</div>
+                            <div class="comp-val" id="comp-encoder-val">98.0%</div>
+                        </div>
+                        <div class="comp-item">
+                            <div class="comp-name"><i class="fa-solid fa-screwdriver"></i> 滾珠絲槓 (Lead Screw)</div>
+                            <div class="comp-val" id="comp-screw-val">91.2%</div>
+                        </div>
+                    </div>
+
+                    <div class="assertion-box" style="margin-top: 10px;">
+                        <div class="assertion-title"><i class="fa-solid fa-shield"></i> 物理限制防誤判斷言：</div>
+                        <div class="assertion-desc" id="assertion-desc-val">防誤判機制啟用：過濾 TSN 網路丟包與瞬時通訊突波，確認非干擾引發之假告警。</div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- 卡片 4：實時感測器波形動態趨勢圖 -->
+            <section class="card chart-card">
+                <div class="card-header">
+                    <h3><i class="fa-solid fa-chart-line"></i> 實時感測波形對比圖 (Heavy-Tailed EMI Guarded Stream)</h3>
+                    <div class="chart-legend">
+                        <span class="legend-item"><i class="fa-solid fa-square text-cyan"></i> 電流 RMS (A)</span>
+                        <span class="legend-item"><i class="fa-solid fa-square text-orange"></i> 追隨誤差 (Pulse)</span>
+                        <span class="legend-item"><i class="fa-solid fa-square text-red"></i> 溫度 (°C)</span>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div class="chart-container">
+                        <canvas id="telemetryChart"></canvas>
+                    </div>
+                </div>
+            </section>
+
+        </main>
+    </div>
+
+    <!-- 確認套用調參之 Modal 彈窗 -->
+    <div class="modal-overlay" id="confirm-modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3><i class="fa-solid fa-triangle-exclamation text-yellow"></i> 三菱 MR-J5 暫存器寫入確認</h3>
+                <button class="btn-close-modal" id="btn-close-modal">&times;</button>
+            </div>
+            <div class="modal-body">
+                <p>您即將透過 <strong>SLMP MC Protocol 3E</strong> 將 AI 推薦之控制參數直接寫入三菱伺服驅動器：</p>
+                <div class="modal-params-summary" id="modal-params-summary">
+                    <!-- 動態渲染寫入參數清單 -->
+                </div>
+                <div class="alert-info-box">
+                    <i class="fa-solid fa-shield"></i> 系統將自動執行步階響應模擬與 ISO 55000 備份，若相位裕度 &lt; 45° 將自動回滾。
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn-cancel" id="btn-modal-cancel">取消</button>
+                <button class="btn-confirm-submit" id="btn-modal-confirm">確認寫入 (Write Registers)</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 載入 JavaScript -->
+    <script src="app.js"></script>
+</body>
+</html>
