@@ -1,0 +1,8 @@
+mechanism,data_features,diagnosis,mr_j5_parameter_relation,performance_goal
+Ball screw,"position_error, torque_ripple, friction_estimate, backlash_estimate",wear / backlash / lubrication degradation,"lost motion compensation, feedforward, acc/dec profile",improve repeatability and reduce friction current
+Linear guide,"current_rms, load_pct, vibration_rms, settling_time",rail friction / stick-slip,"gain tuning, velocity profile, friction compensation",reduce stick-slip and settling time
+Gear train,"torque_ripple, fft_1x/2x/3x, vibration",gear wear / tooth damage,"torque filter, notch filter, speed limit",reduce torque ripple and vibration
+Bearing,"BPFO, BPFI, BSF, FTF, bearing_temp",bearing wear / cage damage,"vibration suppression, speed/acc limit, machine diagnosis",increase bearing health index and RUL
+Belt / chain,"position lag, vibration frequency, command response",tension loss / chain stretch,"command notch, acc/dec smoothing, settling range",reduce elastic oscillation
+Coupling,"phase lag, vibration, torque ripple",misalignment / coupling wear,"notch filter, torque filter, gain reduction",reduce oscillation and torque ripple
+PLC motion command,"pos_cmd vs actual_pos, command jitter, in_position",tracking precision issue,"position gain, feedforward, command smoothing, sync timing",improve command tracking accuracy

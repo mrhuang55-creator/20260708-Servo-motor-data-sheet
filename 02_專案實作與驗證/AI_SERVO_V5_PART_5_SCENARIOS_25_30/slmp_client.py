@@ -9,11 +9,45 @@ class SLMPClient:
     """
     三菱 MC Protocol (3E Binary Frame) 實體通信客戶端
     """
+<<<<<<< HEAD
+=======
+    PARAMETER_MAP = {
+        "PE02": 1002,
+        "PE07": 1007,
+        "PA09": 1009,
+        "PA11": 1011,
+        "PB12": 1012,
+        "PA12": 1052,
+        "PA18": 1018,
+        "PB07": 1027,
+        "PB08": 1028,
+        "PB09": 1029,
+        "PC16": 1056,
+        "PC24": 1064,
+    }
+
+>>>>>>> b5a207cdbbbcb9a64bd2e230beb9283139dc051a
     def __init__(self, host="127.0.0.1", port=5007):
         self.host = host
         self.port = port
         self.sock = None
 
+<<<<<<< HEAD
+=======
+    def write_mr_j5_parameter(self, param_name, value, network_no=0x00, pc_no=0xFF, dest_io=0x03FF, dest_station=0x00):
+        if param_name not in self.PARAMETER_MAP:
+            raise ValueError(f"Unknown parameter name: {param_name}")
+        addr = self.PARAMETER_MAP[param_name]
+        return self.write_d_registers(addr, [int(value)], network_no, pc_no, dest_io, dest_station)
+
+    def read_mr_j5_parameter(self, param_name, network_no=0x00, pc_no=0xFF, dest_io=0x03FF, dest_station=0x00):
+        if param_name not in self.PARAMETER_MAP:
+            raise ValueError(f"Unknown parameter name: {param_name}")
+        addr = self.PARAMETER_MAP[param_name]
+        res = self.read_d_registers(addr, 1, network_no, pc_no, dest_io, dest_station)
+        return res[0] if res else None
+
+>>>>>>> b5a207cdbbbcb9a64bd2e230beb9283139dc051a
     def connect(self):
         self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.sock.settimeout(2.0)
@@ -121,7 +155,25 @@ class SLMPServerMock:
     def __init__(self, host="127.0.0.1", port=5007):
         self.host = host
         self.port = port
+<<<<<<< HEAD
         self.registers = {} # 暫存器模擬 (D1000 - D1020)
+=======
+        self.registers = {
+            1002: 10,  # PE02 default
+            1007: 0,   # PE07 default
+            1009: 12,  # PA09 default
+            1011: 300, # PA11 default
+            1012: 0,   # PB12 default
+            1052: 300, # PA12 default
+            1018: 0,   # PA18 default
+            1027: 100, # PB07 default
+            1028: 150, # PB08 default
+            1029: 20,  # PB09 default
+            1056: 50,  # PC16 default
+            1064: 100, # PC24 default
+            1010: 0    # Speed register
+        }
+>>>>>>> b5a207cdbbbcb9a64bd2e230beb9283139dc051a
         self.running = False
         self.sock = None
 

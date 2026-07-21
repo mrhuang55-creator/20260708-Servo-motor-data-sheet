@@ -1,0 +1,27 @@
+analysis_signal,root_cause,mr_j5_parameter_group,mr_j5_adjustment_action,kpi_target,trial_rule,target_parameters,parameter_adjustment_type,register_addresses
+following_error_high,position loop response insufficient,Position loop gain / feedforward / model adaptive control,increase response gradually; verify overshoot,following_error_down,low-speed then production-speed trial,PB07,PB08,increase_10%,D1027,D1028
+settling_time_long,residual vibration,Advanced vibration suppression control II,enable or retune vibration suppression,settling_time_down,compare residual vibration window,PB19,PB20,vibration_suppression,D1039,D1040
+fft_resonance_peak,mechanical resonance,Machine resonance suppression filter / command notch filter,set detected resonance frequency and bandwidth,fft_peak_down,frequency sweep before/after,PA18,PB12,notch_tuning,D1018,D1032
+overshoot_high,gain too high or damping insufficient,Speed gain / robust filter,reduce aggressive gain or enable robust filter,overshoot_down,step response comparison,PB07,PB08,decrease_10%,D1027,D1028
+torque_ripple_high,transmission ripple,Torque filter / command notch filter,filter torque ripple frequency,torque_ripple_down,torque FFT comparison,PB18,current_filter,D1038
+bpfo_bpfi_high,bearing wear,Machine diagnosis / vibration suppression / speed-acc limit,reduce stress and schedule maintenance,bearing_health_up,RUL and vibration comparison,PE02,friction_compensation,D1002
+friction_estimate_high,ball screw or linear guide friction,Lost motion compensation / feedforward / acc-dec profile,tune compensation and reduce peak acceleration,current_rms_down,bidirectional precision test,PE07,lost_motion_compensation,D1007
+belt_tension_low,belt or chain elasticity,Command notch / acc-dec smoothing / settling range,reduce excitation and tune command filter,position_ripple_down,belt frequency comparison,PB18,command_filter,D1038
+ethercat_jitter_high,network timing instability,PLC motion cycle / sync timing / command smoothing,stabilize cycle and reduce command jitter,sync_error_down,network jitter KPI,none,none,none
+vibration_rms_g_high,coupling_misalignment,Speed loop gain / vibration suppression,reduce speed loop gain slightly to suppress coupling resonance,vibration_rms_down,low-speed then production-speed trial,PB08,decrease_5%,D1028
+following_error_accel,belt_slack,Position loop gain / accel-decel time constant,reduce position loop gain to avoid belt elasticity oscillation,following_error_down,low-speed then production-speed trial,PB07,decrease_5%,D1027
+backlash_lag,gearbox_backlash,Lost motion compensation / feedforward,increase lost motion compensation to adjust backlash,position_accuracy_up,bidirectional precision test,PE07,lost_motion_compensation,D1007
+friction_both_directions,ball_screw_friction,Friction compensation / torque limit,increase friction compensation value,current_rms_down,bidirectional friction test,PE02,friction_compensation,D1002
+current_unbalance_high,phase_loss,Torque limit / current filter,limit motor peak current and flag warning,current_unbalance_down,low-speed safety test,PA11,decrease_10%,D1011
+drive_temp_high_decel,bus_overvoltage,Deceleration time constant / torque limit,increase deceleration time constant to reduce regenerative voltage,drive_temp_down,deceleration stop test,PC24,increase_20%,D1064
+following_error_accel_peak,bus_undervoltage,Acceleration time constant / torque limit,increase acceleration time constant to reduce peak power draw,following_error_down,acceleration start test,PC24,increase_20%,D1064
+torque_limit_reached,mechanical_jam,Torque limit / forced stop decel,reduce torque limit for safety protection,following_error_up,low-speed safety test,PA11,decrease_10%,D1011
+drive_temp_high_no_load,fan_failure,None,reduce duty cycle and flag fan maintenance,drive_temp_down,holding test,none,none,none
+encoder_error_noise,ground_noise,Current filter / command smoothing,increase current command filter constant to smooth noise,following_error_down,low-speed then production-speed trial,PB18,increase_10%,D1038
+limit_active,limit_active,Forced stop decel / brake timing,engage brakes immediately to stop motion,stop_distance_down,emergency deceleration stop test,PC16,decrease_10%,D1056
+current_rms_accel_peak,accel_aggressive,Acceleration/deceleration time constant,increase acceleration/deceleration time constant to smooth velocity profile,current_rms_down,low-speed then production-speed trial,PC24,increase_20%,D1064
+stopping_time_long,dynamic_brake_fail,Brake release/hold timing,adjust brake release delay to ensure mechanical holding,stopping_time_down,holding test,PC16,increase_20%,D1056
+command_jitter_high,command_jitter,Current filter / command smoothing,increase command filter constant,following_error_down,low-speed then production-speed trial,PB18,increase_10%,D1038
+settling_time_long_no_vibration,inertia_mismatch,Load inertia ratio / auto tuning,retune estimated load inertia ratio,settling_time_down,low-speed then production-speed trial,PA09,increase_1,D1009
+bearing_bpfo_high_trend,bearing_wear,Friction compensation / machine diagnosis,apply bearing friction compensation,bearing_health_up,RUL and vibration comparison,PE02,friction_compensation,D1002
+sync_error_high,sync_timeout,PLC motion cycle / sync timing / command smoothing,inspect TSN bus sync configuration,sync_error_down,network jitter KPI,none,none,none

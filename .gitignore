@@ -1,48 +1,62 @@
-# Python Virtual Environment
+# ── Python 虛擬環境 ──
 venv/
 .venv/
 env/
 ENV/
+**/venv/
+**/.venv/
+**/env/
+**/myenv/
 
-# Ignore huge Parquet databases and datasets
+# ── 大數據集與資料庫 (Parquet, CSV, MAT) ──
 *.parquet
+**/*.parquet
 *.csv
+*.mat
 
-# Ignore compiled python code and cache
+# ── Python 編譯與測試快取 ──
 __pycache__/
+**/__pycache__/
 *.pyc
+**/*.pyc
 *.pyo
+**/*.pyo
 *.pyd
+**/*.pyd
 .pytest_cache/
+**/.pytest_cache/
 .coverage
 htmlcov/
+**/.ipynb_checkpoints/
 
-# Ignore binary datasets to avoid github limits
-*.mat
+# ── 二進位與大型文件 ──
 *.pdf
 *.zip
 *.tar.gz
 *.pkl
 
-# IDE / Editor configuration
+# ── IDE 設定與系統暫存 ──
 .vscode/
 .idea/
 *.swp
 *.swo
 *.user
-
-# OS generated files
 .DS_Store
 Thumbs.db
 desktop.ini
+*.tmp
 
-# Environment variables & secrets
-.env
-.env.local
+# ── 暫存模型與測試輸出 ──
+**/*.npz
+*.log
 
-# Ignore local agent and gemini workspace folders
+# ── 對話紀錄與 Agent 專用目錄 ──
 .agents/
 .gemini/
 scratch/
-*.log
+**/對話紀錄.md
+**/update_dialogue_history.py
 
+# ── 環境變數檔 ──
+.env
+.env.local

@@ -24,7 +24,10 @@ def run_trial_safety_gate(rec, df_before, df_after):
     """
     執行試運行安全閘門判定 (Safety Gate/Trial Run)
     驗證點：
+<<<<<<< HEAD
     0. OT Cybersecurity 校驗: CRC-32 與 SHA-256 數位簽章驗證
+=======
+>>>>>>> b5a207cdbbbcb9a64bd2e230beb9283139dc051a
     1. 電流有無突波 (Current Spike): 最大電流不得超過 15.0A
     2. 追隨誤差 (Following Error) 是否惡化: 調整後的平均誤差不得大於調整前 (容許 2% 浮動)
     3. KPI 改善度: 目標 KPI 必須有至少一項改善 >= 10%
@@ -33,6 +36,7 @@ def run_trial_safety_gate(rec, df_before, df_after):
     print("        MR-J5 試運行安全閘門驗證 (Safety Gate Verification)")
     print("="*60)
     
+<<<<<<< HEAD
     # 0. OT Cybersecurity 數位簽章驗證
     import binascii, hashlib
     writes = rec.get("mr_j5_parameter_writes", {})
@@ -56,6 +60,8 @@ def run_trial_safety_gate(rec, df_before, df_after):
         print("="*60 + "\n")
         return False, "ROLLBACK"
     
+=======
+>>>>>>> b5a207cdbbbcb9a64bd2e230beb9283139dc051a
     # 1. 電流突波檢查
     max_current_after = float(df_after["current_rms_a"].max())
     current_spike_violation = max_current_after > 15.0
@@ -68,6 +74,7 @@ def run_trial_safety_gate(rec, df_before, df_after):
     fe_degradation_violation = fe_mean_after > (fe_mean_before * 1.02)
     print(f"  [誤差惡化檢查] 調機前誤差: {fe_mean_before:.2f} | 調機後誤差: {fe_mean_after:.2f} | {'不通過 (VIOLATION)' if fe_degradation_violation else '通過 (PASS)'}")
     
+<<<<<<< HEAD
     # 3. 相位與增益穩定性檢查 (Stability Phase Margin Lock)
     # 利用轉矩誤差與追隨誤差的動態相關性估算閉環相位裕度 (Phase Margin)
     import numpy as np
@@ -79,6 +86,9 @@ def run_trial_safety_gate(rec, df_before, df_after):
     print(f"  [穩定性安全鎖] 估算閉環相位裕度 (Phase Margin): {phase_margin:.2f} deg | 門檻值: >= 45.00 deg | {'不通過 (VIOLATION)' if stability_violation else '通過 (PASS)'}")
     
     # 4. KPI 改善判定
+=======
+    # 3. KPI 改善判定
+>>>>>>> b5a207cdbbbcb9a64bd2e230beb9283139dc051a
     target_kpis = rec.get("target_kpi", [])
     kpi_improvements = {}
     any_improved = False
@@ -106,14 +116,22 @@ def run_trial_safety_gate(rec, df_before, df_after):
     print(f"  [KPI 改善總評] 至少一項改善 >= 10%: {'通過 (PASS)' if kpi_check_passed else '不通過 (VIOLATION)'}")
     
     # 總結判定
+<<<<<<< HEAD
     safety_passed = (not current_spike_violation) and (not fe_degradation_violation) and (not stability_violation) and kpi_check_passed
+=======
+    safety_passed = (not current_spike_violation) and (not fe_degradation_violation) and kpi_check_passed
+>>>>>>> b5a207cdbbbcb9a64bd2e230beb9283139dc051a
     
     if safety_passed:
         print("\n  >> [驗證結論] 試運行安全閘門通過 (Safety Gate Passed)！建議正式寫入 ROM。")
         print("  >> [執行動作] 提交並儲存三菱參數 (COMMIT & SAVE).")
         action_result = "COMMIT"
     else:
+<<<<<<< HEAD
         print("\n  >> [警告 WARNING] 試運行未通過安全指標、穩定性限制或 KPI 未有明顯改善！")
+=======
+        print("\n  >> [警告 WARNING] 試運行未通過安全指標或 KPI 未有明顯改善！")
+>>>>>>> b5a207cdbbbcb9a64bd2e230beb9283139dc051a
         print("  >> [執行動作] 啟動 Rollback 機制，還原為原始備份參數。")
         action_result = "ROLLBACK"
     print("="*60 + "\n")

@@ -1,6 +1,10 @@
 #!/usr/bin/env python3
 import numpy as np
+<<<<<<< HEAD
 from dsp_analytics import KalmanFilter2D, BodeResponseAnalyzer, ARIMAPredictor, TimeDomainFeatureExtractor
+=======
+from dsp_analytics import KalmanFilter2D, BodeResponseAnalyzer, ARIMAPredictor
+>>>>>>> b5a207cdbbbcb9a64bd2e230beb9283139dc051a
 
 def test_kalman_filter():
     print(">>> 測試 1.1：2D 卡爾曼估測器 (Kalman Filter)...")
@@ -52,11 +56,17 @@ def test_bode_analyzer():
     print(f"  共振突出度: {res['resonance_prominence_db']:.2f} dB")
     print(f"  增益裕度: {res['gain_margin_db']:.2f} dB")
     print(f"  相位裕度: {res['phase_margin_deg']:.2f} 度")
+<<<<<<< HEAD
     print(f"  側頻共振帶能量比 (100-400Hz Ratio): {res['sideband_resonance_energy_ratio']:.4f}")
     
     assert abs(res['resonance_peak_freq_hz'] - 290.0) < 15.0, "共振峰分析誤差過大！"
     assert "nyquist_real" in res and "nyquist_imag" in res, "Nyquist 實部與虛部計算缺失！"
     assert "sideband_resonance_energy_ratio" in res, "缺少共振帶能量占比指標！"
+=======
+    
+    assert abs(res['resonance_peak_freq_hz'] - 290.0) < 15.0, "共振峰分析誤差過大！"
+    assert "nyquist_real" in res and "nyquist_imag" in res, "Nyquist 實部與虛部計算缺失！"
+>>>>>>> b5a207cdbbbcb9a64bd2e230beb9283139dc051a
     print(f"  Nyquist 實部樣本[5]: {res['nyquist_real'][5]:.4f} | 虛部樣本[5]: {res['nyquist_imag'][5]:.4f}")
     print("  [PASS] 波德圖與共振峰頻譜分析測試通過！")
 
@@ -84,6 +94,7 @@ def test_arima_predictor():
     assert abs(preds[-1]) < 150.0, "ARIMA 預估結果發散！"
     print("  [PASS] ARIMA 溫升趨勢預估測試通過！")
 
+<<<<<<< HEAD
 def test_time_domain_features():
     print("\n>>> 測試 1.4：時域高階無量綱指標 (Kurtosis/Crest/Margin Factor)...")
     
@@ -116,8 +127,13 @@ def test_time_domain_features():
     
     print("  [PASS] 時域高階無量綱指標早期故障識別測試通過！")
 
+=======
+>>>>>>> b5a207cdbbbcb9a64bd2e230beb9283139dc051a
 if __name__ == "__main__":
     test_kalman_filter()
     test_bode_analyzer()
     test_arima_predictor()
+<<<<<<< HEAD
     test_time_domain_features()
+=======
+>>>>>>> b5a207cdbbbcb9a64bd2e230beb9283139dc051a

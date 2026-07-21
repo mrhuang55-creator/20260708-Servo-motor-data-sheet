@@ -1,0 +1,7 @@
+Layer,Device,Protocol/Interface,Main Data,Sampling/Cycle,AI Usage
+Level 3,MES / Factory DB,SQL/REST/OPC UA,"Lot, recipe, product, maintenance history",1s-1min,Context and labels
+Level 2,SCADA / Historian,OPC UA / MQTT,"Trend, alarms, event logs, OEE",100ms-1s,Feature store
+Level 1,HMI,Ethernet / GOT / SCADA,"Status, alarms, AI recommendation, approval button",100ms-1s,Human-in-the-loop approval
+Level 1,PLC / Motion Controller,"Ethernet, CC-Link IE TSN, EtherCAT gateway","Command, step, interlock, scan time",1-10ms,Motion context
+Level 0,Servo Drive,"SSCNET, EtherCAT, CC-Link IE, pulse/train, analog","position, speed, torque, current, temp, alarm",0.5-2ms,High-frequency AI signals
+Level 0,Motor / Encoder / Sensor,"Encoder, analog, IO-Link, accelerometer","encoder, vibration, bearing temp, limit sensor",0.5-10ms,Fault features

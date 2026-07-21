@@ -2,10 +2,18 @@
   "ai_root_cause": "resonance",
   "confidence": 0.98,
   "mr_j5_parameter_group": [
+<<<<<<< HEAD
     "PB13",
     "PB15"
   ],
   "recommended_action": "Configure notch filters around resonance peak.",
+=======
+    "Machine resonance suppression filter",
+    "Command notch filter",
+    "Vibration suppression control"
+  ],
+  "recommended_action": "Apply notch filters to suppress mechanical resonance peak (>100Hz).",
+>>>>>>> b5a207cdbbbcb9a64bd2e230beb9283139dc051a
   "trial_plan": [
     "Read parameters",
     "Set trial parameters",
@@ -16,6 +24,7 @@
     "Save parameters"
   ],
   "mr_j5_parameter_writes": {
+<<<<<<< HEAD
     "PB13": 1,
     "PB15": 290
   },
@@ -28,4 +37,15 @@
     "crc32": "0x20A5E1A2",
     "sha256": "a604d91ff71a3ca68fa44050366059dd1f19f3671489f8b7eb61a5cc4a3632a0"
   }
+=======
+    "PA18": 290,
+    "PB12": 435
+  },
+  "target_kpi": [
+    "vibration_rms_g",
+    "frequency_response_100hz_db",
+    "torque_error_nm"
+  ],
+  "save_condition": "Save when KPI improvement >= 10% and no new alarm/trip is detected."
+>>>>>>> b5a207cdbbbcb9a64bd2e230beb9283139dc051a
 }

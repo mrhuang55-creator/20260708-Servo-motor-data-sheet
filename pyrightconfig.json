@@ -1,0 +1,12 @@
+{
+  "include": [
+    "02_專案實作與驗證",
+    "報告輸出"
+  ],
+  "venvPath": "02_專案實作與驗證/AI_SERVO_V5_PART_5_SCENARIOS_25_30",
+  "venv": "venv",
+  "extraPaths": [
+    "02_專案實作與驗證/AI_SERVO_V5_PART_5_SCENARIOS_25_30/venv/Lib/site-packages",
+    "02_專案實作與驗證/AI_SERVO_V5_PART_5_SCENARIOS_25_30"
+  ]
+}

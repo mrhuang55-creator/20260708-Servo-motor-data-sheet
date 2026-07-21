@@ -23,6 +23,7 @@ from sklearn.neural_network import MLPRegressor
 # Clustering models
 from sklearn.cluster import KMeans, DBSCAN, OPTICS, Birch, SpectralClustering
 
+<<<<<<< HEAD
 def oversample_minority_class(X, y, random_state=42):
     """
     純 NumPy 實作之簡易過採樣 (SMOTE-like 或隨機過採樣)
@@ -70,12 +71,15 @@ def oversample_minority_class(X, y, random_state=42):
         
     return np.vstack(X_resampled), np.concatenate(y_resampled)
 
+=======
+>>>>>>> b5a207cdbbbcb9a64bd2e230beb9283139dc051a
 class MLCompetitionPlatform:
     """
     分類與回歸多模型競賽平台 (Model Competition Platform)
     包含 Stacking 整合與 20+ 候選模型庫對接
     """
     def __init__(self):
+<<<<<<< HEAD
         # 1. 初始化分類器庫 (全部配置為代價敏感類型 class_weight='balanced')
         base_cls_estimators = [
             ('rf', RandomForestClassifier(n_estimators=10, max_depth=3, class_weight='balanced', random_state=42)),
@@ -94,6 +98,26 @@ class MLCompetitionPlatform:
             "KNeighbors": KNeighborsClassifier(n_neighbors=5),
             "MLPClassifier": MLPClassifier(hidden_layer_sizes=(32, 16), max_iter=10, random_state=42),
             "StackingClassifier": StackingClassifier(estimators=base_cls_estimators, final_estimator=LogisticRegression(class_weight='balanced'), cv=2)
+=======
+        # 1. 初始化分類器庫
+        base_cls_estimators = [
+            ('rf', RandomForestClassifier(n_estimators=10, max_depth=3, random_state=42)),
+            ('et', ExtraTreesClassifier(n_estimators=10, max_depth=3, random_state=42))
+        ]
+        
+        self.classifiers = {
+            "RandomForest": RandomForestClassifier(n_estimators=30, max_depth=5, random_state=42),
+            "ExtraTrees": ExtraTreesClassifier(n_estimators=30, max_depth=5, random_state=42),
+            "GradientBoosting": GradientBoostingClassifier(n_estimators=10, max_depth=3, random_state=42),
+            "HistGradientBoosting": HistGradientBoostingClassifier(max_iter=20, max_depth=3, random_state=42),
+            "DecisionTree": DecisionTreeClassifier(max_depth=5, random_state=42),
+            "LogisticRegression": LogisticRegression(max_iter=50, random_state=42),
+            "SGDClassifier": SGDClassifier(max_iter=50, random_state=42),
+            "AdaBoost": AdaBoostClassifier(n_estimators=10, random_state=42),
+            "KNeighbors": KNeighborsClassifier(n_neighbors=5),
+            "MLPClassifier": MLPClassifier(hidden_layer_sizes=(32, 16), max_iter=10, random_state=42),
+            "StackingClassifier": StackingClassifier(estimators=base_cls_estimators, final_estimator=LogisticRegression(), cv=2)
+>>>>>>> b5a207cdbbbcb9a64bd2e230beb9283139dc051a
         }
         
         # 2. 初始化回歸器庫
@@ -118,12 +142,17 @@ class MLCompetitionPlatform:
 
     def run_classification_competition(self, X, y):
         """
+<<<<<<< HEAD
         對比多種分類器的 F1-Score 並排序，Fold 內部自動執行過採樣以應對類別失衡
+=======
+        對比多種分類器的 F1-Score 並排序
+>>>>>>> b5a207cdbbbcb9a64bd2e230beb9283139dc051a
         """
         results = []
         kf = KFold(n_splits=3, shuffle=True, random_state=42)
         for name, clf in self.classifiers.items():
             try:
+<<<<<<< HEAD
                 # 實作 Fold 內部過採樣的交叉驗證 (防止資訊洩露)
                 scores = []
                 for train_idx, val_idx in kf.split(X, y):
@@ -141,6 +170,9 @@ class MLCompetitionPlatform:
                     # 對不平衡資料，計算 macro 平均的 F1-Score 評估其檢測能力
                     scores.append(f1_score(y_val, preds, average='macro'))
                     
+=======
+                scores = cross_val_score(clf, X, y, cv=kf, scoring='f1_macro')
+>>>>>>> b5a207cdbbbcb9a64bd2e230beb9283139dc051a
                 mean_score = np.mean(scores)
                 results.append({"model": name, "f1_macro": float(mean_score)})
             except Exception as e:

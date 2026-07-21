@@ -1,5 +1,6 @@
 {
   "root_cause": "resonance",
+<<<<<<< HEAD
   "confidence": 0.3,
   "scores": {
     "following_error": 0.20833333333333334,
@@ -42,4 +43,10 @@
     },
     "logical_assertion_triggered": false
   }
+=======
+  "confidence": 0.98,
+  "fft_resonance_peak": 290.0,
+  "health_index_mean": 62.0,
+  "rul_sec_min": 3000.0
+>>>>>>> b5a207cdbbbcb9a64bd2e230beb9283139dc051a
 }

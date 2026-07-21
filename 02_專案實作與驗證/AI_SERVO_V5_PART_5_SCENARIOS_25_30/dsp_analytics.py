@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 import numpy as np
 
+<<<<<<< HEAD
 class TimeDomainFeatureExtractor:
     """
     時域特徵提取器，提供高階無量綱時域指標，用於診斷早期微弱損傷。
@@ -45,6 +46,8 @@ class TimeDomainFeatureExtractor:
             return 1.0
         return float(peak / mean_sqrt)
 
+=======
+>>>>>>> b5a207cdbbbcb9a64bd2e230beb9283139dc051a
 class KalmanFilter2D:
     """
     2D 卡爾曼估測器
@@ -171,12 +174,15 @@ class BodeResponseAnalyzer:
         if len(idx_cross_phase) > 0:
             gain_margin_db = float(-mag_db[idx_cross_phase[0]])
             
+<<<<<<< HEAD
         # 計算共振能量占比 (100Hz - 400Hz 區帶能量與總能量比例)
         total_energy = np.sum(np.abs(fft_act) ** 2) + eps
         idx_band = (freqs >= 100.0) & (freqs <= 400.0)
         band_energy = np.sum(np.abs(fft_act[idx_band]) ** 2)
         sideband_energy_ratio = float(band_energy / total_energy)
             
+=======
+>>>>>>> b5a207cdbbbcb9a64bd2e230beb9283139dc051a
         return {
             "status": "success",
             "frequencies": freqs.tolist(),
@@ -187,8 +193,12 @@ class BodeResponseAnalyzer:
             "resonance_peak_freq_hz": peak_freq,
             "resonance_prominence_db": peak_prominence,
             "phase_margin_deg": phase_margin,
+<<<<<<< HEAD
             "gain_margin_db": gain_margin_db,
             "sideband_resonance_energy_ratio": sideband_energy_ratio
+=======
+            "gain_margin_db": gain_margin_db
+>>>>>>> b5a207cdbbbcb9a64bd2e230beb9283139dc051a
         }
 
 class ARIMAPredictor:
@@ -243,6 +253,7 @@ class ARIMAPredictor:
             predictions.append(float(current_t))
             
         return predictions
+<<<<<<< HEAD
 
 
 class AdvancedMechanicalDiagnostics:
@@ -451,3 +462,5 @@ class AdvancedElectricalDiagnostics:
             return float(area)
         return 0.1
 
+=======
+>>>>>>> b5a207cdbbbcb9a64bd2e230beb9283139dc051a

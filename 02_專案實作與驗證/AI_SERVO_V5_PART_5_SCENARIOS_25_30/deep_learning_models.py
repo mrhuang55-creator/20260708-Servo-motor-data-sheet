@@ -2,12 +2,23 @@
 import numpy as np
 
 def sigmoid(x):
+<<<<<<< HEAD
     return 1.0 / (1.0 + np.exp(-np.clip(x, -500, 500)))
 
 def softmax(x):
     # Stabilized softmax
     e_x = np.exp(x - np.max(x, axis=-1, keepdims=True))
     return e_x / (np.sum(e_x, axis=-1, keepdims=True) + 1e-8)
+=======
+    # 數值穩定性防護：clip 防止 exp 溢位 (Numerical Stability Guard)
+    return 1.0 / (1.0 + np.exp(-np.clip(x, -500, 500)))
+
+def softmax(x):
+    # 穩定版 Softmax：使用 LogSumExp 技巧 (Stabilized via LogSumExp)
+    x_shifted = x - np.max(x, axis=-1, keepdims=True)
+    e_x = np.exp(np.clip(x_shifted, -500, 500))
+    return e_x / (np.sum(e_x, axis=-1, keepdims=True) + 1e-12)
+>>>>>>> b5a207cdbbbcb9a64bd2e230beb9283139dc051a
 
 class NumPyMLP:
     """
@@ -93,6 +104,25 @@ class NumPyMLP:
             
         return loss_history
 
+<<<<<<< HEAD
+=======
+    def save_weights(self, filepath):
+        """序列化儲存模型權重 (Industrial Backup)"""
+        np.savez_compressed(filepath,
+                            W1=self.W1, b1=self.b1,
+                            W2=self.W2, b2=self.b2,
+                            W3=self.W3, b3=self.b3)
+        print(f"  [NumPyMLP] 模型權重已儲存至 {filepath}.npz")
+
+    def load_weights(self, filepath):
+        """載入已備份的模型權重 (Industrial Load)"""
+        data = np.load(filepath)
+        self.W1 = data['W1']; self.b1 = data['b1']
+        self.W2 = data['W2']; self.b2 = data['b2']
+        self.W3 = data['W3']; self.b3 = data['b3']
+        print(f"  [NumPyMLP] 模型權重已從 {filepath} 載入完成")
+
+>>>>>>> b5a207cdbbbcb9a64bd2e230beb9283139dc051a
 class NumPyLSTMCell:
     """
     NumPy 實作之 LSTM 單元 (時序特徵提取)
@@ -314,3 +344,22 @@ class AutogradMLP:
         
         return loss
 
+<<<<<<< HEAD
+=======
+    def save_weights(self, filepath):
+        """序列化儲存 AutogradMLP 模型權重"""
+        np.savez_compressed(filepath,
+                            W1=self.W1.data, b1=self.b1.data,
+                            W2=self.W2.data, b2=self.b2.data)
+        print(f"  [AutogradMLP] 模型權重已儲存至 {filepath}.npz")
+
+    def load_weights(self, filepath):
+        """載入 AutogradMLP 模型權重"""
+        data = np.load(filepath)
+        self.W1 = AutogradTensor(data['W1'])
+        self.b1 = AutogradTensor(data['b1'])
+        self.W2 = AutogradTensor(data['W2'])
+        self.b2 = AutogradTensor(data['b2'])
+        print(f"  [AutogradMLP] 模型權重已從 {filepath} 載入完成")
+
+>>>>>>> b5a207cdbbbcb9a64bd2e230beb9283139dc051a

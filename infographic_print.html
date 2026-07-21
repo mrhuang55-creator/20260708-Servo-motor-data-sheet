@@ -1,0 +1,751 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+    <meta charset="UTF-8">
+    <title>AI Servo 伺服馬達預測性維護與閉環控制專家系統報告 (A3 Expert Report)</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700&family=Noto+Sans+TC:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-color: #f8fafc;
+            --panel-bg: #ffffff;
+            --accent-blue: #2563eb;
+            --accent-green: #059669;
+            --accent-yellow: #d97706;
+            --accent-red: #dc2626;
+            --border-color: #cbd5e1;
+            --text-color: #0f172a;
+            --text-muted: #475569;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            font-family: 'Outfit', 'Noto Sans TC', sans-serif;
+            line-height: 1.5;
+            padding: 20px;
+        }
+
+        /* Container designed for A3 Landscape aspect ratio */
+        .a3-container {
+            max-width: 1600px;
+            margin: 0 auto;
+            border: 2px solid var(--border-color);
+            background-color: #ffffff;
+            padding: 30px;
+            border-radius: 16px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.05);
+        }
+
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 20px;
+            margin-bottom: 25px;
+        }
+
+        .header-title h1 {
+            font-size: 26px;
+            font-weight: 700;
+            color: #1e3a8a;
+            margin-bottom: 5px;
+        }
+
+        .header-title p {
+            color: var(--text-muted);
+            font-size: 13px;
+        }
+
+        .header-meta {
+            text-align: right;
+            font-size: 12px;
+            color: var(--text-muted);
+        }
+
+        .grid-layout {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 25px;
+            margin-bottom: 25px;
+        }
+
+        .full-width {
+            grid-column: span 2;
+        }
+
+        section {
+            background-color: var(--panel-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 20px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.02);
+        }
+
+        section h2 {
+            font-size: 18px;
+            font-weight: 600;
+            color: #0f172a;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            border-left: 4px solid var(--accent-blue);
+            padding-left: 10px;
+        }
+
+        /* 9 Stages Grid */
+        .stages-container {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 15px;
+        }
+
+        .stage-card {
+            background-color: #f8fafc;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 12px;
+            position: relative;
+        }
+
+        .stage-card .badge {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background-color: var(--accent-blue);
+            color: white;
+            font-size: 10px;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-weight: 600;
+        }
+
+        .stage-card h3 {
+            font-size: 14px;
+            color: #0f172a;
+            margin-bottom: 6px;
+        }
+
+        .stage-card p {
+            font-size: 11.5px;
+            color: var(--text-muted);
+            line-height: 1.4;
+        }
+
+        /* System Topology diagram */
+        .topology-flow {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px;
+            background: #f8fafc;
+            border-radius: 8px;
+            border: 1px solid var(--border-color);
+        }
+
+        .node {
+            background-color: #ffffff;
+            border: 1px solid var(--accent-blue);
+            border-radius: 8px;
+            padding: 10px 15px;
+            width: 15%;
+            text-align: center;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.02);
+        }
+
+        .node.sensor-layer { border-color: var(--accent-blue); }
+        .node.comm-layer { border-color: var(--accent-green); }
+        .node.ai-layer { border-color: var(--accent-yellow); }
+        .node.gate-layer { border-color: #7c3aed; }
+        .node.hmi-layer { border-color: var(--accent-red); }
+
+        .node h4 {
+            font-size: 12px;
+            color: #0f172a;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+
+        .node p {
+            font-size: 10px;
+            color: var(--text-muted);
+        }
+
+        .flow-arrow {
+            font-size: 18px;
+            color: var(--border-color);
+            font-weight: bold;
+        }
+
+        /* Diagnostic & KPI layout */
+        .split-layout {
+            display: grid;
+            grid-template-columns: 1fr 1.1fr;
+            gap: 20px;
+        }
+
+        .fields-list {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+        }
+
+        .field-item {
+            background-color: #f8fafc;
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            padding: 8px 12px;
+        }
+
+        .field-item strong {
+            display: block;
+            font-size: 11px;
+            color: var(--accent-blue);
+        }
+
+        .field-item span {
+            font-size: 10.5px;
+            color: var(--text-muted);
+        }
+
+        /* High Data Density Table */
+        .table-wrapper {
+            overflow-x: auto;
+            margin-top: 10px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 11px;
+            text-align: left;
+        }
+
+        th, td {
+            padding: 8px 10px;
+            border: 1px solid var(--border-color);
+        }
+
+        th {
+            background-color: #e2e8f0;
+            color: #0f172a;
+            font-weight: 600;
+        }
+
+        tr:nth-child(even) {
+            background-color: #f8fafc;
+        }
+
+        tr:hover {
+            background-color: #f1f5f9;
+        }
+
+        .risk-badge {
+            font-size: 9px;
+            padding: 2px 5px;
+            border-radius: 3px;
+            font-weight: bold;
+            color: white;
+            display: inline-block;
+            text-align: center;
+            width: 42px;
+        }
+
+        .risk-low { background-color: var(--accent-green); }
+        .risk-med { background-color: var(--accent-yellow); }
+        .risk-high { background-color: var(--accent-red); }
+
+        /* Performance benchmark layout */
+        .flex-layout {
+            display: flex;
+            gap: 20px;
+        }
+
+        .flex-col {
+            flex: 1;
+        }
+
+        .indicator-box {
+            background-color: #f8fafc;
+            border: 1px solid var(--border-color);
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 12px;
+        }
+
+        .indicator-box h4 {
+            font-size: 13px;
+            color: #0f172a;
+            margin-bottom: 6px;
+            font-weight: 600;
+        }
+
+        .indicator-box p {
+            font-size: 11px;
+            color: var(--text-muted);
+        }
+
+        /* Printing styling */
+        @media print {
+            body {
+                background-color: white;
+                color: black;
+                padding: 0;
+            }
+            .a3-container {
+                box-shadow: none;
+                border: none;
+                max-width: 100%;
+                background-color: white;
+                color: black;
+                padding: 10px;
+            }
+            section {
+                background-color: white;
+                border-color: #ccc;
+                color: black;
+            }
+            .stage-card, .node, tr:nth-child(even), .indicator-box, .field-item {
+                background-color: #f9f9f9 !important;
+                border-color: #ccc !important;
+                color: black !important;
+            }
+            th {
+                background-color: #ddd !important;
+                color: black !important;
+            }
+        }
+    </style>
+</head>
+<body>
+
+<div class="a3-container">
+    <header>
+        <div class="header-title">
+            <h1>AI Servo 伺服馬達預測性維護與閉環控制專家系統 (Expert Blueprint)</h1>
+            <p>工業等級馬達PHM大數據分析、控制反饋調優與安全保護鏈路現狀報告 (對齊設計白皮書格式)</p>
+        </div>
+        <div class="header-meta">
+            <p>報告版本：A3 Print-Ready v5.3</p>
+            <p>數據集規模：10,000,000 筆 Parquet 記錄</p>
+            <p>打印日期：2026-07-08 16:08</p>
+        </div>
+    </header>
+
+    <div class="grid-layout">
+        <!-- Section 1: 9 Stages (Section 4 of Whitepaper) -->
+        <section class="full-width">
+            <h2>單元 4：AI Servo 閉環改善流程 9 大階段 (Feedback Loop 9 Stages)</h2>
+            <div class="stages-container">
+                <div class="stage-card">
+                    <div class="badge">階段 1</div>
+                    <h3>資料收集 (Collection)</h3>
+                    <p>以 1000Hz 高速同步採集伺服馬達電流、轉矩指令、編碼器位置、極限開關狀態，並搭配總線通訊日誌與外置振動計數據。</p>
+                </div>
+                <div class="stage-card">
+                    <div class="badge">階段 2</div>
+                    <h3>清理對齊 (Clean & Align)</h3>
+                    <p>使用高速插值演算法將運動層 (1000Hz)、總線層 (100Hz) 與告警日誌進行時間戳對齊，剔除單點噪訊干擾與重疊值。</p>
+                </div>
+                <div class="stage-card">
+                    <div class="badge">階段 3</div>
+                    <h3>特徵工程 (Engineering)</h3>
+                    <p>導入動態雙生模型扣除加減速慣量，提取「位置殘差、速度殘差、轉矩殘差」。計算電流不平衡率與振動 FFT 諧波特徵。</p>
+                </div>
+                <div class="stage-card">
+                    <div class="badge">階段 4</div>
+                    <h3>模型診斷 (Diagnosis)</h3>
+                    <p>將輕量化 NumPy MLP 模型與硬性物理限制相結合。當封包流失率高且追隨誤差大時，強制觸發斷言，優先判定為通信故障。</p>
+                </div>
+                <div class="stage-card">
+                    <div class="badge">階段 5</div>
+                    <h3>參數建議 (Proposal)</h3>
+                    <p>針對增益剛性不匹配、機械共振、煞車失效、遺失運動間隙等情境計算參數優化方案，輸出三菱 J5 對應之 D 暫存器定址。</p>
+                </div>
+                <div class="stage-card">
+                    <div class="badge">階段 6</div>
+                    <h3>安全審核 (Safe Gate)</h3>
+                    <p>AI 不直接寫入伺服驅動器。參數建議發送至 HMI 人機界面，經由安全限制閘門 (Safe Gate) 進行剛性限幅，由工程師審核批准。</p>
+                </div>
+                <div class="stage-card">
+                    <div class="badge">階段 7</div>
+                    <h3>低速試跑 (Dry Run)</h3>
+                    <p>寫入測試參數至伺服驅動器 RAM 區，進行低速點動 JOG 試跑，動態監控電流峰值，若發生電流超限立即警告並回滾。</p>
+                </div>
+                <div class="stage-card">
+                    <div class="badge">階段 8</div>
+                    <h3>效益驗證 (Verification)</h3>
+                    <p>點動無誤後進入滿載生產，自動對比調機前後之 KPI（如 Settling Time 收斂時間、Following Error 追隨誤差、Vibration RMS）。</p>
+                </div>
+                <div class="stage-card">
+                    <div class="badge">階段 9</div>
+                    <h3>監控部署 (Commit)</h3>
+                    <p>若性能提升則 Commit 存檔至伺服 EEPROM (ROM)；若發生異常則執行安全 STO 三段減速並還原出廠備份參數。</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Section 2: Data Topology (Section 3 of Whitepaper) -->
+        <section class="full-width">
+            <h2>單元 3：通訊串接資料架構與 6 層數據流拓撲 (Data Topology & 6-Layer Stream)</h2>
+            <div class="topology-flow">
+                <div class="node sensor-layer">
+                    <h4>1. 伺服傳動層</h4>
+                    <p>驅動器回傳: Speed, Torque, Current, Temperature, Alarm</p>
+                </div>
+                <div class="flow-arrow">➔</div>
+                <div class="node comm-layer">
+                    <h4>2. 感測組件層</h4>
+                    <p>馬達/感測器: Encoder, Limit Switch, Vibration XYZ, Bearing Temp</p>
+                </div>
+                <div class="flow-arrow">➔</div>
+                <div class="node ai-layer">
+                    <h4>3. PLC/控制層</h4>
+                    <p>控制器提供: Step, Recipe, Command ID, Scan time, Interlock</p>
+                </div>
+                <div class="flow-arrow">➔</div>
+                <div class="node gate-layer">
+                    <h4>4. AI邊緣引擎</h4>
+                    <p>雙生殘差/FFT分析, MLP 推理 (0.7us), RUL 剩餘壽命預測</p>
+                </div>
+                <div class="flow-arrow">➔</div>
+                <div class="node hmi-layer">
+                    <h4>5. HMI審核層</h4>
+                    <p>工程人機確認: Approve / Reject 決策, 一鍵備份與安全 Rollback</p>
+                </div>
+                <div class="flow-arrow">➔</div>
+                <div class="node comm-layer">
+                    <h4>6. 閉環寫入區</h4>
+                    <p>透過 SLMP 客戶端寫入暫存器, 通過安全閘門, 儲存至 EEPROM</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Section 3: Diagnostic Outputs & KPIs (Section 5 of Whitepaper) -->
+        <section class="full-width">
+            <div class="split-layout">
+                <div>
+                    <h2>單元 5.1：AI 診斷引擎 12 大輸出欄位規範</h2>
+                    <div class="fields-list">
+                        <div class="field-item"><strong>1. fault_category</strong><span>故障大類 (通信/機械/電氣)</span></div>
+                        <div class="field-item"><strong>2. fault_type</strong><span>故障子類 (超溫/共振/間隙等)</span></div>
+                        <div class="field-item"><strong>3. fault_stage</strong><span>故障衰退階段 (Stage 0 ~ 3)</span></div>
+                        <div class="field-item"><strong>4. anomaly_score</strong><span>異常指標分數 (即時流式分數)</span></div>
+                        <div class="field-item"><strong>5. health_index</strong><span>馬達健康度分數 (0 ~ 100)</span></div>
+                        <div class="field-item"><strong>6. failure_probability</strong><span>停機失效機率 (0% ~ 100%)</span></div>
+                        <div class="field-item"><strong>7. RUL seconds/cycles</strong><span>剩餘壽命秒數與循環次數</span></div>
+                        <div class="field-item"><strong>8. predictive_maint_label</strong><span>預估維護標籤 (正常/預警/強停)</span></div>
+                        <div class="field-item"><strong>9. root_cause</strong><span>根因分類 (例如 S04、S26)</span></div>
+                        <div class="field-item"><strong>10. parameter proposal</strong><span>參數修改建議值與暫存器定址</span></div>
+                        <div class="field-item"><strong>11. risk level</strong><span>風險評等 (LOW/MED/HIGH)</span></div>
+                        <div class="field-item"><strong>12. validation procedure</strong><span>點動 JOG 試跑與效益評估程序</span></div>
+                    </div>
+                </div>
+                <div>
+                    <h2>單元 5.2：閉環效能提升 6 大 KPI 評估矩陣</h2>
+                    <table style="width: 100%; border-collapse: collapse; font-size: 11px;">
+                        <thead>
+                            <tr>
+                                <th>績效 KPI</th>
+                                <th>改善優化方向</th>
+                                <th>現場監控對應數據</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td><strong>Settling time</strong></td>
+                                <td>縮短定位後穩定時間</td>
+                                <td>position_error, vibration_rms</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Following error</strong></td>
+                                <td>降低位置指令與反饋誤差</td>
+                                <td>position_error_pulse</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Cycle time</strong></td>
+                                <td>縮短單次機械手動作運動週期</td>
+                                <td>plc_step_no, motion_complete</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Current margin</strong></td>
+                                <td>降低馬達瞬時與過電流風險</td>
+                                <td>current_rms_a, current_limit_pct</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Thermal margin</strong></td>
+                                <td>降低伺服馬達/驅動器溫升</td>
+                                <td>motor_temp_c, drive_temp_c</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Vibration margin</strong></td>
+                                <td>降低高頻共振與軸承損壞風險</td>
+                                <td>FFT, BPFO, BPFI, BSF, FTF</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+        <!-- Section 4: High Density Table S01-S30 -->
+        <section class="full-width">
+            <h2>三菱 MR-J5 故障診斷與優化參數對照矩陣 (Scenario 01 - 30)</h2>
+            <div class="table-wrapper">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>場景 ID</th>
+                            <th>故障/狀態情境名稱</th>
+                            <th>核心關聯特徵</th>
+                            <th>診斷規則 / 觸發條件</th>
+                            <th>三菱 MR-J5 推薦優化參數及暫存器</th>
+                            <th>風險</th>
+                            <th>優化目標 KPI</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>S01</td>
+                            <td>正常運轉基線 (Healthy)</td>
+                            <td>health_index, 3σ values</td>
+                            <td>健康度均值 H_w > 80，特徵在 3σ 正常範圍內</td>
+                            <td>無需調整，維持當前運行參數</td>
+                            <td><span class="risk-badge risk-low">LOW</span></td>
+                            <td>維持生產線穩定，健康指標 > 80</td>
+                        </tr>
+                        <tr>
+                            <td>S02</td>
+                            <td>馬達超溫 (Motor Over-Temp)</td>
+                            <td>motor_temp_c, current_rms_a</td>
+                            <td>繞組溫度 T_motor > 90°C，非通訊干擾</td>
+                            <td>限制正反轉矩上限 D1011 (PA11)/D1052 (PA12) 降 10%</td>
+                            <td><span class="risk-badge risk-med">MED</span></td>
+                            <td>降低馬達溫升斜率與電流負荷</td>
+                        </tr>
+                        <tr>
+                            <td>S03</td>
+                            <td>驅動器超溫 (Drive Over-Temp)</td>
+                            <td>drive_temp_c, current_rms_a</td>
+                            <td>驅動模組或散熱片溫度 T_drive > 85°C</td>
+                            <td>增加加減速時間常數 D1064 (PC24) 增加 20%</td>
+                            <td><span class="risk-badge risk-med">MED</span></td>
+                            <td>降低驅動器最高溫度與峰值電流</td>
+                        </tr>
+                        <tr>
+                            <td>S04</td>
+                            <td>編碼器漂移 (Encoder Drift)</td>
+                            <td>pos_residual, drift_pulse</td>
+                            <td>反饋位置與雙生模型出現長時累積偏差 > 100 pulse</td>
+                            <td>寫入遺失運動補償 D1007 (PE07) 補償穩態偏差的 80%</td>
+                            <td><span class="risk-badge risk-med">MED</span></td>
+                            <td>提升重複定位精度，補償反向間隙</td>
+                        </tr>
+                        <tr>
+                            <td>S05</td>
+                            <td>編碼器雜訊 (Encoder Noise)</td>
+                            <td>following_error, error_count</td>
+                            <td>編碼器錯誤計數 > 50 且追隨誤差高頻抖動</td>
+                            <td>增加電流指令濾波時間 D1038 (PB18) 增加 10%</td>
+                            <td><span class="risk-badge risk-med">MED</span></td>
+                            <td>過濾編碼器高頻雜訊，穩定速度環</td>
+                        </tr>
+                        <tr>
+                            <td>S06</td>
+                            <td>編碼器訊號遺失 (Signal Loss)</td>
+                            <td>error_count, health_index</td>
+                            <td>編碼器通訊中斷，單秒錯誤累計 > 1000</td>
+                            <td>寫入強停時間 D1064 (PC24)，增加電磁煞車動作延遲</td>
+                            <td><span class="risk-badge risk-high">HIGH</span></td>
+                            <td>實施安全強停與煞車鎖死，防止下滑</td>
+                        </tr>
+                        <tr>
+                            <td>S07</td>
+                            <td>聯軸器對中不良 (Coupling)</td>
+                            <td>vibration_rms_g, fft_1x_amp</td>
+                            <td>振動 RMS > 0.25G 且 1X 倍頻振幅 > 0.8</td>
+                            <td>降低速度環增益 D1028 (PB08) 降 10% 以防共振</td>
+                            <td><span class="risk-badge risk-med">MED</span></td>
+                            <td>降低 1X 振動振幅與機械晃動</td>
+                        </tr>
+                        <tr>
+                            <td>S08</td>
+                            <td>皮帶張力鬆動 (Belt Slack)</td>
+                            <td>following_error, vibration_rms</td>
+                            <td>追隨誤差 > 105 pulse 且振動 > 0.20G</td>
+                            <td>降低位置環增益 D1027 (PB07) 降 10%</td>
+                            <td><span class="risk-badge risk-med">MED</span></td>
+                            <td>消除皮帶鬆弛抖動，穩定追隨誤差</td>
+                        </tr>
+                        <tr>
+                            <td>S09</td>
+                            <td>減速機背隙 (Backlash)</td>
+                            <td>drift_pulse, pos_residual</td>
+                            <td>反向殘差 > 100 pulse 且漂移值 > 70 pulse</td>
+                            <td>寫入遺失運動補償 D1007 (PE07) 補償 Steady-State 偏差</td>
+                            <td><span class="risk-badge risk-med">MED</span></td>
+                            <td>補償齒輪嚙合空隙，提高傳動精準度</td>
+                        </tr>
+                        <tr>
+                            <td>S10</td>
+                            <td>絲槓磨損 (Ball Screw Wear)</td>
+                            <td>torque_error_nm, current_rms_a</td>
+                            <td>轉矩殘差 > 0.7Nm 且運行電流 > 6A (摩擦阻力大)</td>
+                            <td>增加摩擦力補償 D1002 (PE02) 加強軸承與導軌驅動力</td>
+                            <td><span class="risk-badge risk-med">MED</span></td>
+                            <td>補償摩擦阻力，降低轉矩漣波</td>
+                        </tr>
+                        <tr>
+                            <td>S11</td>
+                            <td>馬達輸出缺相 (Phase Loss)</td>
+                            <td>current_unbalance_pct, temp</td>
+                            <td>電流不平衡率 > 3.0%，伴隨馬達溫度異常升高</td>
+                            <td>限制最大輸出轉矩 D1011 (PA11) 限制至 50%</td>
+                            <td><span class="risk-badge risk-high">HIGH</span></td>
+                            <td>降低非對稱相電流，避免繞組燒毀</td>
+                        </tr>
+                        <tr>
+                            <td>S12</td>
+                            <td>母線過電壓 (Bus Overvoltage)</td>
+                            <td>drive_temp_c, torque_error_nm</td>
+                            <td>減速程序中轉矩殘差呈負大值，且驅動器溫度 > 60°C</td>
+                            <td>增加減速時間常數 D1064 (PC24) 增加 20%</td>
+                            <td><span class="risk-badge risk-med">MED</span></td>
+                            <td>降低再生能量回衝，防止母線過壓過載</td>
+                        </tr>
+                        <tr>
+                            <td>S13</td>
+                            <td>母線欠壓 (Bus Undervoltage)</td>
+                            <td>following_error, current_rms_a</td>
+                            <td>加速程序中追隨誤差 > 80 pulse 且電流低於 3A</td>
+                            <td>增加加速時間常數 D1064 (PC24) 增加 20%</td>
+                            <td><span class="risk-badge risk-med">MED</span></td>
+                            <td>減緩啟動電流爬升斜率，避免瞬間電壓降</td>
+                        </tr>
+                        <tr>
+                            <td>S14</td>
+                            <td>機械過載卡阻 (Overload Jam)</td>
+                            <td>torque_error, following_error</td>
+                            <td>轉矩殘差 > 1.2Nm 且追隨誤差 > 150 pulse (堵轉趨勢)</td>
+                            <td>限制轉矩上限 D1011 (PA11) 降 20%，執行安全 STO</td>
+                            <td><span class="risk-badge risk-high">HIGH</span></td>
+                            <td>防止電機堵轉過載燒毀，保障傳動機構</td>
+                        </tr>
+                        <tr>
+                            <td>S15</td>
+                            <td>冷卻風扇故障 (Fan Failure)</td>
+                            <td>drive_temp_c, current_rms_a</td>
+                            <td>驅動器溫度 > 88°C 且運行電流小於 5A (散熱失效)</td>
+                            <td>觸發報警，建議更換風扇，暫時增加 PC24 減緩負載率</td>
+                            <td><span class="risk-badge risk-med">MED</span></td>
+                            <td>降低驅動模組溫升，防止熱擊穿</td>
+                        </tr>
+                        <tr>
+                            <td>S16 - S22</td>
+                            <td>結構磨損/環境干擾情境</td>
+                            <td>vibration, encoder_err, bearing</td>
+                            <td>依據軸承 BPFO/BPFI 及接地雜訊閾值進行物理判定</td>
+                            <td>調整對應的 PE02、PC16、PB18 與 D1038 參數進行補償</td>
+                            <td><span class="risk-badge risk-med">MED</span></td>
+                            <td>優化機械剛性，降低高頻雜訊</td>
+                        </tr>
+                        <tr>
+                            <td>S23 - S24</td>
+                            <td>通訊失控與同步超時</td>
+                            <td>packet_loss, sync_error</td>
+                            <td>封包流失 > 2% 且位置誤差大，或同步誤差 > 30us</td>
+                            <td>觸發 E-Stop 程序，一鍵安全 STO 三段減速並回滾參數</td>
+                            <td><span class="risk-badge risk-high">HIGH</span></td>
+                            <td>防止多軸同步脫節，避免機構撞機</td>
+                        </tr>
+                        <tr>
+                            <td>S25 - S26</td>
+                            <td>增益不穩與機械共振</td>
+                            <td>vibration, resonance_amp, PB12</td>
+                            <td>100Hz 以上高頻諧波突出，或特定窄頻共振幅值超標</td>
+                            <td>寫入共振 Notch 頻率 D1018 (PA18) 與濾波特徵 D1012 (PB12)</td>
+                            <td><span class="risk-badge risk-med">MED</span></td>
+                            <td>消除特定窄頻共振峰，降低 Vibration RMS</td>
+                        </tr>
+                        <tr>
+                            <td>S27 - S30</td>
+                            <td>煞車失效與漸進式衰退</td>
+                            <td>vibration, bearing, health_idx</td>
+                            <td>煞車狀態下 Z 軸位移增加，或軸承特徵時序性惡化</td>
+                            <td>增加電磁煞車動作延遲 D1056 (PC16) 20% 與軸承預維護預警</td>
+                            <td><span class="risk-badge risk-high">HIGH</span></td>
+                            <td>垂直 Z 軸重力防滑落，實現零意外停機</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <!-- Section 5: Performance Benchmark & Safety Gate (Unit 14 & 15) -->
+        <section class="flex-col">
+            <h2>單元 14：邊緣端三模態算法效能評測 (Benchmark)</h2>
+            <div class="flex-layout">
+                <div class="flex-col">
+                    <div class="indicator-box">
+                        <h4>1. 傳統 DSP 規則法</h4>
+                        <p><strong>診斷準確度 (F1)</strong>: 65.51 %</p>
+                        <p><strong>推理延遲 (Latency)</strong>: 0.0002 ms (0.2 us)</p>
+                        <p><strong>記憶體佔用 (RAM)</strong>: &lt; 0.01 MB</p>
+                        <p><strong>控制週期適配性</strong>: 極高 (適合實時閉環)</p>
+                    </div>
+                </div>
+                <div class="flex-col">
+                    <div class="indicator-box">
+                        <h4>2. 機器學習 (Random Forest)</h4>
+                        <p><strong>診斷準確度 (F1)</strong>: 31.21 % (30分類)</p>
+                        <p><strong>推理延遲 (Latency)</strong>: 0.0105 ms (10.5 us)</p>
+                        <p><strong>記憶體佔用 (RAM)</strong>: 3.87 MB</p>
+                        <p><strong>控制週期適配性</strong>: 偏低 (易引發總線抖動)</p>
+                    </div>
+                </div>
+                <div class="flex-col">
+                    <div class="indicator-box">
+                        <h4>3. 深度學習 (NumPy MLP)</h4>
+                        <p><strong>診斷準確度 (F1)</strong>: 82.41 % (30分類)</p>
+                        <p><strong>推理延遲 (Latency)</strong>: 0.0007 ms (0.7 us)</p>
+                        <p><strong>記憶體佔用 (RAM)</strong>: 0.12 MB</p>
+                        <p><strong>控制週期適配性</strong>: 極高 (微秒級，適合閉環)</p>
+                    </div>
+                </div>
+            </div>
+            <div class="indicator-box" style="margin-top: 10px; border-color: var(--accent-blue);">
+                <h4>💡 部署決策與安全防護防假警報：</h4>
+                <p>雖然隨機森林於大類預測可達 95.8%，但在精準故障定位（30分類）下精度低且記憶體大。推薦選用「深度學習 NumPy MLP」做為微秒級實時閉環調機核心（0.7 us），配合「get_root_cause_physics」物理斷言，達成 100% 關鍵故障召回率。此外，當網路丟包大且誤差大時強制判定通信異常，屏蔽卡阻警告，防止增益誤寫入損壞機器。</p>
+            </div>
+        </section>
+
+        <section class="flex-col">
+            <h2>單元 15：CC-Link TSN 閉環寫入與安全防護 (Safety Gate)</h2>
+            <div class="indicator-box">
+                <h4>八步驟閉環調試控制流程 (8-Step Tuning Sequence)</h4>
+                <p><strong>1. 參數備份 (Backup)</strong>: 讀取當前 D 暫存器參數並於 PC 端進行出廠原始狀態備份。</p>
+                <p><strong>2. 參數寫入 (Write Trial)</strong>: 透過 SLMP 將 AI 建議的調機參數寫入伺服 RAM 暫存器。</p>
+                <p><strong>3. 點動試跑 (JOG Trial)</strong>: 控制 PLC 使馬達在低速、低負載（JOG 點動）狀態下試運行。</p>
+                <p><strong>4. 安全閘門判定 (Safety Gate)</strong>: 實時讀回電流，若 max_current > 15A 則判定違規。</p>
+                <p><strong>5. 效益評估 (Tuning Verification)</strong>: 馬達運行，若 Settling Time 縮短或震動 KPI 改善 >= 10% 則通過。</p>
+                <p><strong>6. 安全減速強停 (Safe STO Decel)</strong>: 若違規，PLC 執行三段減速：1200rpm -> 600rpm -> 0rpm。</p>
+                <p><strong>7. Commit 存檔 (Save to ROM)</strong>: 效益達標且工程師確認後，將參數永久儲存至伺服 EEPROM (ROM)。</p>
+                <p><strong>8. 回滾還原 (Rollback)</strong>: 若試跑失敗或工程師拒絕，安全減速馬達靜止後，一鍵還原出廠備份參數。</p>
+            </div>
+            <div class="indicator-box" style="border-color: var(--accent-green);">
+                <h4>🔒 電流防抖與強停安全技術：</h4>
+                <p><strong>電流防抖過濾器 (Anti-Chatter Filter)</strong>：採用滑動均值窗（SMA）過濾單點雜訊突波，防誤觸回滾率達 0%。</p>
+                <p><strong>安全減速停機 (Safe Deceleration)</strong>：Rollback 時嚴禁在馬達高速運轉下切換參數，必須先強停減速至 0rpm 並確認 STO 狀態後再寫入，以防止剪切力對軸承導軌的衝擊破壞。</p>
+            </div>
+        </section>
+    </div>
+</div>
+
+</body>
+</html>
