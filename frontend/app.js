@@ -9,6 +9,9 @@ let currentScenarioId = 1;
 let currentDiagnosisData = null;
 let telemetryChart = null;
 
+// 使用者驗證全域狀態 (Auth State)
+let currentUser = JSON.parse(localStorage.getItem("phm_current_user") || "null");
+
 const MAX_CHART_POINTS = 30;
 const chartData = {
     labels: [],
@@ -26,6 +29,10 @@ document.addEventListener("DOMContentLoaded", () => {
     initBenchmarkButtons();
     initModalEvents();
     initIsoReportButton();
+    initHardwareButtons();
+    initAuthUI();
+    initRegisterModalEvents();
+
 
     // 初次載入即時診斷與影子模式數據
     fetchDiagnoseData(currentScenarioId);
@@ -40,6 +47,7 @@ document.addEventListener("DOMContentLoaded", () => {
     // 開啟 WebSocket 即時 Telemetry 串流
     initWebSocket();
 });
+
 
 function initClock() {
     const clockEl = document.getElementById("clock-display");
@@ -115,6 +123,87 @@ function initIsoReportButton() {
     });
 }
 
+function updateConnectionStatusUI(mode, statusText) {
+    const statusEl = document.getElementById("connection-status");
+    const indicatorEl = document.querySelector(".status-indicator");
+    const dotEl = document.querySelector(".status-indicator .dot");
+
+    if (mode === "online" || mode === true) {
+        if (statusEl) statusEl.textContent = statusText || "TSN ONLINE (波形串流中)";
+        if (dotEl) {
+            dotEl.className = "dot pulse-green";
+            dotEl.style.backgroundColor = "";
+            dotEl.style.boxShadow = "";
+        }
+        if (indicatorEl) indicatorEl.style.color = "var(--green-normal)";
+    } else if (mode === "error") {
+        if (statusEl) statusEl.textContent = statusText || "連線失敗 (Server 無回應)";
+        if (dotEl) {
+            dotEl.className = "dot";
+            dotEl.style.backgroundColor = "var(--red-trip)";
+            dotEl.style.boxShadow = "0 0 10px var(--red-trip)";
+        }
+        if (indicatorEl) indicatorEl.style.color = "var(--red-trip)";
+    } else {
+        // offline / disconnected / 未連結馬達 (離線模擬)
+        if (statusEl) statusEl.textContent = statusText || "未連結馬達 (離線模擬)";
+        if (dotEl) {
+            dotEl.className = "dot pulse-yellow";
+            dotEl.style.backgroundColor = "";
+            dotEl.style.boxShadow = "";
+        }
+        if (indicatorEl) indicatorEl.style.color = "var(--yellow-warning)";
+    }
+}
+
+
+function initHardwareButtons() {
+    const btnConnect = document.getElementById("btn-hardware-connect");
+    const btnDisconnect = document.getElementById("btn-hardware-disconnect");
+
+    btnConnect?.addEventListener("click", async () => {
+        try {
+            const res = await fetch(`${API_BASE_URL}/api/v1/hardware/connect`, { method: "POST" });
+            const data = await res.json();
+            if (res.ok) {
+                updateConnectionStatusUI("online", `TSN ONLINE (${data.latency_ms}ms)`);
+                alert(`✅ ${data.message}\n` +
+                      `🔌 驅動器站號: ${data.station_id}\n` +
+                      `⚡ 通訊埠協定: SLMP MC Protocol 3E\n` +
+                      `📊 感測器實時波形已開啟串流！`);
+            } else {
+                updateConnectionStatusUI("error", "硬體連線異常");
+                alert("❌ 硬體連線失敗。");
+            }
+        } catch (e) {
+            // 後端未連通，嚴格維持黃燈離線警告並提示使用者
+            updateConnectionStatusUI("error", "連線失敗 (請啟動 server.py)");
+            alert("⚠️ [連線失敗] 無法連線至後端伺服器！\n請先於終端機執行 python server.py 以開啟機器通訊網關與波形推播。");
+        }
+    });
+
+
+    btnDisconnect?.addEventListener("click", async () => {
+        try {
+            const res = await fetch(`${API_BASE_URL}/api/v1/hardware/disconnect`, { method: "POST" });
+            const data = await res.json();
+            if (res.ok) {
+                updateConnectionStatusUI("offline", "未連結馬達 (離線模擬)");
+                alert("⚠️ 未連結馬達 (離線模擬模式已啟用，感測波形已暫停)！");
+            }
+        } catch (e) {
+            updateConnectionStatusUI("offline", "未連結馬達 (離線模擬)");
+            alert("⚠️ 未連結馬達 (離線模擬模式已啟用)！");
+        }
+    });
+}
+
+
+
+
+
+
+
 // ------------------------------------------------------------------------
 // 3. REST API 資料對接與 UI 渲染
 // ------------------------------------------------------------------------
@@ -158,7 +247,8 @@ function renderDiagnosisUI(data) {
         34: "Scenario 34: Rotor Demagnetization (轉子高溫退磁)"
     };
     const sId = disp.current_scenario || currentScenarioId;
-    document.getElementById("scenario-title").textContent = scenarioNames[sId] || `Scenario ${sId:02d}: 工業故障診斷`;
+    document.getElementById("scenario-title").textContent = scenarioNames[sId] || `Scenario ${String(sId).padStart(2, '0')}: 工業故障診斷`;
+
     
     const rulSec = disp.rul_sec || 999999;
     document.getElementById("rul-val").textContent = rulSec > 100000 ? "999,999 秒 (運作良好)" : `${rulSec} 秒 (~${(rulSec/3600).toFixed(1)} 小時)`;
@@ -227,7 +317,150 @@ function getRiskClass(risk) {
 }
 
 // ------------------------------------------------------------------------
-// 4. 調參 Modal 彈窗與實態暫態響應事件
+// 4. 使用者驗證與權限控制 UI 邏輯 (Auth UI & Logic)
+// ------------------------------------------------------------------------
+
+function initAuthUI() {
+    const authArea = document.getElementById("user-auth-area");
+    if (!authArea) return;
+
+    if (currentUser) {
+        authArea.innerHTML = `
+            <div class="auth-user-info">
+                <i class="fa-solid fa-user-shield text-cyan"></i>
+                <span class="user-name-text">操作員: <strong>${currentUser.operator_id || currentUser.username}</strong></span>
+                <span class="user-role-badge">${currentUser.role || "Operator"}</span>
+                <button class="btn-auth-logout" id="btn-auth-logout" title="登出帳號">
+                    <i class="fa-solid fa-right-from-bracket"></i>
+                </button>
+            </div>
+        `;
+
+        document.getElementById("btn-auth-logout")?.addEventListener("click", () => {
+            currentUser = null;
+            localStorage.removeItem("phm_current_user");
+            initAuthUI();
+        });
+    } else {
+        authArea.innerHTML = `
+            <div class="auth-form-inline">
+                <div class="input-group-inline">
+                    <i class="fa-solid fa-user"></i>
+                    <input type="text" id="auth-input-user" placeholder="帳號" />
+                </div>
+                <div class="input-group-inline">
+                    <i class="fa-solid fa-lock"></i>
+                    <input type="password" id="auth-input-pass" placeholder="密碼" />
+                </div>
+                <button class="btn-auth-submit" id="btn-auth-login">登入</button>
+                <button class="btn-auth-secondary" id="btn-auth-reg-trigger">註冊</button>
+            </div>
+        `;
+
+        document.getElementById("btn-auth-login")?.addEventListener("click", handleLogin);
+        document.getElementById("btn-auth-reg-trigger")?.addEventListener("click", () => {
+            document.getElementById("register-modal")?.classList.add("active");
+        });
+
+        // 支援 Enter 鍵登入
+        document.getElementById("auth-input-pass")?.addEventListener("keypress", (e) => {
+            if (e.key === "Enter") handleLogin();
+        });
+    }
+}
+
+async function handleLogin() {
+    const usernameInput = document.getElementById("auth-input-user")?.value.trim();
+    const passwordInput = document.getElementById("auth-input-pass")?.value;
+
+    if (!usernameInput || !passwordInput) {
+        alert("⚠️ 請輸入帳號與密碼！");
+        return;
+    }
+
+    try {
+        const res = await fetch(`${API_BASE_URL}/api/v1/auth/login`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ username: usernameInput, password: passwordInput })
+        });
+
+        const data = await res.json();
+        if (!res.ok) {
+            alert(`❌ 登入失敗: ${data.detail || "帳號或密碼錯誤"}`);
+            return;
+        }
+
+        currentUser = {
+            username: data.username,
+            role: data.role,
+            operator_id: data.operator_id,
+            token: data.token
+        };
+        localStorage.setItem("phm_current_user", JSON.stringify(currentUser));
+        initAuthUI();
+        alert(`✅ 登入成功！歡迎回來 ${currentUser.operator_id} (${currentUser.role})`);
+    } catch (err) {
+        alert("❌ 無法連線至驗證伺服器。");
+    }
+}
+
+function initRegisterModalEvents() {
+    const regModal = document.getElementById("register-modal");
+    const btnClose = document.getElementById("btn-close-reg-modal");
+    const btnCancel = document.getElementById("btn-reg-cancel");
+    const btnSubmit = document.getElementById("btn-reg-submit");
+
+    const closeRegModal = () => regModal?.classList.remove("active");
+
+    btnClose?.addEventListener("click", closeRegModal);
+    btnCancel?.addEventListener("click", closeRegModal);
+
+    btnSubmit?.addEventListener("click", async () => {
+        const username = document.getElementById("reg-username")?.value.trim();
+        const password = document.getElementById("reg-password")?.value;
+        const role = document.getElementById("reg-role")?.value;
+        const operatorId = document.getElementById("reg-operator-id")?.value.trim();
+
+        if (!username || !password) {
+            alert("⚠️ 帳號與密碼為必填欄位！");
+            return;
+        }
+
+        try {
+            const res = await fetch(`${API_BASE_URL}/api/v1/auth/register`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    username,
+                    password,
+                    role,
+                    operator_id: operatorId
+                })
+            });
+
+            const data = await res.json();
+            if (!res.ok) {
+                alert(`❌ 註冊失敗: ${data.detail || "無法建立使用者"}`);
+                return;
+            }
+
+            alert(`✅ ${data.message}！您現在可以使用此帳號登入。`);
+            closeRegModal();
+
+            // 自動填入登入欄位
+            const userIn = document.getElementById("auth-input-user");
+            const passIn = document.getElementById("auth-input-pass");
+            if (userIn) userIn.value = username;
+            if (passIn) passIn.value = password;
+        } catch (err) {
+            alert("❌ 註冊失敗，連線異常。");
+        }
+    });
+}
+
+// ------------------------------------------------------------------------
+// 5. 調參 Modal 彈窗與實態暫態響應事件 (對接操作員驗證)
 // ------------------------------------------------------------------------
 
 function initModalEvents() {
@@ -238,6 +471,11 @@ function initModalEvents() {
     const btnConfirm = document.getElementById("btn-modal-confirm");
 
     applyBtn.addEventListener("click", () => {
+        if (!currentUser) {
+            alert("⚠️ 工業安全防護限制：\n請先於右上方登入授權操作員帳號，才能將 AI 推薦參數寫入三菱驅動器 EEPROM/RAM！");
+            return;
+        }
+
         if (!currentDiagnosisData) return;
         const action = currentDiagnosisData["建議調整參數_後端執行"] || {};
         const recParams = action.recommended_parameters || [];
@@ -245,7 +483,8 @@ function initModalEvents() {
         if (recParams.length === 0) return;
 
         const summaryEl = document.getElementById("modal-params-summary");
-        let html = `<strong>當前診斷根因：</strong> ${action.root_cause || "異常"}<br>`;
+        let html = `<strong>當前操作員 ID：</strong> ${currentUser.operator_id} (${currentUser.role})<br>`;
+        html += `<strong>當前診斷根因：</strong> ${action.root_cause || "異常"}<br>`;
         html += `<strong>推薦寫入暫存器：</strong> ${recParams.join(", ")}<br>`;
         html += `<strong>處置方針：</strong> ${action.action || ""}`;
         summaryEl.innerHTML = html;
@@ -276,7 +515,11 @@ function initModalEvents() {
             const res = await fetch(`${API_BASE_URL}/api/v1/apply_parameters`, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ scenario_id: sId, parameters: paramMap })
+                body: JSON.stringify({
+                    scenario_id: sId,
+                    parameters: paramMap,
+                    operator_id: currentUser ? currentUser.operator_id : "Engineer_01"
+                })
             });
 
             const resData = await res.json();
@@ -284,6 +527,7 @@ function initModalEvents() {
             
             const trans = resData.physical_transient_response || {};
             alert(`✅ ${resData.message}\n` +
+                  `👤 操作員: ${resData.operator_id}\n` +
                   `📊 實體步階響應：整定時間 ${trans.settling_time_sec}s，超調量 ${trans.overshoot_pct}%\n` +
                   `🔒 安全檢定：相位裕度 ${trans.phase_margin_deg}° (${trans.safety_margin_status})\n` +
                   `📜 ISO 55000 稽核 ID: ${resData.iso_audit_trail_id}`);
@@ -297,6 +541,7 @@ function initModalEvents() {
         }
     });
 }
+
 
 // ------------------------------------------------------------------------
 // 5. WebSocket 實時 Telemetry 繪圖 (Chart.js)
@@ -370,10 +615,19 @@ function initWebSocket() {
             const data = JSON.parse(event.data);
             const timeStr = new Date(data.timestamp * 1000).toLocaleTimeString();
 
+            if (data.hardware_connected === false) {
+                updateConnectionStatusUI("offline", "未連結馬達 (離線模擬)");
+            } else {
+                updateConnectionStatusUI("online", "TSN ONLINE (波形串流中)");
+            }
+
+
+
+
             chartData.labels.push(timeStr);
-            chartData.currentRms.push(data.current_rms_a);
-            chartData.followingError.push(data.following_error_abs_pulse);
-            chartData.motorTemp.push(data.motor_temp_c);
+            chartData.currentRms.push(data.hardware_connected === false ? 0 : data.current_rms_a);
+            chartData.followingError.push(data.hardware_connected === false ? 0 : data.following_error_abs_pulse);
+            chartData.motorTemp.push(data.hardware_connected === false ? 0 : data.motor_temp_c);
 
             if (chartData.labels.length > MAX_CHART_POINTS) {
                 chartData.labels.shift();
@@ -387,6 +641,7 @@ function initWebSocket() {
             console.error("WS 解析失敗:", e);
         }
     };
+
 
     ws.onclose = () => {
         setTimeout(initWebSocket, 2000);

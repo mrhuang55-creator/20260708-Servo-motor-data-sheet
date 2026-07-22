@@ -122,6 +122,13 @@ body {
     animation: pulse 1.5s infinite;
 }
 
+.pulse-yellow {
+    background-color: var(--yellow-warning);
+    box-shadow: 0 0 10px var(--yellow-warning);
+    animation: pulse 1.5s infinite;
+}
+
+
 @keyframes pulse {
     0% { transform: scale(0.95); opacity: 0.8; }
     50% { transform: scale(1.15); opacity: 1; }
@@ -550,3 +557,209 @@ body {
     color: #000; font-weight: 700;
     border: none; padding: 10px 18px; border-radius: 6px; cursor: pointer;
 }
+
+/* ------------------------------------------------------------------------
+   使用者帳號與權限驗證區樣式 (User Auth & Form Controls)
+   ------------------------------------------------------------------------ */
+
+.user-auth-area {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.auth-form-inline {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: rgba(0, 0, 0, 0.3);
+    border: 1px solid var(--card-border);
+    padding: 6px 12px;
+    border-radius: 8px;
+}
+
+.input-group-inline {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    padding: 4px 8px;
+    border-radius: 6px;
+}
+
+.input-group-inline i {
+    font-size: 12px;
+    color: var(--cyan-accent);
+}
+
+.input-group-inline input {
+    background: transparent;
+    border: none;
+    outline: none;
+    color: var(--text-main);
+    font-size: 12px;
+    width: 100px;
+}
+
+.input-group-inline input::placeholder {
+    color: var(--text-muted);
+}
+
+.btn-auth-submit {
+    background: var(--cyan-accent);
+    color: #000;
+    font-weight: 700;
+    border: none;
+    padding: 6px 12px;
+    border-radius: 6px;
+    font-size: 12px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.btn-auth-submit:hover {
+    box-shadow: 0 0 8px rgba(0, 229, 255, 0.6);
+}
+
+.btn-auth-secondary {
+    background: rgba(255, 255, 255, 0.08);
+    color: var(--text-main);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    padding: 6px 12px;
+    border-radius: 6px;
+    font-size: 12px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.btn-auth-secondary:hover {
+    background: rgba(255, 255, 255, 0.18);
+}
+
+.auth-user-info {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    background: rgba(0, 229, 255, 0.08);
+    border: 1px solid rgba(0, 229, 255, 0.25);
+    padding: 6px 14px;
+    border-radius: 8px;
+}
+
+.user-name-text {
+    font-size: 13px;
+    color: var(--text-main);
+}
+
+.user-role-badge {
+    background: rgba(0, 255, 157, 0.2);
+    color: var(--green-normal);
+    border: 1px solid var(--green-normal);
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-size: 11px;
+    font-weight: 700;
+}
+
+.btn-auth-logout {
+    background: rgba(255, 59, 48, 0.2);
+    color: var(--red-trip);
+    border: 1px solid var(--red-trip);
+    padding: 4px 8px;
+    border-radius: 6px;
+    font-size: 12px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.btn-auth-logout:hover {
+    background: var(--red-trip);
+    color: #fff;
+}
+
+.form-group {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.form-label {
+    font-size: 12px;
+    color: var(--text-muted);
+    font-weight: 600;
+}
+
+.form-control {
+    background: rgba(0, 0, 0, 0.4);
+    border: 1px solid var(--card-border);
+    color: var(--text-main);
+    padding: 8px 12px;
+    border-radius: 6px;
+    font-size: 13px;
+    outline: none;
+}
+
+.form-control:focus {
+    border-color: var(--cyan-accent);
+    box-shadow: 0 0 8px rgba(0, 229, 255, 0.3);
+}
+
+select.form-control {
+    cursor: pointer;
+}
+
+select.form-control option {
+    background: #131927;
+    color: var(--text-main);
+}
+
+.benchmark-right {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.btn-hardware-conn {
+    background: rgba(0, 229, 255, 0.15);
+    color: var(--cyan-accent);
+    border: 1px solid var(--cyan-accent);
+    padding: 8px 14px;
+    border-radius: 8px;
+    font-size: 13px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.btn-hardware-conn:hover {
+    background: var(--cyan-accent);
+    color: #000;
+    box-shadow: 0 0 12px rgba(0, 229, 255, 0.4);
+}
+
+.btn-hardware-disconn {
+    background: rgba(255, 59, 48, 0.15);
+    color: var(--red-trip);
+    border: 1px solid var(--red-trip);
+    padding: 8px 14px;
+    border-radius: 8px;
+    font-size: 13px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.btn-hardware-disconn:hover {
+    background: var(--red-trip);
+    color: #fff;
+    box-shadow: 0 0 12px rgba(255, 59, 48, 0.4);
+}
+
+

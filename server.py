@@ -9,6 +9,9 @@ import random
 import time
 import math
 import asyncio
+import sqlite3
+import secrets
+import hashlib
 from typing import Dict, List, Optional, Any
 from fastapi import FastAPI, WebSocket, WebSocketDisconnect, Query, HTTPException, Response
 from fastapi.middleware.cors import CORSMiddleware
@@ -51,6 +54,55 @@ def load_test_scenarios():
 
 load_test_scenarios()
 
+# ------------------------------------------------------------------------
+# 使用者資料庫與權限管理 (SQLite User Database)
+# ------------------------------------------------------------------------
+DB_PATH = os.path.join(BASE_DIR, "users.db")
+
+def init_user_db():
+    conn = sqlite3.connect(DB_PATH)
+    cursor = conn.cursor()
+    cursor.execute("""
+        CREATE TABLE IF NOT EXISTS users (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            username TEXT UNIQUE NOT NULL,
+            password_hash TEXT NOT NULL,
+            salt TEXT NOT NULL,
+            role TEXT NOT NULL,
+            operator_id TEXT NOT NULL,
+            created_at REAL NOT NULL
+        )
+    """)
+    
+    cursor.execute("SELECT COUNT(*) FROM users")
+    if cursor.fetchone()[0] == 0:
+        default_users = [
+            ("admin", "admin123", "Administrator", "Admin_01"),
+            ("engineer", "eng123", "Engineer", "Engineer_01"),
+            ("operator", "op123", "Operator", "Operator_01")
+        ]
+        for username, password, role, operator_id in default_users:
+            salt = secrets.token_hex(8)
+            pw_hash = hashlib.sha256((password + salt).encode('utf-8')).hexdigest()
+            cursor.execute(
+                "INSERT INTO users (username, password_hash, salt, role, operator_id, created_at) VALUES (?, ?, ?, ?, ?, ?)",
+                (username, pw_hash, salt, role, operator_id, time.time())
+            )
+        conn.commit()
+    conn.close()
+
+init_user_db()
+
+class LoginRequest(BaseModel):
+    username: str
+    password: str
+
+class RegisterRequest(BaseModel):
+    username: str
+    password: str
+    role: Optional[str] = "Operator"
+    operator_id: Optional[str] = None
+
 # 全局系統狀態
 current_active_scenario_id = 1
 shadow_mode_cycles = 600
@@ -64,6 +116,7 @@ class ApplyParametersRequest(BaseModel):
     scenario_id: int
     parameters: Dict[str, Any]
     operator_id: Optional[str] = "Engineer_01"
+
 
 class ConnectionManager:
     def __init__(self):
@@ -122,7 +175,112 @@ def root():
         "docs_url": "/docs"
     }
 
+# ------------------------------------------------------------------------
+# 身份驗證與帳號管理 API (Authentication & User Management)
+# ------------------------------------------------------------------------
+
+@app.post("/api/v1/auth/login")
+def login(req: LoginRequest):
+    conn = sqlite3.connect(DB_PATH)
+    cursor = conn.cursor()
+    cursor.execute("SELECT password_hash, salt, role, operator_id FROM users WHERE username = ?", (req.username,))
+    row = cursor.fetchone()
+    conn.close()
+    
+    if not row:
+        raise HTTPException(status_code=400, detail="帳號或密碼錯誤")
+    
+    password_hash, salt, role, operator_id = row
+    test_hash = hashlib.sha256((req.password + salt).encode('utf-8')).hexdigest()
+    if test_hash != password_hash:
+        raise HTTPException(status_code=400, detail="帳號或密碼錯誤")
+        
+    return {
+        "status": "success",
+        "username": req.username,
+        "role": role,
+        "operator_id": operator_id,
+        "token": f"token_{req.username}_{int(time.time())}"
+    }
+
+@app.post("/api/v1/auth/register")
+def register(req: RegisterRequest):
+    if not req.username or not req.password:
+        raise HTTPException(status_code=400, detail="帳號與密碼不能為空")
+        
+    conn = sqlite3.connect(DB_PATH)
+    cursor = conn.cursor()
+    
+    cursor.execute("SELECT COUNT(*) FROM users WHERE username = ?", (req.username,))
+    if cursor.fetchone()[0] > 0:
+        conn.close()
+        raise HTTPException(status_code=400, detail="帳號名稱已存在")
+        
+    salt = secrets.token_hex(8)
+    pw_hash = hashlib.sha256((req.password + salt).encode('utf-8')).hexdigest()
+    op_id = req.operator_id if req.operator_id and req.operator_id.strip() else f"OP_{req.username.upper()}"
+    role = req.role if req.role in ["Administrator", "Engineer", "Operator"] else "Operator"
+    
+    try:
+        cursor.execute(
+            "INSERT INTO users (username, password_hash, salt, role, operator_id, created_at) VALUES (?, ?, ?, ?, ?, ?)",
+            (req.username, pw_hash, salt, role, op_id, time.time())
+        )
+        conn.commit()
+    except Exception as e:
+        conn.close()
+        raise HTTPException(status_code=500, detail=f"註冊失敗: {str(e)}")
+        
+    conn.close()
+    return {
+        "status": "success",
+        "username": req.username,
+        "role": role,
+        "operator_id": op_id,
+        "message": f"成功建立使用者 {req.username}"
+    }
+
+# ------------------------------------------------------------------------
+# 機器確認器與硬體連線管理 (Hardware Connection Controller)
+# ------------------------------------------------------------------------
+hardware_connected = True
+
+@app.get("/api/v1/hardware/status")
+def get_hardware_status():
+    return {
+        "connected": hardware_connected,
+        "status": "TSN ONLINE (100ms)" if hardware_connected else "未連接機器 (離線模擬)",
+        "protocol": "SLMP MC Protocol 3E / CC-Link IE TSN"
+    }
+
+@app.post("/api/v1/hardware/connect")
+def connect_hardware():
+    global hardware_connected
+    latency_ms = round(random.uniform(1.2, 3.5), 2)
+    hardware_connected = True
+    return {
+        "status": "success",
+        "connected": True,
+        "message": f"成功建立與三菱 MR-J5 伺服驅動器之實體 SLMP MC 通訊 (延遲 {latency_ms}ms)",
+        "latency_ms": latency_ms,
+        "station_id": "MR-J5-AXIS-01"
+    }
+
+@app.post("/api/v1/hardware/disconnect")
+def disconnect_hardware():
+    global hardware_connected
+    hardware_connected = False
+    return {
+        "status": "success",
+        "connected": False,
+        "message": "已中斷與三菱 MR-J5 驅動器之連線 (未連接機器 (離線模擬))"
+    }
+
+
+
+
 @app.get("/api/v1/diagnose")
+
 def get_diagnose(scenario_id: Optional[int] = Query(None)):
     target_id = scenario_id if scenario_id is not None else current_active_scenario_id
     
@@ -214,9 +372,15 @@ def switch_active_scenario(scenario_id: int):
 
 @app.post("/api/v1/apply_parameters")
 def apply_parameters(req: ApplyParametersRequest):
+    if not hardware_connected:
+        raise HTTPException(status_code=400, detail="未連接機器 (離線模擬)：無法發送 SLMP MC Protocol 暫存器寫入指令！")
+
+
+
     scenario_id = req.scenario_id
     params = req.parameters
     operator = req.operator_id
+
     
     timestamp = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())
     
@@ -268,10 +432,28 @@ async def websocket_telemetry(websocket: WebSocket):
     try:
         t = 0.0
         while True:
-            global current_active_scenario_id
+            global current_active_scenario_id, hardware_connected
             
+            if not hardware_connected:
+                telemetry_data = {
+                    "timestamp": time.time(),
+                    "step": int(t * 10),
+                    "scenario_id": current_active_scenario_id,
+                    "motor_temp_c": 0.0,
+                    "current_rms_a": 0.0,
+                    "following_error_abs_pulse": 0.0,
+                    "vibration_rms_g": 0.0,
+                    "health_index": 0.0,
+                    "emi_burst_detected": False,
+                    "hardware_connected": False
+                }
+                await websocket.send_json(telemetry_data)
+                await asyncio.sleep(0.5)
+                continue
+
             # 偶發工廠 EMI 電磁突波
             is_emi = random.random() < 0.05
+
             
             if current_active_scenario_id == 1:
                 motor_temp = 42.5 + random.uniform(-0.5, 0.5)
@@ -307,8 +489,10 @@ async def websocket_telemetry(websocket: WebSocket):
                 "following_error_abs_pulse": round(following_error, 2),
                 "vibration_rms_g": round(vibration, 3),
                 "health_index": round(health, 1),
-                "emi_burst_detected": is_emi
+                "emi_burst_detected": is_emi,
+                "hardware_connected": True
             }
+
             
             await websocket.send_json(telemetry_data)
             await asyncio.sleep(0.1)

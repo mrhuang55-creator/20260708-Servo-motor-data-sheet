@@ -22,17 +22,26 @@
                     <p>符合 ISO 55000 / ISO 13374 標準之工業級自適應閉環優化平台</p>
                 </div>
             </div>
+
+            <!-- 使用者帳號與權限管理區 -->
+            <div class="user-auth-area" id="user-auth-area">
+                <!-- 動態由 JavaScript 渲染登入表單或已登入狀態 -->
+            </div>
+
             <div class="system-status">
-                <div class="status-indicator">
-                    <span class="dot pulse-green"></span>
-                    <span id="connection-status">TSN ONLINE (100ms)</span>
+                <div class="status-indicator" style="color: var(--yellow-warning);">
+                    <span class="dot pulse-yellow"></span>
+                    <span id="connection-status">未連結馬達 (離線模擬)</span>
                 </div>
+
+
                 <div class="shadow-mode-badge" id="shadow-mode-badge">
                     <i class="fa-solid fa-ghost"></i> SHADOW MODE: RMSE -14.8% (READY)
                 </div>
                 <div class="time-display" id="clock-display">2026-07-21 20:00:00</div>
             </div>
         </header>
+
 
         <!-- 經典 3 大標竿工況切換與 ISO 匯出工具列 -->
         <div class="benchmark-bar">
@@ -51,10 +60,17 @@
                 </div>
             </div>
             <div class="benchmark-right">
+                <button class="btn-hardware-conn" id="btn-hardware-connect" title="確認與三菱 MR-J5 伺服驅動器實體 Socket 通訊狀態">
+                    <i class="fa-solid fa-plug"></i> 確認機器連線
+                </button>
+                <button class="btn-hardware-disconn" id="btn-hardware-disconnect" title="安全中斷與伺服驅動器之連線">
+                    <i class="fa-solid fa-plug-circle-xmark"></i> 中斷機器連線
+                </button>
                 <button class="btn-export-iso" id="btn-export-iso-report">
                     <i class="fa-solid fa-file-contract"></i> 一鍵匯出 ISO 稽核報告 (JSON)
                 </button>
             </div>
+
         </div>
 
         <!-- 主儀表板卡片區 -->
@@ -189,6 +205,44 @@
             </div>
         </div>
     </div>
+
+    <!-- 註冊新操作員帳號之 Modal 彈窗 -->
+    <div class="modal-overlay" id="register-modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3><i class="fa-solid fa-user-plus text-cyan"></i> 註冊授權操作員帳號</h3>
+                <button class="btn-close-modal" id="btn-close-reg-modal">&times;</button>
+            </div>
+            <div class="modal-body">
+                <p style="font-size: 13px; color: var(--text-muted);">建立新帳號以取得三菱 MR-J5 實體驅動器調參寫入權限：</p>
+                <div class="form-group">
+                    <label class="form-label" for="reg-username">帳號名稱 (Username)</label>
+                    <input type="text" id="reg-username" class="form-control" placeholder="例如: engineer_jack" />
+                </div>
+                <div class="form-group">
+                    <label class="form-label" for="reg-password">密碼 (Password)</label>
+                    <input type="password" id="reg-password" class="form-control" placeholder="請輸入密碼" />
+                </div>
+                <div class="form-group">
+                    <label class="form-label" for="reg-role">系統權限角色 (Role)</label>
+                    <select id="reg-role" class="form-control">
+                        <option value="Operator">Operator (一般操作員)</option>
+                        <option value="Engineer" selected>Engineer (自動化工程師)</option>
+                        <option value="Administrator">Administrator (系統管理員)</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label class="form-label" for="reg-operator-id">實體操作識別碼 (Operator ID)</label>
+                    <input type="text" id="reg-operator-id" class="form-control" placeholder="例如: Engineer_02 (留空自動建立)" />
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn-cancel" id="btn-reg-cancel">取消</button>
+                <button class="btn-confirm-submit" id="btn-reg-submit">確認註冊 (Register)</button>
+            </div>
+        </div>
+    </div>
+
 
     <!-- 載入 JavaScript -->
     <script src="app.js"></script>
