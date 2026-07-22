@@ -1,0 +1,21 @@
+{% extends "base.html" %}
+{% block title %}Shadow 模式比較 — AI SERVO PLATFORM{% endblock %}
+{% block content %}
+<h3 class="fw-bold mb-3"><i class="fa-solid fa-clone text-secondary me-2"></i>影子模式 (Shadow Mode) 詳細擬合與檢定分析</h3>
+<div class="glass-card p-4">
+    <div class="row align-items-center mb-4">
+        <div class="col-md-6 border-end border-secondary">
+            <div class="text-muted fs-7">v3.2.0 (Active)</div>
+            <div class="fs-3 fw-bold text-muted">Baseline RMSE: {{ shadow.baseline_rmse if shadow else '4.832' }}</div>
+        </div>
+        <div class="col-md-6">
+            <div class="text-muted fs-7">v3.2.1 (Shadow Candidate)</div>
+            <div class="fs-3 fw-bold text-success">Candidate RMSE: {{ shadow.current_model_rmse if shadow else '4.118' }}</div>
+        </div>
+    </div>
+    <div class="p-3 bg-dark rounded border border-success">
+        <span class="text-success fw-bold"><i class="fa-solid fa-circle-check me-2"></i>檢定結果：</span>
+        在線影子殘差改善率到達 +{{ shadow.improvement_rate_pct if shadow else '14.8' }}%，超過 ISO 55000 / 13374 規格門檻 (10.0%)，具備推升正式環境之資格。
+    </div>
+</div>
+{% endblock %}

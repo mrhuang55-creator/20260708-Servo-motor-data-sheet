@@ -1,0 +1,13 @@
+{% extends "base.html" %}
+{% block title %}資料保留 — AI SERVO PLATFORM{% endblock %}
+{% block content %}
+<h3 class="fw-bold mb-3"><i class="fa-solid fa-clock-rotate-left text-info me-2"></i>資料保留與自動清理策略</h3>
+<div class="glass-card p-4">
+    <div class="p-3 bg-dark rounded border border-secondary mb-3">
+        高頻 Telemetry 數據保留：<span class="text-info fw-bold">30 天 (Parquet 壓縮)</span>
+    </div>
+    <div class="p-3 bg-dark rounded border border-secondary">
+        ISO 55000 / 13374 稽核日誌保留：<span class="text-success fw-bold">7 年 (合規永久儲存)</span>
+    </div>
+</div>
+{% endblock %}

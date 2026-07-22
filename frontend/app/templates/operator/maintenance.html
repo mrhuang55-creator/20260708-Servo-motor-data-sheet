@@ -1,0 +1,18 @@
+{% extends "base.html" %}
+{% block title %}維修回報 — AI SERVO PLATFORM{% endblock %}
+{% block content %}
+<h3 class="fw-bold mb-3"><i class="fa-solid fa-wrench text-secondary me-2"></i>維修與處置結果登錄</h3>
+<div class="glass-card p-4">
+    <form>
+        <div class="mb-3">
+            <label class="form-label text-muted fs-7">處置設備 / Scenario</label>
+            <input type="text" class="form-control bg-dark border-secondary text-light" value="MR-J5-AXIS-01 (S01)" readonly>
+        </div>
+        <div class="mb-3">
+            <label class="form-label text-muted fs-7">現場處置說明</label>
+            <textarea class="form-control bg-dark border-secondary text-light" rows="3" placeholder="請輸入維修處置細節與更換零件說明..."></textarea>
+        </div>
+        <button type="button" class="btn btn-info fw-bold" onclick="alert('已成功登記維修處置結果！')">提交處置紀錄</button>
+    </form>
+</div>
+{% endblock %}

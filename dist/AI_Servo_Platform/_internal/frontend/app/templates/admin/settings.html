@@ -1,0 +1,15 @@
+{% extends "base.html" %}
+{% block title %}全域設定 — AI SERVO PLATFORM{% endblock %}
+{% block content %}
+<h3 class="fw-bold mb-3"><i class="fa-solid fa-gears text-secondary me-2"></i>全域系統與告警門檻設定</h3>
+<div class="glass-card p-4">
+    <div class="mb-3">
+        <label class="form-label text-muted fs-7">UI 數據更新頻率</label>
+        <select class="form-select bg-dark border-secondary text-light">
+            <option>1 秒 (預設)</option>
+            <option>500 ms (高頻)</option>
+        </select>
+    </div>
+    <button class="btn btn-info fw-bold">儲存設定</button>
+</div>
+{% endblock %}

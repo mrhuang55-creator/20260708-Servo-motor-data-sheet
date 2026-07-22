@@ -1,0 +1,198 @@
+{% extends "base.html" %}
+{% block title %}操作員主控制台 — AI SERVO PLATFORM{% endblock %}
+
+{% block content %}
+<div class="container-fluid p-0">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h3 class="fw-bold mb-1"><i class="fa-solid fa-display text-info me-2"></i>操作員主控制台 (Operator Console)</h3>
+            <p class="text-muted fs-7 mb-0">即時監控伺服驅動器運轉狀態、殘差變動與操作控制</p>
+        </div>
+        <div class="d-flex gap-2">
+            <button id="btn-cycle-start" class="btn btn-success fw-bold px-3"><i class="fa-solid fa-play me-2"></i>Cycle Start</button>
+            <button id="btn-cycle-stop" class="btn btn-warning fw-bold px-3"><i class="fa-solid fa-stop me-2"></i>Cycle Stop</button>
+            <button id="btn-estop-request" class="btn btn-danger fw-bold px-3"><i class="fa-solid fa-triangle-exclamation me-2"></i>E-Stop Request</button>
+        </div>
+    </div>
+
+    <!-- L1 系統狀態與 L2 關鍵數字 -->
+    <div class="row g-3 mb-4">
+        <div class="col-md-3">
+            <div class="glass-card p-3 d-flex align-items-center">
+                <div class="fs-1 text-success me-3"><i class="fa-solid fa-circle-check"></i></div>
+                <div>
+                    <div class="text-muted fs-7">全廠系統狀態</div>
+                    <div class="fs-4 fw-bold text-light">Normal 運轉中</div>
+                    <div class="fs-8 text-muted">Scenario: S01 (基期)</div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="glass-card p-3">
+                <div class="text-muted fs-7">異常分數 (DV)</div>
+                <div class="fs-3 metric-val text-info" id="val-dv">0.13</div>
+                <div class="fs-8 text-success"><i class="fa-solid fa-arrow-down me-1"></i>在正常門檻 (0.50) 內</div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="glass-card p-3">
+                <div class="text-muted fs-7">數位雙生殘差 (Residual)</div>
+                <div class="fs-3 metric-val text-success" id="val-residual">0.021 mm</div>
+                <div class="fs-8 text-muted">Z-score < 1.5σ</div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="glass-card p-3">
+                <div class="text-muted fs-7">活動中警報 (Active Alarms)</div>
+                <div class="fs-3 metric-val text-warning">0 件</div>
+                <div class="fs-8 text-muted">系統運作穩定</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- L4 即時趨勢圖 -->
+    <div class="row g-3 mb-4">
+        <div class="col-md-8">
+            <div class="glass-card p-3">
+                <h6 class="fw-bold mb-3"><i class="fa-solid fa-chart-line text-info me-2"></i>即時異常殘差趨勢 (DV & Residual Trend)</h6>
+                <div style="height: 260px;">
+                    <canvas id="chart-operator-trend"></canvas>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="glass-card p-3 h-100">
+                <h6 class="fw-bold mb-3"><i class="fa-solid fa-bolt text-warning me-2"></i>實態部件健康度</h6>
+                <div class="mb-3">
+                    <div class="d-flex justify-content-between fs-7 mb-1">
+                        <span>軸承健康度 (Bearing)</span>
+                        <span class="fw-bold text-success">96.5%</span>
+                    </div>
+                    <div class="progress bg-dark" style="height: 6px;">
+                        <div class="progress-bar bg-success" style="width: 96.5%"></div>
+                    </div>
+                </div>
+                <div class="mb-3">
+                    <div class="d-flex justify-content-between fs-7 mb-1">
+                        <span>定子繞組 (Stator Winding)</span>
+                        <span class="fw-bold text-success">94.2%</span>
+                    </div>
+                    <div class="progress bg-dark" style="height: 6px;">
+                        <div class="progress-bar bg-success" style="width: 94.2%"></div>
+                    </div>
+                </div>
+                <div class="mb-3">
+                    <div class="d-flex justify-content-between fs-7 mb-1">
+                        <span>編碼器狀態 (Encoder)</span>
+                        <span class="fw-bold text-success">98.0%</span>
+                    </div>
+                    <div class="progress bg-dark" style="height: 6px;">
+                        <div class="progress-bar bg-success" style="width: 98.0%"></div>
+                    </div>
+                </div>
+                <div>
+                    <div class="d-flex justify-content-between fs-7 mb-1">
+                        <span>滾珠螺桿 (Lead Screw)</span>
+                        <span class="fw-bold text-info">91.8%</span>
+                    </div>
+                    <div class="progress bg-dark" style="height: 6px;">
+                        <div class="progress-bar bg-info" style="width: 91.8%"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- L5 最近警報與事件 -->
+    <div class="glass-card p-3">
+        <h6 class="fw-bold mb-3"><i class="fa-solid fa-list-check text-secondary me-2"></i>最近系統事件摘要</h6>
+        <div class="table-responsive">
+            <table class="table table-dark table-hover fs-7 align-middle mb-0">
+                <thead>
+                    <tr class="text-muted">
+                        <th>時間</th>
+                        <th>事件類型</th>
+                        <th>Scenario</th>
+                        <th>狀態/摘要</th>
+                        <th>處置狀態</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>14:02:11</td>
+                        <td><span class="badge bg-success">Cycle Completed</span></td>
+                        <td>S01 (標準工況)</td>
+                        <td>Cycle #1042 順利完成，整定時間 0.85s</td>
+                        <td><span class="text-muted">無需處置</span></td>
+                    </tr>
+                    <tr>
+                        <td>13:45:00</td>
+                        <td><span class="badge bg-info">Mode Switched</span></td>
+                        <td>S01</td>
+                        <td>操作員啟動 Normal 模式運轉</td>
+                        <td><span class="text-muted">已記錄</span></td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener("DOMContentLoaded", function() {
+        const ctx = document.getElementById('chart-operator-trend').getContext('2d');
+        const chart = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: ['14:00:00', '14:00:10', '14:00:20', '14:00:30', '14:00:40', '14:00:50', '14:01:00'],
+                datasets: [
+                    {
+                        label: 'DV 異常分數',
+                        data: [0.12, 0.14, 0.13, 0.15, 0.12, 0.13, 0.14],
+                        borderColor: '#38bdf8',
+                        tension: 0.3
+                    },
+                    {
+                        label: 'Residual (mm)',
+                        data: [0.02, 0.021, 0.019, 0.022, 0.020, 0.021, 0.021],
+                        borderColor: '#22c55e',
+                        tension: 0.3
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: { legend: { labels: { color: '#94a3b8' } } },
+                scales: {
+                    x: { ticks: { color: '#94a3b8' }, grid: { color: '#334155' } },
+                    y: { ticks: { color: '#94a3b8' }, grid: { color: '#334155' } }
+                }
+            }
+        });
+
+        // 控制按鈕 AJAX
+        document.getElementById('btn-cycle-start').addEventListener('click', function() {
+            fetch('/api/ui/commands/cycle/start', { method: 'POST' })
+                .then(res => res.json())
+                .then(data => alert(data.message));
+        });
+
+        document.getElementById('btn-cycle-stop').addEventListener('click', function() {
+            fetch('/api/ui/commands/cycle/stop', { method: 'POST' })
+                .then(res => res.json())
+                .then(data => alert(data.message));
+        });
+
+        document.getElementById('btn-estop-request').addEventListener('click', function() {
+            if(confirm("確定要發送緊急停機請求 (E-Stop Request) 嗎？")) {
+                fetch('/api/ui/emergency-stop-request', { method: 'POST' })
+                    .then(res => res.json())
+                    .then(data => alert(data.message));
+            }
+        });
+    });
+</script>
+{% endblock %}

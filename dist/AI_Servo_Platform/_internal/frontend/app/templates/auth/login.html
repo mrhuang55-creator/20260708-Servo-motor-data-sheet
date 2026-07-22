@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="zh-TW" data-bs-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>登入 — AI SERVO PLATFORM</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css" rel="stylesheet">
+    <style>
+        body {
+            background-color: #0f172a;
+            color: #f8fafc;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .login-card {
+            background: rgba(30, 41, 59, 0.85);
+            backdrop-filter: blur(12px);
+            border: 1px solid #334155;
+            border-radius: 1rem;
+            width: 100%;
+            max-width: 420px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+        }
+    </style>
+</head>
+<body>
+    <div class="login-card p-4 p-sm-5">
+        <div class="text-center mb-4">
+            <div class="mb-3 text-info fs-1">
+                <i class="fa-solid fa-microchip"></i>
+            </div>
+            <h4 class="fw-bold">AI SERVO PLATFORM</h4>
+            <p class="text-muted fs-7">三菱 MR-J5 AI 智慧診斷與預測維護系統</p>
+        </div>
+
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="alert alert-{{ category }} p-2 fs-7 mb-3" role="alert">
+                        {{ message }}
+                    </div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+
+        <form action="{{ url_for('auth.login') }}" method="POST">
+            <div class="mb-3">
+                <label for="username" class="form-label fs-7 text-muted">使用者帳號</label>
+                <div class="input-group">
+                    <span class="input-group-text bg-dark border-secondary text-secondary"><i class="fa-solid fa-user"></i></span>
+                    <input type="text" class="form-control bg-dark border-secondary text-light" id="username" name="username" required placeholder="admin / engineer / operator">
+                </div>
+            </div>
+
+            <div class="mb-4">
+                <label for="password" class="form-label fs-7 text-muted">登入密碼</label>
+                <div class="input-group">
+                    <span class="input-group-text bg-dark border-secondary text-secondary"><i class="fa-solid fa-lock"></i></span>
+                    <input type="password" class="form-control bg-dark border-secondary text-light" id="password" name="password" required placeholder="請輸入密碼">
+                </div>
+            </div>
+
+            <button type="submit" class="btn btn-info w-100 py-2 fw-bold text-dark"><i class="fa-solid fa-right-to-bracket me-2"></i>登入工作臺</button>
+        </form>
+
+        <div class="mt-4 pt-3 border-top border-secondary text-center text-muted fs-8">
+            <div>預設帳號測試對照：</div>
+            <div class="mt-1">
+                <span class="badge bg-secondary">operator / op123</span>
+                <span class="badge bg-secondary ms-1">engineer / eng123</span>
+                <span class="badge bg-secondary ms-1">admin / admin123</span>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

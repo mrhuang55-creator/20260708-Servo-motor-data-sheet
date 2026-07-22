@@ -1,0 +1,263 @@
+{% extends "base.html" %}
+{% block title %}41 Scenarios 工業診斷對照庫 — AI SERVO PLATFORM{% endblock %}
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <div>
+        <h3 class="fw-bold mb-1"><i class="fa-solid fa-cubes text-warning me-2"></i>41 Scenarios 全工業診斷與運轉問題庫</h3>
+        <p class="text-muted fs-7 mb-0">包含位置定位、負載扭矩、電網通訊、傳動劣化、電氣故障與複合過載 41 種真實工況</p>
+    </div>
+    <span class="badge bg-success fs-6 py-2 px-3">已載入 41/41 項工況模組</span>
+</div>
+
+<!-- 上方視窗：隨運轉動態更新之即時警告與診斷視窗 (Real-time Dynamic Warning Window) -->
+<div class="glass-card p-4 mb-4" id="warning-window-card">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h5 class="fw-bold m-0" id="warning-window-title">
+            <i class="fa-solid fa-bell me-2"></i>即時運轉異常與警告動態視窗 (Real-time Active Warnings)
+        </h5>
+        <div id="warning-window-badge">
+            <span class="badge bg-secondary fs-7"><i class="fa-solid fa-rotate fa-spin me-1"></i>動態連線檢測中...</span>
+        </div>
+    </div>
+
+    <!-- 動態渲染容器 (由 JavaScript 對接 /api/v1/diagnose 自動即時更新) -->
+    <div class="row g-3" id="active-warnings-container">
+        <div class="col-12 text-center text-muted py-3">
+            <i class="fa-solid fa-spinner fa-spin me-2"></i>正在與 FastAPI 分析引擎同步最新運轉告警數據...
+        </div>
+    </div>
+</div>
+
+<!-- 下方視窗：41種工況參考與對照總表 -->
+<div class="glass-card p-4">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h5 class="fw-bold mb-0 text-light"><i class="fa-solid fa-list-check me-2 text-info"></i>41 種工況參考與對照總表</h5>
+        <span class="fs-8 text-muted">對齊 ISO 55000 / ISO 13374 規格標籤</span>
+    </div>
+    <div class="table-responsive" style="max-height: 50vh; overflow-y: auto;">
+        <table class="table table-dark table-hover fs-7 align-middle mb-0">
+            <thead class="sticky-top bg-dark">
+                <tr class="text-muted">
+                    <th>編號</th>
+                    <th>工況名稱 (Scenario Name)</th>
+                    <th>工況分類</th>
+                    <th>監控 Tag / 特徵指標</th>
+                    <th>系統診斷狀態</th>
+                    <th>操作</th>
+                </tr>
+            </thead>
+            <tbody>
+                <!-- 01 - 10 位置定位與運動軌跡類 -->
+                <tr id="row-s01"><td>S01</td><td>Pick & Place (定位到位時間優化)</td><td>位置定位與運動軌跡</td><td>time, rod_demand_pos, rod_actual_pos, Following Error</td><td><span class="badge bg-success">Active (基期)</span></td><td><button class="btn btn-sm btn-outline-info" onclick="switchScenario(1)">模擬切換</button></td></tr>
+                <tr id="row-s02"><td>S02</td><td>Press Axis (重載配合/繞組溫升估算)</td><td>位置定位與運動軌跡</td><td>torque, Electrical Power, Winding Temperature</td><td><span class="badge bg-secondary">Standby</span></td><td><button class="btn btn-sm btn-outline-info" onclick="switchScenario(2)">模擬切換</button></td></tr>
+                <tr id="row-s03"><td>S03</td><td>Tray Loader (高速搬運/溫升率警告)</td><td>位置定位與運動軌跡</td><td>rotor_speed, Electrical Power, Motor Temperature</td><td><span class="badge bg-secondary">Standby</span></td><td><button class="btn btn-sm btn-outline-info" onclick="switchScenario(3)">模擬切換</button></td></tr>
+                <tr id="row-s04"><td>S04</td><td>XY Gantry (長行程定位/雙軸同步與反向補償)</td><td>位置定位與運動軌跡</td><td>rod_demand_pos, Following Error, Backlash</td><td><span class="badge bg-secondary">Standby</span></td><td><button class="btn btn-sm btn-outline-info" onclick="switchScenario(4)">模擬切換</button></td></tr>
+                <tr id="row-s05"><td>S05</td><td>Vision Stage (微對位定位/編碼器高頻震動)</td><td>位置定位與運動軌跡</td><td>rod_actual_pos, Velocity, Position RMS</td><td><span class="badge bg-secondary">Standby</span></td><td><button class="btn btn-sm btn-outline-info" onclick="switchScenario(5)">模擬切換</button></td></tr>
+                <tr id="row-s06"><td>S06</td><td>Conveyor (高速往返輸送/皮帶抖動)</td><td>位置定位與運動軌跡</td><td>Velocity, Acceleration, Jerk, Following Error</td><td><span class="badge bg-secondary">Standby</span></td><td><button class="btn btn-sm btn-outline-info" onclick="switchScenario(6)">模擬切換</button></td></tr>
+                <tr id="row-s07"><td>S07</td><td>Robot Joint (高速加減速/軌跡追隨錯誤)</td><td>位置定位與運動軌跡</td><td>Following Error, Acceleration, Jerk</td><td><span class="badge bg-secondary">Standby</span></td><td><button class="btn btn-sm btn-outline-info" onclick="switchScenario(7)">模擬切換</button></td></tr>
+                <tr id="row-s08"><td>S08</td><td>Spindle (高速旋轉主軸/軸心擺動速度過高)</td><td>位置定位與運動軌跡</td><td>rotor_speed, Velocity, Torque Ripple</td><td><span class="badge bg-secondary">Standby</span></td><td><button class="btn btn-sm btn-outline-info" onclick="switchScenario(8)">模擬切換</button></td></tr>
+                <tr id="row-s09"><td>S09</td><td>Indexer (S曲線旋轉/轉換點過沖抑制)</td><td>位置定位與運動軌跡</td><td>rod_actual_pos, Velocity, Acceleration</td><td><span class="badge bg-secondary">Standby</span></td><td><button class="btn btn-sm btn-outline-info" onclick="switchScenario(9)">模擬切換</button></td></tr>
+                <tr id="row-s10"><td>S10</td><td>Inspection (短行程幾何/減速殘留震動)</td><td>位置定位與運動軌跡</td><td>rod_actual_pos, Velocity, Jerk</td><td><span class="badge bg-secondary">Standby</span></td><td><button class="btn btn-sm btn-outline-info" onclick="switchScenario(10)">模擬切換</button></td></tr>
+
+                <!-- 11 - 20 負載扭矩與機械結構類 -->
+                <tr id="row-s11"><td>S11</td><td>Press Fit (精密壓入/峰值電流限制)</td><td>負載扭矩與機械結構</td><td>i_3p_a, i_3p_b, Current RMS, torque</td><td><span class="badge bg-secondary">Standby</span></td><td><button class="btn btn-sm btn-outline-info" onclick="switchScenario(11)">模擬切換</button></td></tr>
+                <tr id="row-s12"><td>S12</td><td>Clamp (扭矩夾緊與維持/時間與扭矩和)</td><td>負載扭矩與機械結構</td><td>time, torque, Torque RMS</td><td><span class="badge bg-secondary">Standby</span></td><td><button class="btn btn-sm btn-outline-info" onclick="switchScenario(12)">模擬切換</button></td></tr>
+                <tr id="row-s13"><td>S13</td><td>Transfer Arm (卡檢/卡死扭矩變動率)</td><td>負載扭矩與機械結構</td><td>torque, Torque RMS, Torque Ripple</td><td><span class="badge bg-secondary">Standby</span></td><td><button class="btn btn-sm btn-outline-info" onclick="switchScenario(13)">模擬切換</button></td></tr>
+                <tr id="row-s14"><td>S14</td><td>Rotary Table (軸承狀態/BPFO特徵幅值與震動)</td><td>負載扭矩與機械結構</td><td>rotor_speed, torque, Bearing Temperature</td><td><span class="badge bg-secondary">Standby</span></td><td><button class="btn btn-sm btn-outline-info" onclick="switchScenario(14)">模擬切換</button></td></tr>
+                <tr id="row-s15"><td>S15</td><td>Linear Stage (導軌/潤滑老化摩擦力估算)</td><td>負載扭矩與機械結構</td><td>torque, Friction, Lubrication Index</td><td><span class="badge bg-secondary">Standby</span></td><td><button class="btn btn-sm btn-outline-info" onclick="switchScenario(15)">模擬切換</button></td></tr>
+                <tr id="row-s16"><td>S16</td><td>Rotor (轉子不平衡旋轉/擺動震動位移)</td><td>負載扭矩與機械結構</td><td>rotor_speed, torque, Position RMS</td><td><span class="badge bg-secondary">Standby</span></td><td><button class="btn btn-sm btn-outline-info" onclick="switchScenario(16)">模擬切換</button></td></tr>
+                <tr id="row-s17"><td>S17</td><td>Coupling (聯軸器偏差/角度偏差高頻共振)</td><td>負載扭矩與機械結構</td><td>rotor_speed, torque, Gearbox Temperature</td><td><span class="badge bg-secondary">Standby</span></td><td><button class="btn btn-sm btn-outline-info" onclick="switchScenario(17)">模擬切換</button></td></tr>
+                <tr id="row-s18"><td>S18</td><td>Ball Screw (滾珠絲槓/磨損導致反向間隙)</td><td>負載扭矩與機械結構</td><td>Following Error, Backlash, Stiffness</td><td><span class="badge bg-warning text-dark">Warning</span></td><td><button class="btn btn-sm btn-outline-warning text-dark" onclick="switchScenario(18)">模擬切換</button></td></tr>
+                <tr id="row-s19"><td>S19</td><td>Index Table (分度盤/空程間隙多重分類)</td><td>負載扭矩與機械結構</td><td>rod_demand_pos, rod_actual_pos, Backlash</td><td><span class="badge bg-secondary">Standby</span></td><td><button class="btn btn-sm btn-outline-info" onclick="switchScenario(19)">模擬切換</button></td></tr>
+                <tr id="row-s20"><td>S20</td><td>Scanner (結構低頻震動/結構共振頻率)</td><td>負載扭矩與機械結構</td><td>rod_actual_pos, Velocity, Acceleration</td><td><span class="badge bg-secondary">Standby</span></td><td><button class="btn btn-sm btn-outline-info" onclick="switchScenario(20)">模擬切換</button></td></tr>
+
+                <!-- 21 - 30 電網、通訊與運維壽命類 -->
+                <tr id="row-s21"><td>S21</td><td>Power Test (電網電源/母線電壓紋波比)</td><td>電網通訊與運維壽命</td><td>Electrical Power, i_3p_a, direct, quadrature</td><td><span class="badge bg-secondary">Standby</span></td><td><button class="btn btn-sm btn-outline-info" onclick="switchScenario(21)">模擬切換</button></td></tr>
+                <tr id="row-s22"><td>S22</td><td>Peak Load (加速母線欠壓/電流限制與跌落值)</td><td>電網通訊與運維壽命</td><td>Electrical Power, Current RMS, torque</td><td><span class="badge bg-secondary">Standby</span></td><td><button class="btn btn-sm btn-outline-info" onclick="switchScenario(22)">模擬切換</button></td></tr>
+                <tr id="row-s23"><td>S23</td><td>PLC Sync (通訊同步超時/時基抖動)</td><td>電網通訊與運維壽命</td><td>time, run_index, transitions</td><td><span class="badge bg-secondary">Standby</span></td><td><button class="btn btn-sm btn-outline-info" onclick="switchScenario(23)">模擬切換</button></td></tr>
+                <tr id="row-s24"><td>S24</td><td>EtherCAT (數據表/網路丟包與中斷時間)</td><td>電網通訊與運維壽命</td><td>time, run_index, transitions, packet_loss</td><td><span class="badge bg-secondary">Standby</span></td><td><button class="btn btn-sm btn-outline-info" onclick="switchScenario(24)">模擬切換</button></td></tr>
+                <tr id="row-s25"><td>S25</td><td>Precision Axis (高精密/位置高頻自激嘯叫)</td><td>電網通訊與運維壽命</td><td>rod_actual_pos, Velocity, Torque Ripple</td><td><span class="badge bg-secondary">Standby</span></td><td><button class="btn btn-sm btn-outline-info" onclick="switchScenario(25)">模擬切換</button></td></tr>
+                <tr id="row-s26"><td>S26</td><td>Resonance (共振激振/機械台板主共振頻率)</td><td>電網通訊與運維壽命</td><td>torque, Torque Ripple, Acceleration</td><td><span class="badge bg-warning text-dark">Warning</span></td><td><button class="btn btn-sm btn-outline-warning text-dark" onclick="switchScenario(26)">模擬切換</button></td></tr>
+                <tr id="row-s27"><td>S27</td><td>Vertical Z (垂直軸防下滑/煞車釋放下滑量)</td><td>電網通訊與運維壽命</td><td>time, rod_actual_pos, del_pos</td><td><span class="badge bg-secondary">Standby</span></td><td><button class="btn btn-sm btn-outline-info" onclick="switchScenario(27)">模擬切換</button></td></tr>
+                <tr id="row-s28"><td>S28</td><td>Prod Line (生產線急停/制動最大減速阻尼扭矩)</td><td>電網通訊與運維壽命</td><td>torque, Torque RMS, Acceleration, Jerk</td><td><span class="badge bg-secondary">Standby</span></td><td><button class="btn btn-sm btn-outline-info" onclick="switchScenario(28)">模擬切換</button></td></tr>
+                <tr id="row-s29"><td>S29</td><td>Factory (多重故障失效/溫升與性能併發退化)</td><td>電網通訊與運維壽命</td><td>DV, Motor Temperature, Efficiency Index</td><td><span class="badge bg-secondary">Standby</span></td><td><button class="btn btn-sm btn-outline-info" onclick="switchScenario(29)">模擬切換</button></td></tr>
+                <tr id="row-s30"><td>S30</td><td>Pred Maint (預測壽命/RUL剩餘壽命估算)</td><td>電網通訊與運維壽命</td><td>time, DV, Efficiency Index, Lubrication Index</td><td><span class="badge bg-secondary">Standby</span></td><td><button class="btn btn-sm btn-outline-info" onclick="switchScenario(30)">模擬切換</button></td></tr>
+
+                <!-- 31 - 41 機械傳動、電氣與過載類 -->
+                <tr id="row-s31"><td>S31</td><td>Belt Slackness (皮帶鬆弛/長時間張力下滑)</td><td>機械傳動劣化進階類</td><td>Velocity, Acceleration, Jerk, Stiffness</td><td><span class="badge bg-secondary">Standby</span></td><td><button class="btn btn-sm btn-outline-info" onclick="switchScenario(31)">模擬切換</button></td></tr>
+                <tr id="row-s32"><td>S32</td><td>Gear Tooth Breakage (減速機齒輪斷齒/嚙合局部損傷)</td><td>機械傳動劣化進階類</td><td>rotor_speed, torque, Gearbox Temperature</td><td><span class="badge bg-secondary">Standby</span></td><td><button class="btn btn-sm btn-outline-info" onclick="switchScenario(32)">模擬切換</button></td></tr>
+                <tr id="row-s33"><td>S33</td><td>Guide Rail Jamming (導軌異物卡阻/局部阻力突變)</td><td>機械傳動劣化進階類</td><td>rod_actual_pos, torque, Coulomb Friction</td><td><span class="badge bg-secondary">Standby</span></td><td><button class="btn btn-sm btn-outline-info" onclick="switchScenario(33)">模擬切換</button></td></tr>
+                <tr id="row-s34"><td>S34</td><td>Rotor Demagnetization (轉子永磁體高溫退磁)</td><td>電氣與磁路故障類</td><td>torque, i_3p_a, Motor Temperature</td><td><span class="badge bg-danger">Critical</span></td><td><button class="btn btn-sm btn-outline-danger" onclick="switchScenario(34)">模擬切換</button></td></tr>
+                <tr id="row-s35"><td>S35</td><td>Phase Open Circuit / Unbalance (定子線圈不對稱/單相短路)</td><td>電氣與磁路故障類</td><td>i_3p_a, i_3p_b, Winding Temperature</td><td><span class="badge bg-secondary">Standby</span></td><td><button class="btn btn-sm btn-outline-info" onclick="switchScenario(35)">模擬切換</button></td></tr>
+                <tr id="row-s36"><td>S36</td><td>External Collision Detection (外部突發碰撞/防撞安全保護)</td><td>動態環境與控制過載類</td><td>Velocity, Acceleration, torque, Torque RMS</td><td><span class="badge bg-secondary">Standby</span></td><td><button class="btn btn-sm btn-outline-info" onclick="switchScenario(36)">模擬切換</button></td></tr>
+                <tr id="row-s37"><td>S37</td><td>Load Inertia Mismatch (負載慣量嚴重失配/過大工件誤換)</td><td>動態環境與控制過載類</td><td>Following Error, Load Inertia, Stiffness</td><td><span class="badge bg-secondary">Standby</span></td><td><button class="btn btn-sm btn-outline-info" onclick="switchScenario(37)">模擬切換</button></td></tr>
+                <tr id="row-s38"><td>S38</td><td>Continuous Micro-Oscillation (微幅持續抖動/伺服過增益自激)</td><td>動態環境與控制過載類</td><td>rod_actual_pos, Velocity, Position RMS</td><td><span class="badge bg-secondary">Standby</span></td><td><button class="btn btn-sm btn-outline-info" onclick="switchScenario(38)">模擬切換</button></td></tr>
+                <tr id="row-s39"><td>S39</td><td>Encoder Pulse Drop (編碼器訊號偶發丟脈衝/光柵髒污)</td><td>感測器與訊號線劣化類</td><td>rod_demand_pos, rod_actual_pos, del_pos</td><td><span class="badge bg-secondary">Standby</span></td><td><button class="btn btn-sm btn-outline-info" onclick="switchScenario(39)">模擬切換</button></td></tr>
+                <tr id="row-s40"><td>S40</td><td>Power Cable Intermittent Contact (馬達動力線斷芯/接觸不良)</td><td>感測器與訊號線劣化類</td><td>i_3p_a, i_3p_b, Electrical Power</td><td><span class="badge bg-secondary">Standby</span></td><td><button class="btn btn-sm btn-outline-info" onclick="switchScenario(40)">模擬切換</button></td></tr>
+                <tr id="row-s41"><td>S41</td><td>Multi-Axis Complex Overload & Cable Degradation (複合多軸過載)</td><td>複合系統異常類</td><td>multi_axis_sync_err, thermal_drift, noise_rms</td><td><span class="badge bg-info text-dark">Active Support</span></td><td><button class="btn btn-sm btn-outline-info" onclick="switchScenario(41)">模擬切換</button></td></tr>
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    const API_BASE = window.location.port === '5000' ? `http://${window.location.hostname}:8000` : '';
+
+    // 隨運轉動態更新即時警告視窗 (AJAX 輪詢對接 FastAPI /api/v1/diagnose)
+    function fetchActiveDiagnose() {
+        fetch(API_BASE + '/api/v1/diagnose')
+            .then(response => response.json())
+            .then(data => {
+                const disp    = data['診斷狀態_前端顯示'] || {};
+                const rec     = data['建議調整參數_後端執行'] || {};
+                const snap    = data['即時遙測快照'] || {};
+                const eng     = data['診斷依據與可解釋性_工程師審核'] || {};
+
+                const currentScenario = disp.current_scenario || 1;
+                const riskLevel       = disp.risk_level || 'Normal';
+                const healthIndex     = disp.health_index || 95.0;
+                const rulSec          = disp.rul_sec;
+                const rootCause       = rec.root_cause || 'normal';
+                const action          = rec.action || '系統運作正常';
+                const confidence      = eng.confidence || 0.99;
+
+                // 即時遙測數值
+                const tempC   = snap.motor_temp_c    !== undefined ? snap.motor_temp_c.toFixed(1) + ' °C' : '—';
+                const currA   = snap.current_rms_a   !== undefined ? snap.current_rms_a.toFixed(2) + ' A'  : '—';
+                const feErr   = snap.following_error_abs_pulse !== undefined ? snap.following_error_abs_pulse.toFixed(1) + ' pulse' : '—';
+                const vibG    = snap.vibration_rms_g !== undefined ? snap.vibration_rms_g.toFixed(3) + ' g'  : '—';
+
+                // RUL 顯示
+                let rulText = '';
+                if (rulSec === -1) { rulText = 'E-Stop 停機中'; }
+                else if (rulSec === 0) { rulText = '⚠ 須立即停機'; }
+                else if (rulSec !== undefined && rulSec < 999999) {
+                    const h = Math.floor(rulSec / 3600);
+                    const m = Math.floor((rulSec % 3600) / 60);
+                    rulText = `預估剩餘壽命：約 ${h}h ${m}m`;
+                }
+
+                // 信心度顯示
+                const confPct = (confidence * 100).toFixed(0);
+
+                const card      = document.getElementById('warning-window-card');
+                const title     = document.getElementById('warning-window-title');
+                const badge     = document.getElementById('warning-window-badge');
+                const container = document.getElementById('active-warnings-container');
+                const sId       = currentScenario < 10 ? '0' + currentScenario : currentScenario;
+
+                // 遙測數值快照 HTML (共用於三種等級)
+                const snapHtml = `
+                    <div class="row g-2 mt-2 fs-8">
+                        <div class="col-6 col-md-3">
+                            <div class="p-2 rounded" style="background:rgba(255,255,255,0.05)">
+                                <div class="text-muted">🌡 馬達溫度</div>
+                                <div class="fw-bold text-light">${tempC}</div>
+                            </div>
+                        </div>
+                        <div class="col-6 col-md-3">
+                            <div class="p-2 rounded" style="background:rgba(255,255,255,0.05)">
+                                <div class="text-muted">⚡ 電流 RMS</div>
+                                <div class="fw-bold text-light">${currA}</div>
+                            </div>
+                        </div>
+                        <div class="col-6 col-md-3">
+                            <div class="p-2 rounded" style="background:rgba(255,255,255,0.05)">
+                                <div class="text-muted">📍 跟蹤誤差</div>
+                                <div class="fw-bold text-light">${feErr}</div>
+                            </div>
+                        </div>
+                        <div class="col-6 col-md-3">
+                            <div class="p-2 rounded" style="background:rgba(255,255,255,0.05)">
+                                <div class="text-muted">📳 振動 RMS</div>
+                                <div class="fw-bold text-light">${vibG}</div>
+                            </div>
+                        </div>
+                    </div>
+                    ${rulText ? `<div class="mt-2 fs-8 text-info"><i class="fa-solid fa-clock me-1"></i>${rulText}</div>` : ''}
+                    <div class="mt-1 fs-8 text-muted">AI 診斷信心度：${confPct}%</div>
+                `;
+
+                if (riskLevel === 'Normal' && healthIndex >= 90) {
+                    card.className = "glass-card p-4 mb-4 border-success";
+                    title.className = "fw-bold m-0 text-success";
+                    title.innerHTML = '<i class="fa-solid fa-circle-check me-2"></i>即時運轉異常與警告動態視窗 (系統運作正常)';
+                    badge.innerHTML = `<span class="badge bg-success fs-7"><i class="fa-solid fa-check me-1"></i>系統無活動中警告 (Health: ${healthIndex}%)</span>`;
+                    container.innerHTML = `
+                        <div class="col-12">
+                            <div class="p-3 bg-dark rounded border border-success">
+                                <div class="d-flex justify-content-between align-items-center mb-2">
+                                    <div>
+                                        <span class="badge bg-success me-2">S${sId} Normal</span>
+                                        <strong class="text-light">根因：${rootCause}</strong>
+                                    </div>
+                                    <span class="fs-4 text-success fw-bold">${healthIndex}%</span>
+                                </div>
+                                <div class="fs-7 text-muted">${action}</div>
+                                ${snapHtml}
+                            </div>
+                        </div>
+                    `;
+                } else if (riskLevel === 'Critical' || healthIndex < 60) {
+                    card.className = "glass-card p-4 mb-4 border-danger";
+                    title.className = "fw-bold m-0 text-danger";
+                    title.innerHTML = '<i class="fa-solid fa-circle-exclamation me-2"></i>即時運轉異常與警告動態視窗 (臨界異常觸發！)';
+                    badge.innerHTML = `<span class="badge bg-danger fs-7"><i class="fa-solid fa-triangle-exclamation me-1"></i>CRITICAL ALARM ACTIVE (Health: ${healthIndex}%)</span>`;
+                    container.innerHTML = `
+                        <div class="col-12">
+                            <div class="p-3 bg-dark rounded border border-danger">
+                                <div class="d-flex justify-content-between align-items-center mb-2">
+                                    <span class="badge bg-danger fw-bold">S${sId} CRITICAL FAULT</span>
+                                    <span class="fs-8 text-muted">即時監控中</span>
+                                </div>
+                                <div class="fw-bold text-light mb-1">根因定位：${rootCause.toUpperCase()}</div>
+                                <div class="fs-7 text-danger-emphasis">健康指數降至 ${healthIndex}%，特徵超標。</div>
+                                <div class="mt-2 pt-2 border-top border-secondary fs-8 text-danger fw-bold">
+                                    <i class="fa-solid fa-screwdriver-wrench me-1"></i>建議處置：${action}
+                                </div>
+                                ${snapHtml}
+                            </div>
+                        </div>
+                    `;
+                } else {
+                    card.className = "glass-card p-4 mb-4 border-warning";
+                    title.className = "fw-bold m-0 text-warning";
+                    title.innerHTML = '<i class="fa-solid fa-triangle-exclamation me-2"></i>即時運轉異常與警告動態視窗 (系統警告)';
+                    badge.innerHTML = `<span class="badge bg-warning text-dark fs-7"><i class="fa-solid fa-triangle-exclamation me-1"></i>WARNING ACTIVE (Health: ${healthIndex}%)</span>`;
+                    container.innerHTML = `
+                        <div class="col-12">
+                            <div class="p-3 bg-dark rounded border border-warning">
+                                <div class="d-flex justify-content-between align-items-center mb-2">
+                                    <span class="badge bg-warning text-dark fw-bold">S${sId} WARNING</span>
+                                    <span class="fs-8 text-muted">即時監控中</span>
+                                </div>
+                                <div class="fw-bold text-light mb-1">診斷根因：${rootCause}</div>
+                                <div class="fs-7 text-muted">健康指數 ${healthIndex}%。</div>
+                                <div class="mt-2 pt-2 border-top border-secondary fs-8 text-warning fw-bold">
+                                    <i class="fa-solid fa-wrench me-1"></i>建議處置：${action}
+                                </div>
+                                ${snapHtml}
+                            </div>
+                        </div>
+                    `;
+                }
+            })
+            .catch(err => {
+                console.log("後端同步中:", err);
+            });
+    }
+
+    // 模擬動態切換工況測試函數
+    function switchScenario(id) {
+        fetch(API_BASE + '/api/v1/switch_scenario/' + id, { method: 'POST' })
+            .then(res => res.json())
+            .then(() => { fetchActiveDiagnose(); });
+    }
+
+    // 每 2 秒自動動態對接更新
+    setInterval(fetchActiveDiagnose, 2000);
+    document.addEventListener("DOMContentLoaded", fetchActiveDiagnose);
+</script>
+{% endblock %}

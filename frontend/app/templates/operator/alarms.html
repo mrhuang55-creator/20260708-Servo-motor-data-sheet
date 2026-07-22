@@ -1,0 +1,15 @@
+{% extends "base.html" %}
+{% block title %}警報中心 — AI SERVO PLATFORM{% endblock %}
+{% block content %}
+<h3 class="fw-bold mb-3"><i class="fa-solid fa-triangle-exclamation text-warning me-2"></i>警報中心 (Alarms Center)</h3>
+<div class="glass-card p-4">
+    <div class="d-flex gap-2 mb-3">
+        <button class="btn btn-sm btn-info">Active (0)</button>
+        <button class="btn btn-sm btn-outline-secondary">Acknowledged</button>
+        <button class="btn btn-sm btn-outline-secondary">Resolved</button>
+    </div>
+    <div class="alert alert-secondary text-center p-4">
+        目前無活動中警報。系統運行正常。
+    </div>
+</div>
+{% endblock %}

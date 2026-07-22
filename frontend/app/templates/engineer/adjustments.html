@@ -1,0 +1,26 @@
+{% extends "base.html" %}
+{% block title %}調參寫入審查 — AI SERVO PLATFORM{% endblock %}
+{% block content %}
+<h3 class="fw-bold mb-3"><i class="fa-solid fa-sliders text-danger me-2"></i>伺服驅動器調參提案與寫入測試</h3>
+<div class="glass-card p-4">
+    <div class="alert alert-warning p-3 fs-7 mb-4">
+        <i class="fa-solid fa-shield-halved me-2"></i>安全警告：參數寫入將透過 SLMP MC Protocol 直接發送至三菱 MR-J5 實體驅動器暫存器，寫入前請確認實體步階響應與相位裕度模擬結果。
+    </div>
+    
+    <form action="{{ url_for('engineer.adjustments') }}" method="POST">
+        <div class="mb-3">
+            <label class="form-label text-muted fs-7">選擇目標工況 (Scenario)</label>
+            <select class="form-select bg-dark border-secondary text-light" name="scenario_id">
+                <option value="1">S01: 標準基期工況</option>
+                <option value="18">S18: 增益不穩定 (Gain Instability)</option>
+                <option value="26">S26: 機械共振 (Resonance)</option>
+            </select>
+        </div>
+        <div class="mb-3">
+            <label class="form-label text-muted fs-7">寫入參數白名單 (PA01 位置環增益)</label>
+            <input type="number" class="form-control bg-dark border-secondary text-light" name="pa01_val" value="1000">
+        </div>
+        <button type="submit" class="btn btn-danger fw-bold"><i class="fa-solid fa-paper-plane me-2"></i>發送 SLMP MC 寫入指令</button>
+    </form>
+</div>
+{% endblock %}

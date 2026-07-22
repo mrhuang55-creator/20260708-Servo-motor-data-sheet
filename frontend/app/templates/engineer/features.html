@@ -1,0 +1,12 @@
+{% extends "base.html" %}
+{% block title %}特徵監控 — AI SERVO PLATFORM{% endblock %}
+{% block content %}
+<h3 class="fw-bold mb-3"><i class="fa-solid fa-chart-line text-info me-2"></i>特徵監控 (Feature Engineering & Residues)</h3>
+<div class="glass-card p-4">
+    <div class="row g-3">
+        <div class="col-md-4"><div class="p-3 bg-dark rounded border border-secondary">fft_1x_amp: <span class="text-info fw-bold">0.012</span></div></div>
+        <div class="col-md-4"><div class="p-3 bg-dark rounded border border-secondary">resonance_amp: <span class="text-success fw-bold">0.003</span></div></div>
+        <div class="col-md-4"><div class="p-3 bg-dark rounded border border-secondary">digital_twin_pos_residual: <span class="text-success fw-bold">0.021 mm</span></div></div>
+    </div>
+</div>
+{% endblock %}

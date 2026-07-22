@@ -1,0 +1,132 @@
+{% extends "base.html" %}
+{% block title %}待核准事項與審核 — AI SERVO PLATFORM{% endblock %}
+
+{% block content %}
+<div class="container-fluid p-0">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h3 class="fw-bold mb-1"><i class="fa-solid fa-stamp text-warning me-2"></i>管理者審核與待辦事項 (Admin Approvals)</h3>
+            <p class="text-muted fs-7 mb-0">落實雙人核准機制 (Dual Approval)、正式環境模型 Promotion 審查與 ISO 55000 稽核對照</p>
+        </div>
+        <div>
+            <a href="{{ url_for('admin.audit') }}" class="btn btn-outline-success btn-sm fw-bold"><i class="fa-solid fa-clipboard-check me-1"></i>匯出 ISO 稽核報告</a>
+        </div>
+    </div>
+
+    <!-- 4 張待辦計數卡 -->
+    <div class="row g-3 mb-4">
+        <div class="col-md-3">
+            <div class="glass-card p-3 d-flex align-items-center">
+                <div class="fs-1 text-warning me-3"><i class="fa-solid fa-brain"></i></div>
+                <div>
+                    <div class="text-muted fs-7">模型 Promotion</div>
+                    <div class="fs-3 metric-val text-warning">1 件待核准</div>
+                    <div class="fs-8 text-muted">v3.2.0 → v3.2.1</div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="glass-card p-3 d-flex align-items-center">
+                <div class="fs-1 text-info me-3"><i class="fa-solid fa-cubes"></i></div>
+                <div>
+                    <div class="text-muted fs-7">Scenario 審查</div>
+                    <div class="fs-3 metric-val text-info">1 件待審查</div>
+                    <div class="fs-8 text-muted">S04_高轉速輕載</div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="glass-card p-3 d-flex align-items-center">
+                <div class="fs-1 text-danger me-3"><i class="fa-solid fa-sliders"></i></div>
+                <div>
+                    <div class="text-muted fs-7">高風險調參申請</div>
+                    <div class="fs-3 metric-val text-danger">1 件待核准</div>
+                    <div class="fs-8 text-muted">MR-J5 PA01 增益</div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="glass-card p-3 d-flex align-items-center">
+                <div class="fs-1 text-success me-3"><i class="fa-solid fa-shield-check"></i></div>
+                <div>
+                    <div class="text-muted fs-7">越權與異常嘗試</div>
+                    <div class="fs-3 metric-val text-success">0 件</div>
+                    <div class="fs-8 text-muted">系統安全等級高</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 待核准列表 (最舊在上) -->
+    <div class="glass-card p-4 mb-4">
+        <h5 class="fw-bold mb-3"><i class="fa-solid fa-list-check text-warning me-2"></i>待核准事項清單 (Pending Approvals)</h5>
+        
+        <div class="card bg-dark border-secondary mb-3">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-start mb-2">
+                    <div>
+                        <span class="badge bg-warning text-dark me-2">模型 Promotion 申請</span>
+                        <span class="fw-bold fs-6">模型版本推升：v3.2.0 → v3.2.1</span>
+                    </div>
+                    <span class="fs-8 text-muted">提出時間：2026-07-22 14:00</span>
+                </div>
+                <p class="fs-7 text-muted mb-2">
+                    提案工程師：張工 (Engineer_01)<br>
+                    評估數據：Shadow 模式驗證完成 (600 Cycles)，RMSE 改善率達到 <strong>+14.8%</strong> (自 4.832 降至 4.118)，符合 ISO 55000 認證規範。
+                </p>
+                <div class="d-flex gap-2 mt-3">
+                    <button class="btn btn-sm btn-success fw-bold px-3" onclick="alert('已成功核准新模型 v3.2.1 上線！系統已執行原子切換。')"><i class="fa-solid fa-check me-1"></i>同意核准上線</button>
+                    <button class="btn btn-sm btn-outline-danger px-3" onclick="alert('已退回此模型 Promotion 申請。')"><i class="fa-solid fa-xmark me-1"></i>退回修正</button>
+                </div>
+            </div>
+        </div>
+
+        <div class="card bg-dark border-secondary">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-start mb-2">
+                    <div>
+                        <span class="badge bg-danger me-2">高風險參數寫入</span>
+                        <span class="fw-bold fs-6">三菱 MR-J5 驅動器 PA01 位置環增益寫入 (1000)</span>
+                    </div>
+                    <span class="fs-8 text-muted">提出時間：2026-07-22 13:30</span>
+                </div>
+                <p class="fs-7 text-muted mb-2">
+                    提案工程師：李工 (Engineer_02)<br>
+                    物理步階響應模擬驗證：整定時間 0.82s，相位裕度 54.2° (符合 >45° 標準規格)。
+                </p>
+                <div class="d-flex gap-2 mt-3">
+                    <button class="btn btn-sm btn-success fw-bold px-3" onclick="alert('已核准參數寫入。')"><i class="fa-solid fa-check me-1"></i>核准寫入</button>
+                    <button class="btn btn-sm btn-outline-danger px-3" onclick="alert('已拒絕參數寫入。')"><i class="fa-solid fa-xmark me-1"></i>拒絕</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 系統整合狀態 -->
+    <div class="glass-card p-3">
+        <h6 class="fw-bold mb-3"><i class="fa-solid fa-network-wired text-primary me-2"></i>系統整合健康與連線狀態</h6>
+        <div class="row g-2 fs-7 text-center">
+            <div class="col-md-3">
+                <div class="p-2 bg-dark rounded border border-secondary">
+                    FastAPI 分析引擎: <span class="text-success fw-bold">ONLINE (12ms)</span>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="p-2 bg-dark rounded border border-secondary">
+                    Redis Pub/Sub: <span class="text-success fw-bold">ONLINE (3ms)</span>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="p-2 bg-dark rounded border border-secondary">
+                    SQLite User DB: <span class="text-success fw-bold">ONLINE (5ms)</span>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="p-2 bg-dark rounded border border-secondary">
+                    NTP 時間同步: <span class="text-success fw-bold">SYNC (NTP)</span>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

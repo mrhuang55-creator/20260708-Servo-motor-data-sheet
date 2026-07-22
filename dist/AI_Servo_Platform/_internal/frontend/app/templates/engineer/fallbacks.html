@@ -1,0 +1,28 @@
+{% extends "base.html" %}
+{% block title %}Fallback 分析 — AI SERVO PLATFORM{% endblock %}
+{% block content %}
+<h3 class="fw-bold mb-3"><i class="fa-solid fa-shield-halved text-success me-2"></i>Fallback 安全退避防禦鏈</h3>
+<div class="glass-card p-4">
+    <div class="d-flex align-items-center justify-content-between p-3 bg-dark rounded border border-secondary mb-3">
+        <div>
+            <div class="fw-bold text-light">Level 1: AI Model (RF/XGBoost)</div>
+            <div class="fs-8 text-muted">當前運行狀態：Active 診斷中</div>
+        </div>
+        <span class="badge bg-success">PRIMARY ONLINE</span>
+    </div>
+    <div class="d-flex align-items-center justify-content-between p-3 bg-dark rounded border border-secondary mb-3">
+        <div>
+            <div class="fw-bold text-light">Level 2: Physics Assertion Rules</div>
+            <div class="fs-8 text-muted">極限斷言保護：plc_estop_active / E-Stop 監控</div>
+        </div>
+        <span class="badge bg-info">STANDBY READY</span>
+    </div>
+    <div class="d-flex align-items-center justify-content-between p-3 bg-dark rounded border border-secondary">
+        <div>
+            <div class="fw-bold text-light">Level 3: Hardware Hard-wired Safety Loop</div>
+            <div class="fs-8 text-muted">三菱 MR-J5 STO (Safe Torque Off) 實體迴路</div>
+        </div>
+        <span class="badge bg-secondary">HARDWARE ALWAYS ACTIVE</span>
+    </div>
+</div>
+{% endblock %}

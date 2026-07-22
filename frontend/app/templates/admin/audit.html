@@ -1,0 +1,43 @@
+{% extends "base.html" %}
+{% block title %}ISO 稽核中心 — AI SERVO PLATFORM{% endblock %}
+{% block content %}
+<h3 class="fw-bold mb-3"><i class="fa-solid fa-clipboard-check text-success me-2"></i>ISO 55000 / ISO 13374 稽核中心</h3>
+<div class="glass-card p-4">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h5 class="fw-bold mb-0">歷史操作與參數變更稽核紀錄 (Audit Trail)</h5>
+        <a href="/api/v1/export_audit_report" target="_blank" class="btn btn-sm btn-success fw-bold"><i class="fa-solid fa-download me-1"></i>匯出 JSON 報告</a>
+    </div>
+    <div class="table-responsive">
+        <table class="table table-dark table-hover fs-7 align-middle">
+            <thead>
+                <tr class="text-muted">
+                    <th>時間 (UTC)</th>
+                    <th>操作者</th>
+                    <th>Scenario</th>
+                    <th>寫入參數</th>
+                    <th>步階響應與相位裕度</th>
+                    <th>稽核結果</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% if audit and audit.recent_audit_trail %}
+                    {% for item in audit.recent_audit_trail %}
+                    <tr>
+                        <td>{{ item.timestamp }}</td>
+                        <td>{{ item.operator_id }}</td>
+                        <td>S{{ item.scenario_id }}</td>
+                        <td><code>{{ item.written_parameters }}</code></td>
+                        <td>整定 {{ item.transient_response.settling_time_sec }}s, 相位裕度 {{ item.transient_response.phase_margin_deg }}°</td>
+                        <td><span class="badge bg-success">{{ item.verification_result }}</span></td>
+                    </tr>
+                    {% endfor %}
+                {% else %}
+                    <tr>
+                        <td colspan="6" class="text-center text-muted py-3">尚無調參寫入紀錄。所有控制變更將自動登錄於此。</td>
+                    </tr>
+                {% endif %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

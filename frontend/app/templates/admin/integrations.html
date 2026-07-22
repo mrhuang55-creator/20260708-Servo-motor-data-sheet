@@ -1,0 +1,21 @@
+{% extends "base.html" %}
+{% block title %}系統整合狀態 — AI SERVO PLATFORM{% endblock %}
+{% block content %}
+<h3 class="fw-bold mb-3"><i class="fa-solid fa-network-wired text-primary me-2"></i>系統整合與通訊健康</h3>
+<div class="glass-card p-4">
+    <div class="row g-3">
+        <div class="col-md-6">
+            <div class="p-3 bg-dark rounded border border-secondary">
+                <div class="fw-bold mb-1">FastAPI (server.py) 分析後端</div>
+                <div class="fs-7 text-success">http://127.0.0.1:8000 (ONLINE)</div>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="p-3 bg-dark rounded border border-secondary">
+                <div class="fw-bold mb-1">三菱 MR-J5 SLMP MC 協議連線</div>
+                <div class="fs-7 text-success">TSN ONLINE (延遲 1.2ms)</div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

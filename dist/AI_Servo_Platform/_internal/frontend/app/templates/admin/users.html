@@ -1,0 +1,17 @@
+{% extends "base.html" %}
+{% block title %}使用者與 RBAC — AI SERVO PLATFORM{% endblock %}
+{% block content %}
+<h3 class="fw-bold mb-3"><i class="fa-solid fa-users-gear text-info me-2"></i>使用者與角色 RBAC 管理</h3>
+<div class="glass-card p-4">
+    <div class="table-responsive">
+        <table class="table table-dark table-hover fs-7">
+            <thead><tr><th>使用者帳號</th><th>對應角色</th><th>Operator ID</th><th>建立時間</th><th>操作</th></tr></thead>
+            <tbody>
+                <tr><td>admin</td><td><span class="badge badge-Administrator">Administrator</span></td><td>Admin_01</td><td>2026-07-22</td><td><button class="btn btn-sm btn-outline-info">編輯</button></td></tr>
+                <tr><td>engineer</td><td><span class="badge badge-Engineer">Engineer</span></td><td>Engineer_01</td><td>2026-07-22</td><td><button class="btn btn-sm btn-outline-info">編輯</button></td></tr>
+                <tr><td>operator</td><td><span class="badge badge-Operator">Operator</span></td><td>Operator_01</td><td>2026-07-22</td><td><button class="btn btn-sm btn-outline-info">編輯</button></td></tr>
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}
