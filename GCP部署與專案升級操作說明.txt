@@ -1,0 +1,107 @@
+================================================================================
+三菱 MR-J5 伺服馬達 AI 智慧健康診斷系統 — 41工況升級與 GCP Linux 部署完整說明書
+文件版本: v1.1 (包含完整 GCP Linux 命令清單)
+更新日期: 2026-07-22
+================================================================================
+
+一、 本次專案程式碼升級重點 (Project Upgrades)
+--------------------------------------------------------------------------------
+1. 全 41 工況物理模擬庫 (SCENARIO_PHYSICS_TABLE)
+   - 於 server.py 建立 SCENARIO_PHYSICS_TABLE 字典，涵蓋 S01~S41 所有工況之個別物理參數。
+   - 包含：馬達溫升 (°C)、電流 RMS (A)、跟蹤誤差 (Pulse)、振動 RMS (g)、健康指數 (0~100)、
+     預估剩餘壽命 RUL (秒)、診斷根因標籤與具體維修處置建議。
+
+2. 後端 API 與 WebSocket 雙頻道查表化
+   - /api/v1/diagnose API：不再傳回通用 else 預設值，改為查表動態輸出 41 種工況之診斷特徵與遙測快照。
+   - /ws/telemetry WebSocket：即時數據流查表動態注入重尾 EMI 噪訊與隨機物理擾動。
+
+3. 前端動態警告視窗對接升級
+   - 重構 engineer/scenarios.html 即時警告視窗，點擊「模擬切換」時即時展現對應工況之
+     溫度、電流、跟蹤誤差、振動加速度與剩餘壽命 (RUL)。
+
+4. GCP 雲端與跨平台部署相容性修正
+   - 移除前端硬編碼之 127.0.0.1:8000，改為動態 API_BASE 與相對路徑 /api/v1/...。
+   - 所有 Python 檔案路徑一律採用 os.path.join() 處理，相容 Windows 與 Linux。
+   - 後端 (Port 8000) 與前端 (Port 5000) 預設綁定 0.0.0.0 對外監聽。
+
+
+二、 本次 GCP Linux 操作用到的完整指令清單 (Command Cheatsheet)
+--------------------------------------------------------------------------------
+
+【類別 1：GCP 控制台與主機連線指令】
+--------------------------------------------------
+1. 在 GCP Cloud Shell 連進真正的 VM 主機：
+   gcloud compute instances list
+   gcloud compute ssh <您的VM名稱>
+
+2. 開放 GCP 防火牆 Port 80, 5000, 8000 (需在 Cloud Shell 或 GCP 控制台執行)：
+   gcloud compute firewall-rules create allow-phm-ports \
+       --allow=tcp:80,tcp:5000,tcp:8000 \
+       --target-tags=http-server
+
+
+【類別 2：檔案尋找、目錄建立與複製指令】
+--------------------------------------------------
+1. 查看家目錄 FileZilla 上傳進來的檔案/資料夾：
+   ls -la /home/mrhuang55/
+
+2. 全機尋找專案核心檔案位置：
+   sudo find / -name "server.py" 2>/dev/null
+
+3. 建立標準部署目錄並轉移權限：
+   sudo mkdir -p /opt/phm_system
+   sudo chown -R mrhuang55:mrhuang55 /opt/phm_system
+
+4. 將 FileZilla 上傳的 Servomotor 資料夾複製到部署目錄：
+   cp -r /home/mrhuang55/Servomotor/* /opt/phm_system/
+   cd /opt/phm_system
+   ls -la
+
+
+【類別 3：Linux 套件安裝與 Python 虛擬環境建立】
+--------------------------------------------------
+1. 安裝系統 Python venv 與 Nginx 網頁伺服器：
+   sudo apt update && sudo apt install -y python3-pip python3-venv python3-full nginx
+
+2. 在 /opt/phm_system 建立並啟用 venv 虛擬環境：
+   python3 -m venv venv
+   source venv/bin/activate
+
+3. 在虛擬環境內安裝專案所需依賴套件：
+   pip install flask requests fastapi uvicorn pydantic
+   (或 pip install -r requirements.txt)
+
+
+【類別 4：服務檢查與手動測試啟動指令】
+--------------------------------------------------
+1. 檢查通訊埠 5000/8000 是否已有服務在監聽：
+   sudo ss -tlpn | grep -E '5000|8000'
+
+2. 啟用虛擬環境並手動啟動前端 Flask：
+   cd /opt/phm_system
+   source venv/bin/activate
+   python3 frontend/run_flask.py
+
+3. 在背景同時啟動後端與前端：
+   python3 server.py &
+   python3 frontend/run_flask.py &
+
+
+【類別 5：Systemd 服務常駐與 Nginx 開機自動啟動設定】
+--------------------------------------------------
+1. 設定後端服務 (/etc/systemd/system/phm-backend.service)：
+   sudo cp /opt/phm_system/phm-backend.service /etc/systemd/system/
+
+2. 啟動並設定開機自啟 Systemd 服務：
+   sudo systemctl daemon-reload
+   sudo systemctl enable --now phm-backend phm-frontend
+
+3. 套用 Nginx 反向代理並重啟：
+   sudo cp /opt/phm_system/nginx_phm.conf /etc/nginx/sites-available/phm
+   sudo ln -sf /etc/nginx/sites-available/phm /etc/nginx/sites-enabled/default
+   sudo systemctl restart nginx
+
+
+================================================================================
+本說明檔已自動更新至：d:\20260708-Servo-motor-data-sheet\GCP部署與專案升級操作說明.txt
+================================================================================
