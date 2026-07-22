@@ -34,6 +34,7 @@ htmlcov/
 *.zip
 *.tar.gz
 *.pkl
+!**/演算法核心.pkl
 
 # ── IDE 設定與系統暫存 ──
 .vscode/

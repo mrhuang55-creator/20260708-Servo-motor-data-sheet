@@ -504,6 +504,44 @@ async def websocket_telemetry(websocket: WebSocket):
     except Exception:
         manager.disconnect(websocket)
 
+# ------------------------------------------------------------------------
+# 演算法核心 PKL 模型下載端點
+# ------------------------------------------------------------------------
+PKL_PATH = os.path.join(
+    BASE_DIR,
+    "02_專案實作與驗證",
+    "AI_SERVO_V5_PART_5_SCENARIOS_25_30",
+    "演算法核心.pkl"
+)
+
+@app.get("/api/model/info", tags=["Model"])
+async def get_model_info():
+    """查詢演算法核心.pkl 的元資料（是否存在、大小、更新時間）"""
+    if not os.path.exists(PKL_PATH):
+        raise HTTPException(status_code=404, detail="演算法核心.pkl 尚未生成，請先執行 phm_pipeline.py")
+    stat = os.stat(PKL_PATH)
+    import datetime
+    mtime = datetime.datetime.fromtimestamp(stat.st_mtime).strftime("%Y-%m-%d %H:%M:%S")
+    return {
+        "available": True,
+        "filename": "演算法核心.pkl",
+        "size_kb": round(stat.st_size / 1024, 1),
+        "last_updated": mtime
+    }
+
+@app.get("/api/model/download", tags=["Model"])
+async def download_model():
+    """下載演算法核心.pkl（二進位串流）"""
+    if not os.path.exists(PKL_PATH):
+        raise HTTPException(status_code=404, detail="演算法核心.pkl 尚未生成，請先執行 phm_pipeline.py")
+    with open(PKL_PATH, "rb") as f:
+        data = f.read()
+    return Response(
+        content=data,
+        media_type="application/octet-stream",
+        headers={"Content-Disposition": "attachment; filename*=UTF-8''%E6%BC%94%E7%AE%97%E6%B3%95%E6%A0%B8%E5%BF%83.pkl"}
+    )
+
 if __name__ == "__main__":
     import uvicorn
     uvicorn.run("server:app", host="0.0.0.0", port=8000, reload=True)
