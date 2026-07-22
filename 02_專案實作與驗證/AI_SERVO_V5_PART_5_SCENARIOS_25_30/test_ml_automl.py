@@ -93,7 +93,6 @@ def test_optuna_tuner():
     assert best_fit > 0.5, "Optuna-TPE 未能收斂出合適適應度！"
     print("  [PASS] Optuna-TPE 貝氏超參數尋優測試通過！")
 
-<<<<<<< HEAD
 def test_imbalanced_learning():
     print("\n>>> 測試 2.5：極度類別不平衡下的分類競賽與過採樣 (SMOTE/Class-Weighted)...")
     # 建立高度不平衡數據集 (模擬 LN 正常佔 97%，LO 早期退化僅佔 3%)
@@ -104,17 +103,13 @@ def test_imbalanced_learning():
     # 多數類 (LN)
     X_majority = np.random.normal(0, 1.0, (n_samples - n_minority, 4))
     y_majority = np.zeros(n_samples - n_minority, dtype=int)
-    
     # 少數類 (LO) - 均值有微小偏移，且加入高峭度脈衝
     X_minority = np.random.normal(0.5, 1.0, (n_minority, 4))
     y_minority = np.ones(n_minority, dtype=int)
-    
     X = np.vstack([X_majority, X_minority])
     y = np.concatenate([y_majority, y_minority])
-    
     platform = MLCompetitionPlatform()
     results = platform.run_classification_competition(X, y)
-    
     print("  高度失衡下 (3% 早期故障樣本) 的分類模型 Macro F1-Score 排名：")
     for r in results[:5]:
         print(f"    - 模型: {r['model']:<25} | F1-Score (Macro): {r['f1_macro']:.4f}")
@@ -126,14 +121,9 @@ def test_imbalanced_learning():
     assert best_f1 > 0.48, f"不平衡分類優化效果不佳，最佳 F1 僅為: {best_f1:.4f}"
     print("  [PASS] 類別不平衡與代價敏感學習測試通過！")
 
-=======
->>>>>>> b5a207cdbbbcb9a64bd2e230beb9283139dc051a
 if __name__ == "__main__":
     test_competition_platform()
     test_unsupervised_clustering()
     test_genetic_tuner()
     test_optuna_tuner()
-<<<<<<< HEAD
     test_imbalanced_learning()
-=======
->>>>>>> b5a207cdbbbcb9a64bd2e230beb9283139dc051a

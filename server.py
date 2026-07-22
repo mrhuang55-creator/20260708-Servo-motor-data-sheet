@@ -169,11 +169,13 @@ class HeavyTailedNoiseGenerator:
 def root():
     return {
         "system": "Mitsubishi MR-J5 Real-World Industrial AI PHM Platform",
+        "algorithm_core_model": "演算法核心.pkl",
         "iso_compliance": "ISO 55000 / ISO 13374 Certified",
         "shadow_mode_active": True,
         "scenarios_loaded": len(SCENARIOS_CACHE),
         "docs_url": "/docs"
     }
+
 
 # ------------------------------------------------------------------------
 # 身份驗證與帳號管理 API (Authentication & User Management)

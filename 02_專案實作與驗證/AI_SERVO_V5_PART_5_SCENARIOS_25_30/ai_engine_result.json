@@ -1,52 +1,7 @@
 {
   "root_cause": "resonance",
-<<<<<<< HEAD
-  "confidence": 0.3,
-  "scores": {
-    "following_error": 0.20833333333333334,
-    "thermal_motor": 0.6111111111111112,
-    "thermal_drive": 0.5882352941176471,
-    "vibration": 1.0,
-    "bearing": 0.33333333333333337,
-    "torque_ripple": 0.5,
-    "current_load": 0.6,
-    "network": 0.75,
-    "digital_twin_error": 0.56,
-    "encoder_drift": 0.0,
-    "encoder_noise": 0.0,
-    "encoder_signal_loss": 0.0
-  },
-  "health_index_mean": 62.0,
-  "rul_sec_min": 3000.0,
-  "fft_resonance_peak": 290.0,
-  "data_provenance_warning": [
-    "vibration_rms_g (unavailable)",
-    "frequency_response_100hz_db (fabricated_not_in_dataset)"
-  ],
-  "advanced_diagnostics": {
-    "scenario_id": 26,
-    "scenario_name": "Mechanical Resonance (共振激振)",
-    "frequency_domain": {
-      "max_harmonic_db": 36.0,
-      "has_high_frequency_harmonics": true
-    },
-    "time_window": {
-      "state_transitions": [
-        "early_degradation"
-      ],
-      "current_state": "early_degradation"
-    },
-    "cross_correlation": {
-      "sync_error_vs_torque_load_max_corr": 0.0,
-      "sync_error_vs_torque_load_optimal_lag": 0,
-      "is_communication_driving_torque": false
-    },
-    "logical_assertion_triggered": false
-  }
-=======
   "confidence": 0.98,
   "fft_resonance_peak": 290.0,
   "health_index_mean": 62.0,
   "rul_sec_min": 3000.0
->>>>>>> b5a207cdbbbcb9a64bd2e230beb9283139dc051a
 }

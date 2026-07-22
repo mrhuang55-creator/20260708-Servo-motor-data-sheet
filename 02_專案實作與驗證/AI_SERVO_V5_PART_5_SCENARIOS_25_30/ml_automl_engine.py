@@ -23,13 +23,10 @@ from sklearn.neural_network import MLPRegressor
 # Clustering models
 from sklearn.cluster import KMeans, DBSCAN, OPTICS, Birch, SpectralClustering
 
-<<<<<<< HEAD
 def oversample_minority_class(X, y, random_state=42):
-    """
-    純 NumPy 實作之簡易過採樣 (SMOTE-like 或隨機過採樣)
-    僅複製或在少數類樣本間做線性差值合成，使各類別樣本數平衡。
-    """
+    """純 NumPy 實作之簡易過採樣 (SMOTE-like 或隨機過採樣)"""
     rng = np.random.default_rng(random_state)
+
     classes, counts = np.unique(y, return_counts=True)
     if len(classes) < 2:
         return X, y
@@ -44,10 +41,8 @@ def oversample_minority_class(X, y, random_state=42):
         # 尋找該少數類別的樣本
         idx_c = np.where(y == c)[0]
         X_c = X[idx_c]
-        
         # 需要合成/複製的樣本數
         n_to_add = max_count - count
-        
         # 簡易線性差值過採樣 (SMOTE-like)
         if count >= 2:
             # 隨機選擇基底樣本
@@ -63,23 +58,17 @@ def oversample_minority_class(X, y, random_state=42):
             # 若樣本極少 (單一樣本)，直接進行隨機複製並加入微小高斯擾動
             X_synthetic = np.tile(X_c, (n_to_add, 1))
             X_synthetic += rng.normal(0, 1e-4, X_synthetic.shape)
-            
         y_synthetic = np.full(n_to_add, c)
-        
         X_resampled.append(X_synthetic)
         y_resampled.append(y_synthetic)
-        
     return np.vstack(X_resampled), np.concatenate(y_resampled)
 
-=======
->>>>>>> b5a207cdbbbcb9a64bd2e230beb9283139dc051a
 class MLCompetitionPlatform:
     """
     分類與回歸多模型競賽平台 (Model Competition Platform)
     包含 Stacking 整合與 20+ 候選模型庫對接
     """
     def __init__(self):
-<<<<<<< HEAD
         # 1. 初始化分類器庫 (全部配置為代價敏感類型 class_weight='balanced')
         base_cls_estimators = [
             ('rf', RandomForestClassifier(n_estimators=10, max_depth=3, class_weight='balanced', random_state=42)),
@@ -98,27 +87,8 @@ class MLCompetitionPlatform:
             "KNeighbors": KNeighborsClassifier(n_neighbors=5),
             "MLPClassifier": MLPClassifier(hidden_layer_sizes=(32, 16), max_iter=10, random_state=42),
             "StackingClassifier": StackingClassifier(estimators=base_cls_estimators, final_estimator=LogisticRegression(class_weight='balanced'), cv=2)
-=======
-        # 1. 初始化分類器庫
-        base_cls_estimators = [
-            ('rf', RandomForestClassifier(n_estimators=10, max_depth=3, random_state=42)),
-            ('et', ExtraTreesClassifier(n_estimators=10, max_depth=3, random_state=42))
-        ]
-        
-        self.classifiers = {
-            "RandomForest": RandomForestClassifier(n_estimators=30, max_depth=5, random_state=42),
-            "ExtraTrees": ExtraTreesClassifier(n_estimators=30, max_depth=5, random_state=42),
-            "GradientBoosting": GradientBoostingClassifier(n_estimators=10, max_depth=3, random_state=42),
-            "HistGradientBoosting": HistGradientBoostingClassifier(max_iter=20, max_depth=3, random_state=42),
-            "DecisionTree": DecisionTreeClassifier(max_depth=5, random_state=42),
-            "LogisticRegression": LogisticRegression(max_iter=50, random_state=42),
-            "SGDClassifier": SGDClassifier(max_iter=50, random_state=42),
-            "AdaBoost": AdaBoostClassifier(n_estimators=10, random_state=42),
-            "KNeighbors": KNeighborsClassifier(n_neighbors=5),
-            "MLPClassifier": MLPClassifier(hidden_layer_sizes=(32, 16), max_iter=10, random_state=42),
-            "StackingClassifier": StackingClassifier(estimators=base_cls_estimators, final_estimator=LogisticRegression(), cv=2)
->>>>>>> b5a207cdbbbcb9a64bd2e230beb9283139dc051a
         }
+
         
         # 2. 初始化回歸器庫
         base_reg_estimators = [
@@ -141,18 +111,12 @@ class MLCompetitionPlatform:
         }
 
     def run_classification_competition(self, X, y):
-        """
-<<<<<<< HEAD
-        對比多種分類器的 F1-Score 並排序，Fold 內部自動執行過採樣以應對類別失衡
-=======
-        對比多種分類器的 F1-Score 並排序
->>>>>>> b5a207cdbbbcb9a64bd2e230beb9283139dc051a
-        """
+        """Compare classification F1-scores"""
+
         results = []
         kf = KFold(n_splits=3, shuffle=True, random_state=42)
         for name, clf in self.classifiers.items():
             try:
-<<<<<<< HEAD
                 # 實作 Fold 內部過採樣的交叉驗證 (防止資訊洩露)
                 scores = []
                 for train_idx, val_idx in kf.split(X, y):
@@ -161,18 +125,13 @@ class MLCompetitionPlatform:
                     
                     # 僅對訓練 Fold 執行平衡過採樣
                     X_train_res, y_train_res = oversample_minority_class(X_train, y_train)
-                    
                     from sklearn.base import clone
                     clf_clone = clone(clf)
                     clf_clone.fit(X_train_res, y_train_res)
-                    
                     preds = clf_clone.predict(X_val)
                     # 對不平衡資料，計算 macro 平均的 F1-Score 評估其檢測能力
                     scores.append(f1_score(y_val, preds, average='macro'))
-                    
-=======
                 scores = cross_val_score(clf, X, y, cv=kf, scoring='f1_macro')
->>>>>>> b5a207cdbbbcb9a64bd2e230beb9283139dc051a
                 mean_score = np.mean(scores)
                 results.append({"model": name, "f1_macro": float(mean_score)})
             except Exception as e:
@@ -323,10 +282,8 @@ class GeneticAlgorithmTuner:
         return best_ind, best_fitness
 
 class OptunaBayesianTuner:
-    """
-    樹狀巴森估計器 (TPE/SMAC) 貝氏超參數尋優器 (對照 Optuna 功能定位)
-    使用隨機森林回歸作為 Surrogate 代理模型進行主動學習參數搜尋
-    """
+    """Optuna Bayesian Hyperparameter Tuner Class"""
+
     def __init__(self, X, y, n_trials=10):
         self.X = X
         self.y = y

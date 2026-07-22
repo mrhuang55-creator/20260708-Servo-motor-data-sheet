@@ -1,16 +1,11 @@
 #!/usr/bin/env python3
 import numpy as np
 
-<<<<<<< HEAD
 class TimeDomainFeatureExtractor:
-    """
-    時域特徵提取器，提供高階無量綱時域指標，用於診斷早期微弱損傷。
-    """
+    """時域特徵提取器，提供高階無量綱時域指標，用於診斷早期微弱損傷。"""
     @staticmethod
     def kurtosis(signal):
-        """
-        計算峭度 (Kurtosis)。正常噪訊接近 3.0，早期故障 (LO) 時會顯著上升。
-        """
+        """計算峭度 (Kurtosis)。正常噪訊接近 3.0，早期故障 (LO) 時會顯著上升。"""
         signal = np.asarray(signal)
         n = len(signal)
         if n < 4:
@@ -24,30 +19,22 @@ class TimeDomainFeatureExtractor:
 
     @staticmethod
     def crest_factor(signal):
-        """
-        計算波峰因數 (Crest Factor)。反映峰值與有效值的比例。
-        """
-        signal = np.asarray(signal)
+        """計算波峰因數 (Crest Factor)。反映峰值與有效值的比例。"""
         rms = np.sqrt(np.mean(signal ** 2))
         if rms < 1e-15:
             return 1.0
+
         peak = np.max(np.abs(signal))
         return float(peak / rms)
-
     @staticmethod
     def margin_factor(signal):
-        """
-        計算裕度因數 (Margin Factor)。
-        """
-        signal = np.asarray(signal)
+        """計算裕度因數 (Margin Factor)。"""
         peak = np.max(np.abs(signal))
         mean_sqrt = (np.mean(np.sqrt(np.abs(signal)))) ** 2
         if mean_sqrt < 1e-15:
             return 1.0
         return float(peak / mean_sqrt)
 
-=======
->>>>>>> b5a207cdbbbcb9a64bd2e230beb9283139dc051a
 class KalmanFilter2D:
     """
     2D 卡爾曼估測器
@@ -174,15 +161,12 @@ class BodeResponseAnalyzer:
         if len(idx_cross_phase) > 0:
             gain_margin_db = float(-mag_db[idx_cross_phase[0]])
             
-<<<<<<< HEAD
         # 計算共振能量占比 (100Hz - 400Hz 區帶能量與總能量比例)
         total_energy = np.sum(np.abs(fft_act) ** 2) + eps
         idx_band = (freqs >= 100.0) & (freqs <= 400.0)
         band_energy = np.sum(np.abs(fft_act[idx_band]) ** 2)
         sideband_energy_ratio = float(band_energy / total_energy)
             
-=======
->>>>>>> b5a207cdbbbcb9a64bd2e230beb9283139dc051a
         return {
             "status": "success",
             "frequencies": freqs.tolist(),
@@ -193,13 +177,10 @@ class BodeResponseAnalyzer:
             "resonance_peak_freq_hz": peak_freq,
             "resonance_prominence_db": peak_prominence,
             "phase_margin_deg": phase_margin,
-<<<<<<< HEAD
-            "gain_margin_db": gain_margin_db,
-            "sideband_resonance_energy_ratio": sideband_energy_ratio
-=======
+            "sideband_resonance_energy_ratio": sideband_energy_ratio,
             "gain_margin_db": gain_margin_db
->>>>>>> b5a207cdbbbcb9a64bd2e230beb9283139dc051a
         }
+
 
 class ARIMAPredictor:
     """
@@ -253,19 +234,13 @@ class ARIMAPredictor:
             predictions.append(float(current_t))
             
         return predictions
-<<<<<<< HEAD
-
 
 class AdvancedMechanicalDiagnostics:
-    """
-    提供針對滾珠螺桿、導軌等機械結構之進階物理診斷特徵解算
-    """
+    """提供針對滾珠螺桿、導軌等機械結構之進階物理診斷特徵解算"""
     @staticmethod
     def reversal_error(pos_demand, pos_actual, velocity):
-        """
-        計算反轉誤差 (Reversal Error)
-        在速度反轉 (跨越零點) 的瞬間，計算指令位置與實際位置之差
-        """
+        """計算反轉誤差 (Reversal Error)"""
+
         pos_demand = np.asarray(pos_demand)
         pos_actual = np.asarray(pos_actual)
         velocity = np.asarray(velocity)
@@ -277,27 +252,18 @@ class AdvancedMechanicalDiagnostics:
             if velocity[i] * velocity[i-1] < 0:
                 err = abs(pos_demand[i] - pos_actual[i])
                 reversal_errors.append(err)
-        
         if not reversal_errors:
             # 簡化退化公式
             return float(np.mean(np.abs(pos_demand - pos_actual)) * 0.1)
         return float(np.mean(reversal_errors))
-
     @staticmethod
     def dead_zone_width(pos_demand, pos_actual, velocity):
-        """
-        計算死區寬度 (Dead Zone Width)
-        當指令速度發生反向時，實際位置保持不動而指令位置繼續移動的區間
-        """
-        pos_demand = np.asarray(pos_demand)
-        pos_actual = np.asarray(pos_actual)
-        velocity = np.asarray(velocity)
-        
+        """計算死區寬度 (Dead Zone Width)"""
         dead_zones = []
         for i in range(1, len(velocity)):
             if velocity[i] * velocity[i-1] < 0:
-                # 速度反向瞬間，指令移動但實際幾乎未動
                 start_idx = i
+
                 # 向後搜尋直到實際位置發生明顯變化
                 for j in range(start_idx, min(start_idx + 20, len(pos_actual))):
                     if abs(pos_actual[j] - pos_actual[start_idx]) > 0.05: # 明顯移動
@@ -307,13 +273,10 @@ class AdvancedMechanicalDiagnostics:
         if not dead_zones:
             return 0.05 # 預設微小值
         return float(np.mean(dead_zones))
-
     @staticmethod
     def hysteresis_area(pos_demand, pos_actual):
-        """
-        計算滯後環面積 (Hysteresis Area)
-        利用 Green 公式計算指令-實際位置閉環軌跡圍成的面積
-        """
+        """計算滯後環面積 (Hysteresis Area)"""
+
         x = np.asarray(pos_demand)
         y = np.asarray(pos_actual)
         if len(x) < 3:
@@ -321,30 +284,20 @@ class AdvancedMechanicalDiagnostics:
         # 閉合曲線：A = 0.5 * |sum(x_i * y_i+1 - x_i+1 * y_i)|
         area = 0.5 * np.abs(np.dot(x[:-1], y[1:]) - np.dot(x[1:], y[:-1]))
         return float(area / len(x)) # 平均每個採樣的面積
-
     @staticmethod
     def direction_dependent_following_error(pos_demand, pos_actual, velocity):
-        """
-        方向相關追隨誤差 (Direction-dependent Following Error)
-        計算正向與反向運動狀態下的平均追隨誤差差值
-        """
-        pos_demand = np.asarray(pos_demand)
-        pos_actual = np.asarray(pos_actual)
-        velocity = np.asarray(velocity)
+        """方向相關追隨誤差 (Direction-dependent Following Error)"""
         fe = np.abs(pos_demand - pos_actual)
-        
         pos_fe = fe[velocity > 10.0]
         neg_fe = fe[velocity < -10.0]
-        
         mean_pos = np.mean(pos_fe) if len(pos_fe) > 0 else 0.0
         mean_neg = np.mean(neg_fe) if len(neg_fe) > 0 else 0.0
         return float(abs(mean_pos - mean_neg))
 
     @staticmethod
     def force_displacement_slope(pos_actual, following_error, stiffness):
-        """
-        剛性斜率估算 (Force-Displacement Slope)
-        """
+        """剛性斜率估算 (Force-Displacement Slope)"""
+
         fe = np.asarray(following_error)
         pos = np.asarray(pos_actual)
         # 用追隨誤差做自變量，剛性(力)做因變量估算斜率
@@ -352,107 +305,76 @@ class AdvancedMechanicalDiagnostics:
             return float(np.mean(stiffness))
         slope = np.polyfit(fe, pos, 1)[0]
         return float(abs(slope))
-
     @staticmethod
     def compliance_std(pos_actual, following_error):
-        """
-        柔度標準差 (Compliance Std)
-        """
+        """柔度標準差 (Compliance Std)"""
         fe = np.asarray(following_error)
         pos = np.asarray(pos_actual)
-        # 柔度估算 = 追隨誤差 / 位置變化
         eps = 1e-8
         compliance = fe / (np.abs(pos) + eps)
         return float(np.std(compliance))
 
     @staticmethod
     def elastic_region_width(pos_actual, following_error):
-        """
-        彈性變形區寬度
-        """
+        """彈性變形區寬度"""
         fe = np.asarray(following_error)
-        # 基於追隨誤差與位置的比例範圍
         return float(np.percentile(fe, 95) - np.percentile(fe, 5))
 
     @staticmethod
     def stribeck_friction_parameters(velocity, torque):
-        """
-        擬合 Stribeck 摩擦模型參數
-        返回 [coulomb_friction, viscous_friction, stribeck_coeff]
-        """
+        """擬合 Stribeck 摩擦模型參數"""
         v = np.asarray(velocity)
         t = np.asarray(torque)
-        
-        # 估算庫倫摩擦 (低速時平均扭矩)
         low_v = t[np.abs(v) < 100.0]
         coulomb = np.mean(np.abs(low_v)) if len(low_v) > 0 else 0.3
-        
-        # 估算粘性摩擦 (高速時扭矩與速度斜率)
         high_v_idx = np.abs(v) > 500.0
         if np.sum(high_v_idx) > 5:
             viscous = np.polyfit(np.abs(v[high_v_idx]), np.abs(t[high_v_idx]), 1)[0]
         else:
             viscous = 0.001
-            
-        stribeck = coulomb * 1.25 # 經驗係數
+        stribeck = coulomb * 1.25
         return float(coulomb), float(viscous), float(stribeck)
 
-
 class AdvancedElectricalDiagnostics:
-    """
-    提供針對電機磁路退磁與電磁故障之進階物理特徵解算
-    """
+    """提供針對電機磁路退磁與電磁故障之進階物理特徵解算"""
     @staticmethod
     def fft_harmonic_amplitudes(i_3p_a, i_3p_b, i_3p_c):
-        """
-        計算三相電流 FFT 諧波幅值
-        """
+        """計算三相電流 FFT 諧波幅值"""
         ia = np.asarray(i_3p_a)
-        # 計算 FFT
         fft_a = np.fft.rfft(ia)
         mags = np.abs(fft_a)
-        # 返回前三個諧波成分的均值
         if len(mags) > 5:
             return float(np.mean(mags[1:4]))
         return 0.01
 
     @staticmethod
     def current_total_harmonic_distortion(i_3p):
-        """
-        計算電流總諧波失真 (THD)
-        """
+        """計算電流總諧波失真 (THD)"""
         i = np.asarray(i_3p)
         fft_i = np.fft.rfft(i)
         mags = np.abs(fft_i)
         if len(mags) < 3 or mags[1] < 1e-8:
-            return 0.05 # 預設 THD 5%
-        # THD = sqrt(sum(V_n^2) for n>=2) / V_1
+            return 0.05
         thd = np.sqrt(np.sum(mags[2:]**2)) / mags[1]
         return float(thd)
 
     @staticmethod
     def phase_imbalance_index(i_3p_a, i_3p_b, i_3p_c):
-        """
-        計算三相電流不平衡度 (Phase Imbalance Index)
-        """
+        """計算三相電流不平衡度 (Phase Imbalance Index)"""
         ia = np.mean(np.abs(i_3p_a))
         ib = np.mean(np.abs(i_3p_b))
         ic = np.mean(np.abs(i_3p_c))
-        mean_i = (ia + ib + ic) / 3.0
-        if mean_i < 1e-8:
+        avg = (ia + ib + ic) / 3.0
+        if avg < 1e-5:
             return 0.0
-        max_dev = max(abs(ia - mean_i), abs(ib - mean_i), abs(ic - mean_i))
-        return float(max_dev / mean_i)
+        max_dev = max(abs(ia - avg), abs(ib - avg), abs(ic - avg))
+        return float((max_dev / avg) * 100.0)
 
     @staticmethod
     def id_iq_trajectory_area(id_arr, iq_arr):
-        """
-        計算 DQ 軸電流軌跡的包絡面積
-        """
+        """計算 DQ 軸電流軌跡的包絡面積"""
         x = np.asarray(id_arr)
         y = np.asarray(iq_arr)
-        if len(x) < 3:
-            return 0.0
         # 計算邊界圍成面積 (利用簡化散點凸包或協方差面積)
         cov = np.cov(x, y)
         if cov.ndim == 2:
@@ -461,6 +383,3 @@ class AdvancedElectricalDiagnostics:
             area = np.pi * np.sqrt(np.abs(eigvals[0] * eigvals[1]))
             return float(area)
         return 0.1
-
-=======
->>>>>>> b5a207cdbbbcb9a64bd2e230beb9283139dc051a

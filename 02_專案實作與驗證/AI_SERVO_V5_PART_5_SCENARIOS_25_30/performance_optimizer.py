@@ -2,7 +2,6 @@
 import argparse, json
 from pathlib import Path
 
-<<<<<<< HEAD
 SCENARIO_DETAILS = {
     1: ("normal", "Healthy Baseline", ["PA08", "PB08"], "No adjustment needed. System is operating normally.", []),
     2: ("motor_over_temp", "Motor Over Temperature", ["PA13", "PA11", "PA12"], "Reduce motor peak acceleration/deceleration rate and duty cycle.", ["motor_temp_c", "current_rms_a"]),
@@ -89,7 +88,9 @@ SCENARIO_WRITES = {
     40: {"PA13": 300, "PC73": 10}
 }
 
+
 def optimize(ai):
+
     # 獲取 AI 診斷結果中的情境 ID
     adv = ai.get("advanced_diagnostics", {})
     scenario_id = adv.get("scenario_id", 1)
@@ -102,10 +103,8 @@ def optimize(ai):
             if details[0] == root:
                 scenario_id = sid
                 break
-
     cause, desc, groups, action, kpi = SCENARIO_DETAILS.get(scenario_id, SCENARIO_DETAILS[1])
     writes = SCENARIO_WRITES.get(scenario_id, {}).copy()
-    
     # 自動補正共振峰
     if scenario_id == 26:
         peak = ai.get("fft_resonance_peak")
@@ -115,12 +114,8 @@ def optimize(ai):
     import binascii, hashlib
     payload_str = json.dumps(writes, sort_keys=True)
     crc32_val = binascii.crc32(payload_str.encode('utf-8')) & 0xffffffff
-    sha256_val = hashlib.sha256(payload_str.encode('utf-8')).hexdigest()
-    
-    return {
-        "ai_root_cause": cause,
-=======
-RULES = {
+    RULES = {
+
     "following_error": [
         ["Position loop gain", "Feedforward", "Model adaptive control", "Positioning completion range"],
         "Increase response gradually; verify overshoot and settling.",
@@ -147,6 +142,7 @@ RULES = {
         ["torque_error_nm", "current_rms_a", "fft_2x_amp"]
     ],
     "current_load": [
+
         ["Torque limit", "Current limit", "Load inertia ratio", "Acceleration/deceleration"],
         "Retune load inertia and reduce peak current.",
         ["current_rms_a", "torque_limit_pct", "cycle_time_ms"]
@@ -162,7 +158,7 @@ RULES = {
         ["digital_twin_pos_residual", "digital_twin_speed_residual", "position_error_pulse"]
     ],
     "communication_loss_of_control": [
-        ["PLC motion command cycle", "CC-Link IE TSN / EtherCAT sync", "Command smoothing"],
+        ["Communication cycle"],
         "Suppress network package loss and scan jitter first; do not tune gains.",
         ["ethercat_packet_loss_pct", "plc_scan_time_ms_anomaly", "ethercat_sync_error_us"]
     ],
@@ -181,6 +177,7 @@ RULES = {
         "Verify brake status and adjust mechanical brake timing constants to prevent vertical shaft slip.",
         ["digital_twin_pos_residual", "torque_error_nm", "following_error_abs_pulse"]
     ],
+
     "emergency_stop": [
         ["Forced stop deceleration time constant", "Emergency stop torque limit", "Deceleration smoothing"],
         "Check safety circuits and adjust deceleration ramp time constants to prevent mechanical shock during E-stops.",
@@ -201,13 +198,14 @@ RULES = {
         "No adjustment needed. System is operating normally.",
         []
     ],
+
     "motor_over_temp": [
         ["Acceleration/deceleration time constant", "Torque limit", "Current limit"],
         "Reduce motor acceleration/deceleration rate and duty cycle to prevent thermal run-away.",
         ["motor_temp_c", "current_rms_a"]
     ],
     "drive_over_temp": [
-        ["Acceleration/deceleration time constant", "Torque limit", "Current limit"],
+        ["Current limit", "Torque limit"],
         "Reduce motor peak current and increase deceleration time constant to prevent drive thermal trip.",
         ["drive_temp_c", "current_rms_a"]
     ],
@@ -226,7 +224,6 @@ RULES = {
         "Encoder signal loss detected! Trigger immediate emergency deceleration stop and engage brakes.",
         ["encoder_error_count", "health_index"]
     ],
-    # --- 以下為 新增的 07-22 & 24 優化規則 ---
     "coupling_misalignment": [
         ["Speed gain", "Robust filter", "Position Gain"],
         "Reduce speed loop gain slightly to suppress misalignment oscillation.",
@@ -240,7 +237,7 @@ RULES = {
     "gearbox_backlash": [
         ["Lost motion compensation", "Backlash compensation"],
         "Increase lost motion compensation value (PE07) to adjust backlash.",
-        ["digital_twin_pos_residual", "encoder_drift_pulse"]
+        ["encoder_drift_pulse"]
     ],
     "ball_screw_friction": [
         ["Friction compensation", "Torque limit"],
@@ -268,9 +265,9 @@ RULES = {
         ["torque_error_nm", "following_error_abs_pulse"]
     ],
     "fan_failure": [
-        ["None"],
+        ["Duty cycle"],
         "Reduce duty cycle, schedule fan maintenance.",
-        ["drive_temp_c", "current_rms_a"]
+        ["drive_temp_c"]
     ],
     "ground_noise": [
         ["Current filter", "Command filter"],
@@ -290,7 +287,7 @@ RULES = {
     "dynamic_brake_fail": [
         ["Brake delay timing", "Forced stop deceleration"],
         "Adjust brake delay to reduce mechanical slip distance.",
-        ["following_error_abs_pulse", "vibration_rms_g"]
+        ["following_error_abs_pulse"]
     ],
     "command_jitter": [
         ["Command filter", "Command smoothing"],
@@ -300,7 +297,7 @@ RULES = {
     "inertia_mismatch": [
         ["Load inertia ratio", "Auto tuning"],
         "Retune load inertia ratio (PA09) to match payload.",
-        ["following_error_abs_pulse", "vibration_rms_g"]
+        ["following_error_abs_pulse"]
     ],
     "bearing_wear": [
         ["Friction compensation", "Vibration suppression"],
@@ -308,18 +305,15 @@ RULES = {
         ["bearing_bpfo_amp", "bearing_bpfi_amp", "health_index"]
     ],
     "sync_timeout": [
-        ["None"],
+        ["Communication cycle"],
         "Inspect TSN/EtherCAT master sync cycle, bypass servo gains tuning.",
         ["ethercat_sync_error_us", "network_jitter_ms"]
     ]
 }
 
-def optimize(ai):
     root = ai.get("root_cause", "following_error")
     groups, action, kpi = RULES.get(root, RULES["following_error"])
-    
     writes = {}
-    
     # 讀取當前參數
     current_params = ai.get("current_parameters", {
         "PB07": 100, # Position loop gain
@@ -334,7 +328,6 @@ def optimize(ai):
         "PE02": 50,  # Friction compensation
         "PE07": 0    # Backlash compensation
     })
-    
     # 1. 共振抑制 Notch Filter 寫入
     peak = ai.get("fft_resonance_peak")
     if peak and float(peak) > 0:
@@ -345,36 +338,29 @@ def optimize(ai):
     if root in ["encoder_drift", "gearbox_backlash"] or "encoder_drift" in root:
         drift = ai.get("encoder_drift_pulse", 120.0)
         writes["PE07"] = int(round(drift * 0.8)) # 補償 80% 穩態間隙
-        
     # 3. 摩擦力補償 (Friction Compensation) -> 軸承磨損與卡阻
     if root in ["bearing", "bearing_wear", "ball_screw_friction"] or ai.get("friction_estimate_nm", 0.0) > 0:
         friction = ai.get("friction_estimate_nm", 1.5)
         writes["PE02"] = int(round(friction * 100.0)) # 轉換為對應參數單位
-
     # --- 以下為 核心參數微調寫入邏輯 ---
     # 4. 位置誤差過大 / 響應不足 (following_error) -> 增加增益
     if root in ["following_error", "following_error_high"]:
         writes["PB07"] = int(round(current_params.get("PB07", 100) * 1.10))
         writes["PB08"] = int(round(current_params.get("PB08", 150) * 1.10))
-        
     # 5. 增益不穩定 / 迴路振盪 (gain_instability / overshoot_high) -> 降低增益
     elif root in ["gain_instability", "overshoot_high"]:
         writes["PB07"] = int(round(current_params.get("PB07", 100) * 0.90))
         writes["PB08"] = int(round(current_params.get("PB08", 150) * 0.90))
-        
     # 6. 超溫 / 過熱 (motor_over_temp / drive_over_temp / thermal) -> 降低扭矩限制
     elif root in ["motor_over_temp", "drive_over_temp", "thermal"]:
         writes["PA11"] = int(round(current_params.get("PA11", 300) * 0.90))
         writes["PA12"] = int(round(current_params.get("PA12", 300) * 0.90))
-        
     # 7. 煞車失效 (brake_failure) -> 增加煞車延遲
     elif root == "brake_failure":
         writes["PC16"] = int(round(current_params.get("PC16", 50) * 1.20))
-        
     # 8. 緊急停止 (emergency_stop) -> 平滑強停減速
     elif root == "emergency_stop":
         writes["PC24"] = int(round(current_params.get("PC24", 100) * 1.20))
-
     # --- 以下為 新增的 S07-S22 & S24 調參計算 ---
     # 9. S07: coupling_misalignment -> 降低速度增益 5%
     elif root == "coupling_misalignment":
@@ -385,53 +371,50 @@ def optimize(ai):
     # 11. S11: phase_loss -> 降低轉矩限制 PA11 10%
     elif root == "phase_loss":
         writes["PA11"] = int(round(current_params.get("PA11", 300) * 0.90))
-    # 12. S12: bus_overvoltage -> 增加減速時間 PC24 20%
     elif root == "bus_overvoltage":
         writes["PC24"] = int(round(current_params.get("PC24", 100) * 1.20))
-    # 13. S13: bus_undervoltage -> 增加加速時間 PC24 20%
     elif root == "bus_undervoltage":
         writes["PC24"] = int(round(current_params.get("PC24", 100) * 1.20))
-    # 14. S14: mechanical_jam -> 降低轉矩限制 PA11 10%
     elif root == "mechanical_jam":
         writes["PA11"] = int(round(current_params.get("PA11", 300) * 0.90))
-    # 15. S16: ground_noise -> 增加指令濾波 PB18 10%
     elif root == "ground_noise":
         writes["PB18"] = int(round(current_params.get("PB18", 10) * 1.10))
+
     # 16. S17: limit_active -> 減少煞車動作延遲 PC16 10%
     elif root == "limit_active":
         writes["PC16"] = int(round(current_params.get("PC16", 50) * 0.90))
-    # 17. S18: accel_aggressive -> 增加加減速時間 PC24 20%
     elif root == "accel_aggressive":
-        writes["PC24"] = int(round(current_params.get("PC24", 100) * 1.20))
-    # 18. S19: dynamic_brake_fail -> 增加煞車動作延遲 PC16 20%
+        writes["PC24"] = int(round(current_params.get("PC24", 100) * 1.2))
     elif root == "dynamic_brake_fail":
-        writes["PC16"] = int(round(current_params.get("PC16", 50) * 1.20))
-    # 19. S20: command_jitter -> 增加濾波 PB18 10%
+        writes["PC16"] = int(round(current_params.get("PC16", 50) * 1.2))
     elif root == "command_jitter":
-        writes["PB18"] = int(round(current_params.get("PB18", 10) * 1.10))
-    # 20. S21: inertia_mismatch -> 增加自動響應 PA09 1格
+        writes["PB18"] = int(round(current_params.get("PB18", 10) * 1.1))
     elif root == "inertia_mismatch":
         writes["PA09"] = int(round(current_params.get("PA09", 12) + 1))
-        
+
+    import zlib
+    import hashlib
+    payload_str = str(writes) + root
+    crc32_val = zlib.crc32(payload_str.encode('utf-8'))
+    sha256_val = hashlib.sha256(payload_str.encode('utf-8')).hexdigest()
+
     return {
+
         "ai_root_cause": root,
->>>>>>> b5a207cdbbbcb9a64bd2e230beb9283139dc051a
         "confidence": ai.get("confidence", 0),
         "mr_j5_parameter_group": groups,
         "recommended_action": action,
         "trial_plan": ["Read parameters", "Set trial parameters", "Low-speed trial", "Production-speed trial", "Collect after data", "Compare KPI", "Save parameters"],
         "mr_j5_parameter_writes": writes,
         "target_kpi": kpi,
-<<<<<<< HEAD
         "save_condition": "Save when KPI improvement >= 10% and no new alarm/trip is detected.",
         "security": {
             "crc32": f"0x{crc32_val:08X}",
             "sha256": sha256_val
         }
-=======
-        "save_condition": "Save when KPI improvement >= 10% and no new alarm/trip is detected."
->>>>>>> b5a207cdbbbcb9a64bd2e230beb9283139dc051a
     }
+
+
 
 if __name__ == "__main__":
     p = argparse.ArgumentParser()

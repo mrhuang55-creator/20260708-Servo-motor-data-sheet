@@ -1,10 +1,7 @@
 #!/usr/bin/env python3
 import numpy as np
-<<<<<<< HEAD
 from dsp_analytics import KalmanFilter2D, BodeResponseAnalyzer, ARIMAPredictor, TimeDomainFeatureExtractor
-=======
 from dsp_analytics import KalmanFilter2D, BodeResponseAnalyzer, ARIMAPredictor
->>>>>>> b5a207cdbbbcb9a64bd2e230beb9283139dc051a
 
 def test_kalman_filter():
     print(">>> 測試 1.1：2D 卡爾曼估測器 (Kalman Filter)...")
@@ -56,17 +53,11 @@ def test_bode_analyzer():
     print(f"  共振突出度: {res['resonance_prominence_db']:.2f} dB")
     print(f"  增益裕度: {res['gain_margin_db']:.2f} dB")
     print(f"  相位裕度: {res['phase_margin_deg']:.2f} 度")
-<<<<<<< HEAD
     print(f"  側頻共振帶能量比 (100-400Hz Ratio): {res['sideband_resonance_energy_ratio']:.4f}")
     
     assert abs(res['resonance_peak_freq_hz'] - 290.0) < 15.0, "共振峰分析誤差過大！"
     assert "nyquist_real" in res and "nyquist_imag" in res, "Nyquist 實部與虛部計算缺失！"
     assert "sideband_resonance_energy_ratio" in res, "缺少共振帶能量占比指標！"
-=======
-    
-    assert abs(res['resonance_peak_freq_hz'] - 290.0) < 15.0, "共振峰分析誤差過大！"
-    assert "nyquist_real" in res and "nyquist_imag" in res, "Nyquist 實部與虛部計算缺失！"
->>>>>>> b5a207cdbbbcb9a64bd2e230beb9283139dc051a
     print(f"  Nyquist 實部樣本[5]: {res['nyquist_real'][5]:.4f} | 虛部樣本[5]: {res['nyquist_imag'][5]:.4f}")
     print("  [PASS] 波德圖與共振峰頻譜分析測試通過！")
 
@@ -94,14 +85,12 @@ def test_arima_predictor():
     assert abs(preds[-1]) < 150.0, "ARIMA 預估結果發散！"
     print("  [PASS] ARIMA 溫升趨勢預估測試通過！")
 
-<<<<<<< HEAD
 def test_time_domain_features():
     print("\n>>> 測試 1.4：時域高階無量綱指標 (Kurtosis/Crest/Margin Factor)...")
     
     # 1. 建立健康正常運轉信號 (LN) - 純高斯噪訊
     np.random.seed(42)
     ln_signal = np.random.normal(0, 1.0, 1000)
-    
     # 2. 建立早期退化信號 (LO) - 高斯噪訊中夾帶周期性的微弱敲擊突刺脈衝 (Impulse spike)
     lo_signal = ln_signal.copy()
     # 每 100 點注入一個振幅為 10 的衝擊
@@ -112,28 +101,19 @@ def test_time_domain_features():
     kurt_ln = TimeDomainFeatureExtractor.kurtosis(ln_signal)
     crest_ln = TimeDomainFeatureExtractor.crest_factor(ln_signal)
     margin_ln = TimeDomainFeatureExtractor.margin_factor(ln_signal)
-    
     kurt_lo = TimeDomainFeatureExtractor.kurtosis(lo_signal)
     crest_lo = TimeDomainFeatureExtractor.crest_factor(lo_signal)
     margin_lo = TimeDomainFeatureExtractor.margin_factor(lo_signal)
-    
     print(f"  [LN 正常] Kurtosis: {kurt_ln:.4f} | Crest Factor: {crest_ln:.4f} | Margin Factor: {margin_ln:.4f}")
     print(f"  [LO 早期] Kurtosis: {kurt_lo:.4f} | Crest Factor: {crest_lo:.4f} | Margin Factor: {margin_lo:.4f}")
-    
     # 斷言：高階時域指標在 LO 狀態下必須顯著大於 LN 狀態
     assert kurt_lo > kurt_ln * 2.0, "峭度對早期故障衝擊敏感度不足！"
     assert crest_lo > crest_ln * 1.5, "波峰因數未能有效拉開 LN/LO 邊界！"
     assert margin_lo > margin_ln * 1.5, "裕度因數未能拉開 LN/LO 邊界！"
-    
     print("  [PASS] 時域高階無量綱指標早期故障識別測試通過！")
 
-=======
->>>>>>> b5a207cdbbbcb9a64bd2e230beb9283139dc051a
 if __name__ == "__main__":
     test_kalman_filter()
     test_bode_analyzer()
     test_arima_predictor()
-<<<<<<< HEAD
     test_time_domain_features()
-=======
->>>>>>> b5a207cdbbbcb9a64bd2e230beb9283139dc051a
