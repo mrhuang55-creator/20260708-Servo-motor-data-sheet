@@ -1,6 +1,6 @@
 Metadata-Version: 2.4
 Name: numpy
-Version: 2.4.3
+Version: 2.5.1
 Summary: Fundamental package for array computing in Python
 Author: Travis E. Oliphant et al.
 Maintainer-Email: NumPy Developers <numpy-discussion@python.org>
@@ -28,7 +28,6 @@ Classifier: Intended Audience :: Developers
 Classifier: Programming Language :: C
 Classifier: Programming Language :: Python
 Classifier: Programming Language :: Python :: 3
-Classifier: Programming Language :: Python :: 3.11
 Classifier: Programming Language :: Python :: 3.12
 Classifier: Programming Language :: Python :: 3.13
 Classifier: Programming Language :: Python :: 3.14
@@ -47,7 +46,7 @@ Project-URL: source, https://github.com/numpy/numpy
 Project-URL: download, https://pypi.org/project/numpy/#files
 Project-URL: tracker, https://github.com/numpy/numpy/issues
 Project-URL: release notes, https://numpy.org/doc/stable/release
-Requires-Python: >=3.11
+Requires-Python: >=3.12
 Description-Content-Type: text/markdown
 
 <h1 align="center">
@@ -78,7 +77,7 @@ NumPy is the fundamental package for scientific computing with Python.
 - **Source code:** https://github.com/numpy/numpy
 - **Contributing:** https://numpy.org/devdocs/dev/index.html
 - **Bug reports:** https://github.com/numpy/numpy/issues
-- **Report a security vulnerability:** https://tidelift.com/docs/security
+- **Report a security vulnerability:** https://github.com/numpy/numpy/security/policy (via Tidelift)
 
 It provides:
 

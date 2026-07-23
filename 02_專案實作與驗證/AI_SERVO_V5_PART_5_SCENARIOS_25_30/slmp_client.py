@@ -36,6 +36,9 @@ class SLMPClient:
         return self.write_d_registers(addr, [int(value)], network_no, pc_no, dest_io, dest_station)
 
     def read_mr_j5_parameter(self, param_name, network_no=0x00, pc_no=0xFF, dest_io=0x03FF, dest_station=0x00):
+        if param_name not in self.PARAMETER_MAP:
+            raise ValueError(f"Unknown parameter name: {param_name}")
+        addr = self.PARAMETER_MAP[param_name]
         res = self.read_d_registers(addr, 1, network_no, pc_no, dest_io, dest_station)
         return res[0] if res else None
     def connect(self):

@@ -1,14 +1,175 @@
 {% extends "base.html" %}
-{% block title %}模型登錄 — AI SERVO PLATFORM{% endblock %}
+{% block title %}L3 AutoML 模型排名 + 特徵重要性 — AI SERVO PLATFORM{% endblock %}
+
 {% block content %}
-<h3 class="fw-bold mb-3"><i class="fa-solid fa-brain text-primary me-2"></i>AI 模型登錄與版本管理</h3>
-<div class="glass-card p-4">
-    <table class="table table-dark fs-7">
-        <thead><tr><th>版本</th><th>模型類型</th><th>訓練數據</th><th>RMSE</th><th>狀態</th></tr></thead>
-        <tbody>
-            <tr><td>v3.2.0</td><td>RandomForest + IsolationForest</td><td>10M Parquet Streaming</td><td>4.832</td><td><span class="badge bg-success">Active Active</span></td></tr>
-            <tr><td>v3.2.1</td><td>XGBoost Hybrid</td><td>10M Parquet Streaming</td><td>4.118</td><td><span class="badge bg-warning text-dark">Shadow Evaluated</span></td></tr>
-        </tbody>
-    </table>
+<div class="container-fluid p-0">
+    <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2 glass-card p-3 border-primary">
+        <div>
+            <h4 class="fw-bold mb-1 text-light"><i class="fa-solid fa-brain text-primary me-2"></i>L3 畫面 — AutoML 模型排名 + 特徵重要性</h4>
+            <p class="text-muted fs-7 mb-0">Engineer 專屬：查看 AutoML 競賽排行榜，發起重訓練需由 Administrator 核准推升</p>
+        </div>
+        <div class="d-flex gap-2 flex-wrap">
+            <div class="btn-group" role="group" id="train-level-btns">
+                <button class="btn btn-sm btn-outline-danger active" onclick="setTrainLevel('HEAVY',this)">HEAVY TRAIN</button>
+                <button class="btn btn-sm btn-outline-warning" onclick="setTrainLevel('MIN',this)">MIN TRAIN</button>
+                <button class="btn btn-sm btn-outline-info" onclick="setTrainLevel('MS',this)">MS TRAIN</button>
+            </div>
+            <button class="btn btn-primary btn-sm" onclick="loadL3Data()">
+                <i class="fa-solid fa-rotate me-1"></i>刷新排行榜
+            </button>
+        </div>
+    </div>
+
+    <!-- 指標橫列（從 API 填入） -->
+    <div class="row g-3 mb-4">
+        <div class="col-md-3">
+            <div class="glass-card p-3 border-start border-4 border-primary">
+                <div class="text-muted fs-8">Champion 模型</div>
+                <div class="fs-6 fw-bold text-primary mt-1" id="l3-champion-name">載入中…</div>
+                <div class="fs-8 text-muted" id="l3-trained-at">—</div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="glass-card p-3 border-start border-4 border-warning">
+                <div class="text-muted fs-8">Champion CV_RMSE</div>
+                <div class="fs-4 fw-bold text-warning mt-1" id="l3-champion-rmse">—</div>
+                <div class="fs-8 text-muted">TEST_R2: <span id="l3-champion-r2">—</span></div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="glass-card p-3 border-start border-4 border-success">
+                <div class="text-muted fs-8">訓練樣本數</div>
+                <div class="fs-5 fw-bold text-success mt-1" id="l3-n-train">—</div>
+                <div class="fs-8 text-muted">特徵維度: <span id="l3-n-feat">—</span></div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="glass-card p-3 border-start border-4 border-info">
+                <div class="text-muted fs-8">版本</div>
+                <div class="fs-5 fw-bold text-info mt-1" id="l3-version">—</div>
+                <div class="fs-8 text-muted" id="l3-reason">—</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 排行榜 + 特徵重要性 -->
+    <div class="row g-3 mb-4">
+        <div class="col-md-7">
+            <div class="glass-card p-3">
+                <h6 class="fw-bold mb-3"><i class="fa-solid fa-trophy text-warning me-2"></i>AutoML 模型競賽排行榜 (Leaderboard)</h6>
+                <div class="table-responsive">
+                    <table class="table table-dark table-hover fs-7 align-middle mb-0">
+                        <thead><tr class="text-muted"><th>#</th><th>演算法</th><th>CV_RMSE</th><th>TEST_RMSE</th><th>R²</th><th>訓練時間</th></tr></thead>
+                        <tbody id="l3-leaderboard-tbody"><tr><td colspan="6" class="text-center text-muted">載入中…</td></tr></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-5">
+            <div class="glass-card p-3 h-100">
+                <h6 class="fw-bold mb-3"><i class="fa-solid fa-ranking-star text-info me-2"></i>特徵重要性 (Feature Importance)</h6>
+                <div style="height: 220px;"><canvas id="chart-feature-importance"></canvas></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 歷史版本列表 -->
+    <div class="glass-card p-3">
+        <h6 class="fw-bold mb-3"><i class="fa-solid fa-clock-rotate-left text-secondary me-2"></i>歷史模型版本</h6>
+        <div class="table-responsive">
+            <table class="table table-dark fs-7 align-middle mb-0">
+                <thead><tr class="text-muted"><th>版本</th><th>Pool</th><th>RMSE</th><th>訓練日</th><th>狀態</th></tr></thead>
+                <tbody id="l3-models-tbody"><tr><td colspan="5" class="text-center text-muted">載入中…</td></tr></tbody>
+            </table>
+        </div>
+    </div>
 </div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    const API = 'http://127.0.0.1:8000';
+    let fiChart = null;
+
+    function setTrainLevel(level, btn) {
+        document.querySelectorAll('#train-level-btns button').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+    }
+
+    function loadL3Data() {
+        const scen = '01_Pick_and_Place';
+
+        // --- AutoML 最新結果 ---
+        fetch(`${API}/api/v1/l3/latest?scenario_id=${scen}`)
+            .then(r => r.json()).then(d => {
+                const ch = d.champion || {};
+                document.getElementById('l3-champion-name').textContent = ch.name || '—';
+                document.getElementById('l3-champion-rmse').textContent = ch.CV_RMSE ?? '—';
+                document.getElementById('l3-champion-r2').textContent = ch.TEST_R2 ?? '—';
+                document.getElementById('l3-n-train').textContent = d.n_train ? d.n_train.toLocaleString() : '—';
+                document.getElementById('l3-n-feat').textContent = d.n_features ?? '—';
+                document.getElementById('l3-version').textContent = d.selected_model?.version ?? '—';
+                document.getElementById('l3-reason').textContent = d.selected_model?.reason?.slice(0,40) ?? '—';
+                document.getElementById('l3-trained-at').textContent = d.trained_at ? d.trained_at.slice(0,19) : '—';
+
+                // 排行榜 tbody
+                const reg = d.ml_pool?.regression || [];
+                const tbody = document.getElementById('l3-leaderboard-tbody');
+                tbody.innerHTML = reg.map((m, i) => `
+                    <tr ${i===0 ? 'class="table-warning"' : ''}>
+                        <td>${i===0 ? '🏆 1' : '#'+(i+1)}</td>
+                        <td class="fw-bold">${m.name}</td>
+                        <td class="text-warning fw-bold">${m.CV_RMSE}</td>
+                        <td>${m.TEST_RMSE}</td>
+                        <td class="text-success">${m.TEST_R2}</td>
+                        <td>${m.train_time_s}s</td>
+                    </tr>`).join('') || '<tr><td colspan="6" class="text-center text-muted">無資料</td></tr>';
+
+                // 特徵重要性圖
+                const fi = d.feature_importance_global || [];
+                if (fi.length) {
+                    const labels = fi.map(x => x.feature);
+                    const vals = fi.map(x => x.importance);
+                    const ctx = document.getElementById('chart-feature-importance').getContext('2d');
+                    if (fiChart) fiChart.destroy();
+                    fiChart = new Chart(ctx, {
+                        type: 'bar',
+                        data: {
+                            labels,
+                            datasets: [{ label: 'Gain 重要性', data: vals,
+                                backgroundColor: ['#38bdf8','#22c55e','#f59e0b','#a78bfa','#f87171','#94a3b8'],
+                                borderRadius: 6 }]
+                        },
+                        options: {
+                            indexAxis: 'y', responsive: true, maintainAspectRatio: false,
+                            plugins: { legend: { display: false } },
+                            scales: {
+                                x: { ticks: { color: '#94a3b8' }, grid: { color: '#334155' } },
+                                y: { ticks: { color: '#94a3b8' }, grid: { color: '#334155' } }
+                            }
+                        }
+                    });
+                }
+            }).catch(() => {});
+
+        // --- 歷史模型列表 ---
+        fetch(`${API}/api/v1/l3/models?scenario_id=${scen}`)
+            .then(r => r.json()).then(d => {
+                const tbody = document.getElementById('l3-models-tbody');
+                const models = d.models || [];
+                tbody.innerHTML = models.map(m => `
+                    <tr>
+                        <td class="fw-bold">${m.version}</td>
+                        <td><span class="badge bg-secondary">${m.pool}</span></td>
+                        <td>${m.metrics?.RMSE ?? '—'}</td>
+                        <td class="text-muted">${m.trained_at ? m.trained_at.slice(0,10) : '—'}</td>
+                        <td>${m.status === 'active' ? '<span class="badge bg-success">Active</span>' : '<span class="badge bg-secondary">Rolled Back</span>'}</td>
+                    </tr>`).join('') || '<tr><td colspan="5" class="text-center text-muted">無資料</td></tr>';
+            }).catch(() => {});
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+        startHmiDynamicTimer(loadL3Data, 3000);
+    });
+</script>
 {% endblock %}

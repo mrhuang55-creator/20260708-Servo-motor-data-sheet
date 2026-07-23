@@ -1,135 +1,288 @@
 {% extends "base.html" %}
-{% block title %}操作員主控制台 — AI SERVO PLATFORM{% endblock %}
+{% block title %}L1. 主畫面 — 操作員控制台 (工控 SCADA 監控) — AI SERVO PLATFORM{% endblock %}
 
 {% block content %}
 <div class="container-fluid p-0">
-    <div class="d-flex justify-content-between align-items-center mb-4">
+    <!-- 頂部：整合式手動/自動控制面板 (Manual / Auto Control Panel) -->
+    <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-3 glass-card p-3 border-info">
         <div>
-            <h3 class="fw-bold mb-1"><i class="fa-solid fa-display text-info me-2"></i>操作員主控制台 (Operator Console)</h3>
-            <p class="text-muted fs-7 mb-0">即時監控伺服驅動器運轉狀態、殘差變動與操作控制</p>
+            <h4 class="fw-bold mb-1 text-light"><i class="fa-solid fa-industry text-info me-2"></i>L1. 主畫面 — 工控主控制台 (HMI / SCADA)</h4>
+            <p class="text-muted fs-7 mb-0">即時馬達動態流程圖、實態部件健康度與雙階段防呆控制</p>
         </div>
-        <div class="d-flex gap-2">
-            <button id="btn-cycle-start" class="btn btn-success fw-bold px-3"><i class="fa-solid fa-play me-2"></i>Cycle Start</button>
-            <button id="btn-cycle-stop" class="btn btn-warning fw-bold px-3"><i class="fa-solid fa-stop me-2"></i>Cycle Stop</button>
-            <button id="btn-estop-request" class="btn btn-danger fw-bold px-3"><i class="fa-solid fa-triangle-exclamation me-2"></i>E-Stop Request</button>
+        
+        <!-- 手動 / 自動模式切換與人體工學觸控控制項 (48px Touch Standard) -->
+        <div class="d-flex flex-wrap gap-3 align-items-center">
+            <!-- 模式切換 Toggle -->
+            <div class="d-flex align-items-center bg-dark p-1 rounded-3 border border-secondary">
+                <span class="fs-8 fw-bold me-2 ms-2 text-muted" id="label-mode-manual">MANUAL</span>
+                <div class="form-check form-switch m-0 p-0">
+                    <input class="form-switch-input" type="checkbox" id="switch-auto-mode" checked style="width: 48px; height: 24px; cursor: pointer;">
+                </div>
+                <span class="fs-8 fw-bold ms-2 me-2 text-success" id="label-mode-auto">AUTO</span>
+            </div>
+
+            <!-- 1. POWER 開關 (致能 ON / 停能 OFF 切換) -->
+            <div class="btn-group" role="group" aria-label="Power Controller">
+                <button id="btn-power-on" class="btn btn-success hmi-btn-lg px-4"><i class="fa-solid fa-power-off me-2"></i>POWER ON</button>
+                <button id="btn-power-off" class="btn btn-outline-secondary hmi-btn-lg px-3"><i class="fa-solid fa-circle-xmark me-2"></i>POWER OFF</button>
+            </div>
+
+            <!-- 2. CYCLE START / STOP 運轉雙態切換 -->
+            <div class="btn-group" role="group" aria-label="Cycle Controller">
+                <button id="btn-cycle-start" class="btn btn-primary hmi-btn-lg px-4"><i class="fa-solid fa-play me-2"></i>CYCLE START</button>
+                <button id="btn-cycle-stop" class="btn btn-warning hmi-btn-lg px-3 text-dark fw-bold"><i class="fa-solid fa-stop me-2"></i>STOP</button>
+            </div>
+
+            <!-- 3. EMERGENCY STOP 工業亮紅急停按鈕 (常駐 48px 高度) -->
+            <button id="btn-estop-request" class="btn btn-danger hmi-btn-lg px-4 shadow-lg border border-light fw-bold" style="background-color: #ef4444; animation: pulse-estop 2s infinite;">
+                <i class="fa-solid fa-triangle-exclamation me-2"></i>E-STOP 急停
+            </button>
         </div>
     </div>
 
-    <!-- L1 系統狀態與 L2 關鍵數字 -->
-    <div class="row g-3 mb-4">
-        <div class="col-md-3">
-            <div class="glass-card p-3 d-flex align-items-center">
-                <div class="fs-1 text-success me-3"><i class="fa-solid fa-circle-check"></i></div>
-                <div>
-                    <div class="text-muted fs-7">全廠系統狀態</div>
-                    <div class="fs-4 fw-bold text-light">Normal 運轉中</div>
-                    <div class="fs-8 text-muted">Scenario: S01 (基期)</div>
+    <!-- 模組一：系統總覽 — 圖形化伺服馬達與產線運作流程圖 (SVG Dynamic Process Diagram) -->
+    <div class="glass-card p-4 mb-4 border border-secondary">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <h6 class="fw-bold text-info mb-0"><i class="fa-solid fa-network-wired me-2"></i>機台系統總覽 (Dynamic Machine Process Flowchart)</h6>
+            <span class="badge bg-success-subtle text-success border border-success fs-8"><i class="fa-solid fa-circle me-1 animate-pulse"></i>伺服驅動器：MR-J5-40G (SLMP MC Protocol 8000)</span>
+        </div>
+        
+        <div class="row align-items-center">
+            <!-- 互動式動態流程 SVG -->
+            <div class="col-lg-8 border-end border-secondary pe-lg-4">
+                <div class="bg-dark p-3 rounded-3 border border-secondary text-center relative overflow-hidden" style="min-height: 220px;">
+                    <svg viewBox="0 0 800 200" width="100%" height="200" xmlns="http://www.w3.org/2000/svg">
+                        <!-- 1. AC 伺服馬達 (Stator & Rotor) -->
+                        <g id="svg-motor-group">
+                            <rect x="30" y="40" width="140" height="120" rx="10" fill="#1e293b" stroke="#38bdf8" stroke-width="3"/>
+                            <circle cx="100" cy="100" r="40" fill="#0f172a" stroke="#22c55e" stroke-width="3" id="svg-rotor-ring"/>
+                            <text x="100" y="95" fill="#f8fafc" font-size="12" text-anchor="middle" font-weight="bold">MR-J5 Motor</text>
+                            <text x="100" y="115" fill="#38bdf8" font-size="11" text-anchor="middle" id="svg-motor-rpm">3000 RPM</text>
+                        </g>
+
+                        <!-- 馬達轉軸與聯軸器 -->
+                        <rect x="170" y="90" width="60" height="20" fill="#64748b" stroke="#94a3b8" stroke-width="1"/>
+                        <circle cx="200" cy="100" r="15" fill="#334155" stroke="#f59e0b" stroke-width="2"/>
+                        <text x="200" y="140" fill="#94a3b8" font-size="10" text-anchor="middle">Coupling</text>
+
+                        <!-- 連接訊號傳輸線 -->
+                        <line x1="230" y1="100" x2="310" y2="100" stroke="#38bdf8" stroke-width="4" stroke-dasharray="6,4"/>
+
+                        <!-- 2. 軸承座 (Bearing Housing) -->
+                        <g id="svg-bearing-group">
+                            <rect x="310" y="60" width="70" height="80" rx="5" fill="#1e293b" stroke="#f59e0b" stroke-width="2"/>
+                            <circle cx="345" cy="100" r="22" fill="#0f172a" stroke="#f59e0b" stroke-width="2" stroke-dasharray="4,2"/>
+                            <text x="345" y="104" fill="#f59e0b" font-size="10" text-anchor="middle" font-weight="bold">Bearing</text>
+                            <text x="345" y="155" fill="#94a3b8" font-size="10" text-anchor="middle">S06 Health: 96%</text>
+                        </g>
+
+                        <!-- 傳動軸 -->
+                        <line x1="380" y1="100" x2="460" y2="100" stroke="#64748b" stroke-width="8"/>
+
+                        <!-- 3. 滾珠螺桿與滑台 (Ball Screw & Linear Table) -->
+                        <g id="svg-screw-group">
+                            <rect x="460" y="85" width="220" height="30" rx="4" fill="#0f172a" stroke="#94a3b8" stroke-width="2"/>
+                            <line x1="460" y1="100" x2="680" y2="100" stroke="#38bdf8" stroke-width="3" stroke-dasharray="8,4"/>
+                            <!-- 移動平台 Worktable -->
+                            <rect x="520" y="45" width="80" height="60" rx="6" fill="#1e293b" stroke="#22c55e" stroke-width="3" id="svg-worktable"/>
+                            <text x="560" y="75" fill="#22c55e" font-size="11" text-anchor="middle" font-weight="bold">Worktable</text>
+                            <text x="560" y="92" fill="#94a3b8" font-size="10" text-anchor="middle" id="svg-pos-val">X: 120.4mm</text>
+                        </g>
+
+                        <!-- 4. 光學編碼器 (Encoder Feedback) -->
+                        <g id="svg-encoder-group">
+                            <rect x="700" y="65" width="70" height="70" rx="8" fill="#1e293b" stroke="#a78bfa" stroke-width="2"/>
+                            <text x="735" y="98" fill="#a78bfa" font-size="11" text-anchor="middle" font-weight="bold">Encoder</text>
+                            <text x="735" y="115" fill="#94a3b8" font-size="9" text-anchor="middle">26-bit Absolute</text>
+                        </g>
+                    </svg>
+                </div>
+            </div>
+
+            <!-- 機台關鍵感測器實時狀態欄 -->
+            <div class="col-lg-4 ps-lg-4 mt-3 mt-lg-0">
+                <div class="hmi-metric-card mb-2 d-flex justify-content-between align-items-center">
+                    <div>
+                        <div class="text-muted fs-8 text-uppercase">馬達運轉溫度 (Temp)</div>
+                        <div class="fs-4 metric-val text-success" id="val-temp">42.5 °C</div>
+                    </div>
+                    <i class="fa-solid fa-temperature-half fa-2x text-success opacity-50"></i>
+                </div>
+                <div class="hmi-metric-card mb-2 d-flex justify-content-between align-items-center">
+                    <div>
+                        <div class="text-muted fs-8 text-uppercase">即時扭矩輸出 (Torque)</div>
+                        <div class="fs-4 metric-val text-info" id="val-torque">1.42 Nm</div>
+                    </div>
+                    <i class="fa-solid fa-gauge fa-2x text-info opacity-50"></i>
+                </div>
+                <div class="hmi-metric-card d-flex justify-content-between align-items-center">
+                    <div>
+                        <div class="text-muted fs-8 text-uppercase">位置殘差 (Position Residual)</div>
+                        <div class="fs-4 metric-val text-warning" id="val-residual-box">0.021 mm</div>
+                    </div>
+                    <i class="fa-solid fa-ruler-combined fa-2x text-warning opacity-50"></i>
                 </div>
             </div>
         </div>
+    </div>
+
+    <!-- 訓練狀態顯示 / 狀況顯示 / 模式顯示 列 -->
+    <div class="row g-3 mb-4">
+        <!-- 狀況顯示: ALARM / ERROR / NORMAL -->
         <div class="col-md-3">
-            <div class="glass-card p-3">
-                <div class="text-muted fs-7">異常分數 (DV)</div>
-                <div class="fs-3 metric-val text-info" id="val-dv">0.13</div>
-                <div class="fs-8 text-success"><i class="fa-solid fa-arrow-down me-1"></i>在正常門檻 (0.50) 內</div>
+            <div class="glass-card p-3 border-start border-4 border-success">
+                <div class="text-muted fs-8 text-uppercase">狀況顯示 (System Health)</div>
+                <div class="d-flex align-items-center justify-content-between mt-1">
+                    <div class="fs-4 fw-bold text-success" id="status-indicator"><i class="fa-solid fa-circle-check me-2"></i>NORMAL</div>
+                    <span class="badge bg-success-subtle text-success border border-success">無警報</span>
+                </div>
+                <div class="fs-8 text-muted mt-1">即時監控：運行健全度 99.2%</div>
             </div>
         </div>
+
+        <!-- 訓練狀態顯示 a: HEAVY TRAIN / MIN TRAIN / MS TRAIN -->
         <div class="col-md-3">
-            <div class="glass-card p-3">
-                <div class="text-muted fs-7">數位雙生殘差 (Residual)</div>
-                <div class="fs-3 metric-val text-success" id="val-residual">0.021 mm</div>
-                <div class="fs-8 text-muted">Z-score < 1.5σ</div>
+            <div class="glass-card p-3 border-start border-4 border-primary">
+                <div class="text-muted fs-8 text-uppercase">訓練級別 (Train Level)</div>
+                <div class="fs-5 fw-bold text-info mt-1" id="val-train-level"><i class="fa-solid fa-brain me-2"></i>MS TRAIN</div>
+                <div class="fs-8 text-muted mt-1">微秒級即態串流訓練</div>
             </div>
         </div>
+
+        <!-- 訓練狀態顯示 b: FULL RETRAIN / FINE-TUNE / INFERENCE ONLY -->
         <div class="col-md-3">
-            <div class="glass-card p-3">
-                <div class="text-muted fs-7">活動中警報 (Active Alarms)</div>
-                <div class="fs-3 metric-val text-warning">0 件</div>
-                <div class="fs-8 text-muted">系統運作穩定</div>
+            <div class="glass-card p-3 border-start border-4 border-warning">
+                <div class="text-muted fs-8 text-uppercase">訓練模式 (Train Mode)</div>
+                <div class="fs-5 fw-bold text-warning mt-1" id="val-train-mode"><i class="fa-solid fa-sliders me-2"></i>FINE-TUNE</div>
+                <div class="fs-8 text-muted mt-1">適應性線上微調中</div>
+            </div>
+        </div>
+
+        <!-- 模式顯示: 工況情境模型 (Scenario 01 - 41) -->
+        <div class="col-md-3">
+            <div class="glass-card p-3 border-start border-4 border-info">
+                <div class="text-muted fs-8 text-uppercase">模式顯示 (Scenario Model)</div>
+                <div class="fs-5 fw-bold text-light mt-1"><i class="fa-solid fa-cubes me-2 text-info"></i>S01 (基期取放)</div>
+                <div class="fs-8 text-muted mt-1">全量 41 工況模式啟用中</div>
             </div>
         </div>
     </div>
 
-    <!-- L4 即時趨勢圖 -->
+    <!-- 主畫面 — 即時監控數據區 (DV / ylabel / 延遲 / Fallback) -->
+    <div class="row g-3 mb-4">
+        <div class="col-md-3">
+            <div class="glass-card p-3">
+                <div class="text-muted fs-7">異常分數 (DV Score)</div>
+                <div class="fs-2 metric-val text-info" id="val-dv">0.130</div>
+                <div class="fs-8 text-success"><i class="fa-solid fa-shield-halved me-1"></i>在正常門檻 (0.50) 內</div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="glass-card p-3">
+                <div class="text-muted fs-7">監控指標名稱 (ylabel)</div>
+                <div class="fs-5 fw-bold text-light mt-1 font-monospace" id="val-ylabel">Position_Residual_mm</div>
+                <div class="fs-8 text-success">數位雙生動態位置殘差</div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="glass-card p-3">
+                <div class="text-muted fs-7">TSN 通訊延遲 (Latency)</div>
+                <div class="fs-2 metric-val text-success" id="val-latency">1.2 ms</div>
+                <div class="fs-8 text-muted">EtherCAT/TSN 封包無丟失</div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="glass-card p-3">
+                <div class="text-muted fs-7">Fallback 防禦鏈狀態</div>
+                <div class="fs-5 fw-bold text-success mt-1"><i class="fa-solid fa-shield me-1"></i>Level 1: AI Model</div>
+                <div class="fs-8 text-muted">主 AI 模型線上即時診斷中</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 雙 Y 軸即時殘差與 DV 波形 + 部件健康度 -->
     <div class="row g-3 mb-4">
         <div class="col-md-8">
             <div class="glass-card p-3">
-                <h6 class="fw-bold mb-3"><i class="fa-solid fa-chart-line text-info me-2"></i>即時異常殘差趨勢 (DV & Residual Trend)</h6>
-                <div style="height: 260px;">
-                    <canvas id="chart-operator-trend"></canvas>
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h6 class="fw-bold mb-0"><i class="fa-solid fa-chart-line text-info me-2"></i>即時異常殘差與 DV 雙 Y 軸波形 (ylabel: Position_Residual_mm vs. DV Score)</h6>
+                    <span class="badge bg-dark border border-secondary text-info fs-8">Sampling Rate: 100Hz</span>
+                </div>
+                <div style="height: 280px;">
+                    <canvas id="chart-operator-dual-y"></canvas>
                 </div>
             </div>
         </div>
         <div class="col-md-4">
             <div class="glass-card p-3 h-100">
-                <h6 class="fw-bold mb-3"><i class="fa-solid fa-bolt text-warning me-2"></i>實態部件健康度</h6>
+                <h6 class="fw-bold mb-3"><i class="fa-solid fa-gauge-high text-warning me-2"></i>實態部件健康儀表板 (Health Gauges)</h6>
                 <div class="mb-3">
                     <div class="d-flex justify-content-between fs-7 mb-1">
-                        <span>軸承健康度 (Bearing)</span>
+                        <span><i class="fa-solid fa-circle me-1 text-success"></i>軸承健康度 (Bearing)</span>
                         <span class="fw-bold text-success">96.5%</span>
                     </div>
-                    <div class="progress bg-dark" style="height: 6px;">
-                        <div class="progress-bar bg-success" style="width: 96.5%"></div>
+                    <div class="progress bg-dark" style="height: 8px;">
+                        <div class="progress-bar bg-success progress-bar-striped progress-bar-animated" style="width: 96.5%"></div>
                     </div>
                 </div>
                 <div class="mb-3">
                     <div class="d-flex justify-content-between fs-7 mb-1">
-                        <span>定子繞組 (Stator Winding)</span>
+                        <span><i class="fa-solid fa-circle me-1 text-success"></i>定子繞組 (Stator Winding)</span>
                         <span class="fw-bold text-success">94.2%</span>
                     </div>
-                    <div class="progress bg-dark" style="height: 6px;">
-                        <div class="progress-bar bg-success" style="width: 94.2%"></div>
+                    <div class="progress bg-dark" style="height: 8px;">
+                        <div class="progress-bar bg-success progress-bar-striped progress-bar-animated" style="width: 94.2%"></div>
                     </div>
                 </div>
                 <div class="mb-3">
                     <div class="d-flex justify-content-between fs-7 mb-1">
-                        <span>編碼器狀態 (Encoder)</span>
+                        <span><i class="fa-solid fa-circle me-1 text-success"></i>編碼器狀態 (Encoder)</span>
                         <span class="fw-bold text-success">98.0%</span>
                     </div>
-                    <div class="progress bg-dark" style="height: 6px;">
-                        <div class="progress-bar bg-success" style="width: 98.0%"></div>
+                    <div class="progress bg-dark" style="height: 8px;">
+                        <div class="progress-bar bg-success progress-bar-striped progress-bar-animated" style="width: 98.0%"></div>
                     </div>
                 </div>
                 <div>
                     <div class="d-flex justify-content-between fs-7 mb-1">
-                        <span>滾珠螺桿 (Lead Screw)</span>
+                        <span><i class="fa-solid fa-circle me-1 text-info"></i>滾珠螺桿 (Lead Screw)</span>
                         <span class="fw-bold text-info">91.8%</span>
                     </div>
-                    <div class="progress bg-dark" style="height: 6px;">
-                        <div class="progress-bar bg-info" style="width: 91.8%"></div>
+                    <div class="progress bg-dark" style="height: 8px;">
+                        <div class="progress-bar bg-info progress-bar-striped progress-bar-animated" style="width: 91.8%"></div>
                     </div>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- L5 最近警報與事件 -->
+    <!-- 最近系統控制與事件紀錄表格 -->
     <div class="glass-card p-3">
-        <h6 class="fw-bold mb-3"><i class="fa-solid fa-list-check text-secondary me-2"></i>最近系統事件摘要</h6>
+        <h6 class="fw-bold mb-3"><i class="fa-solid fa-list-check text-secondary me-2"></i>最近系統控制與事件紀錄</h6>
         <div class="table-responsive">
             <table class="table table-dark table-hover fs-7 align-middle mb-0">
                 <thead>
                     <tr class="text-muted">
                         <th>時間</th>
                         <th>事件類型</th>
-                        <th>Scenario</th>
-                        <th>狀態/摘要</th>
-                        <th>處置狀態</th>
+                        <th>Scenario 模型</th>
+                        <th>狀態與 ylabel 指標</th>
+                        <th>處置與防禦等級</th>
                     </tr>
                 </thead>
                 <tbody>
                     <tr>
                         <td>14:02:11</td>
                         <td><span class="badge bg-success">Cycle Completed</span></td>
-                        <td>S01 (標準工況)</td>
-                        <td>Cycle #1042 順利完成，整定時間 0.85s</td>
-                        <td><span class="text-muted">無需處置</span></td>
+                        <td>S01 (基期取放)</td>
+                        <td>Position_Residual_mm = 0.021, DV = 0.13</td>
+                        <td><span class="badge bg-outline border border-success text-success">Level 1 Normal</span></td>
                     </tr>
                     <tr>
                         <td>13:45:00</td>
-                        <td><span class="badge bg-info">Mode Switched</span></td>
+                        <td><span class="badge bg-info">Control Power ON</span></td>
                         <td>S01</td>
-                        <td>操作員啟動 Normal 模式運轉</td>
+                        <td>伺服致能啟動，TSN Latency 1.2ms</td>
                         <td><span class="text-muted">已記錄</span></td>
                     </tr>
                 </tbody>
@@ -142,56 +295,170 @@
 {% block extra_js %}
 <script>
     document.addEventListener("DOMContentLoaded", function() {
-        const ctx = document.getElementById('chart-operator-trend').getContext('2d');
+        // ── 雙 Y 軸即時串流圖表初始化 ──────────────────────────────────
+        const ctx = document.getElementById('chart-operator-dual-y').getContext('2d');
+        const MAX_POINTS = 60; // 保留最近 60 秒資料
+        const tsLabels = [];
+        const dvData = [];
+        const residualData = [];
+
         const chart = new Chart(ctx, {
             type: 'line',
             data: {
-                labels: ['14:00:00', '14:00:10', '14:00:20', '14:00:30', '14:00:40', '14:00:50', '14:01:00'],
+                labels: tsLabels,
                 datasets: [
                     {
-                        label: 'DV 異常分數',
-                        data: [0.12, 0.14, 0.13, 0.15, 0.12, 0.13, 0.14],
+                        label: 'DV 異常分數 (DV Score: 0.0~1.0)',
+                        data: dvData,
                         borderColor: '#38bdf8',
-                        tension: 0.3
+                        backgroundColor: 'rgba(56, 189, 248, 0.08)',
+                        borderWidth: 2,
+                        yAxisID: 'y1',
+                        tension: 0.3,
+                        pointRadius: 2
                     },
                     {
-                        label: 'Residual (mm)',
-                        data: [0.02, 0.021, 0.019, 0.022, 0.020, 0.021, 0.021],
+                        label: 'ylabel: Position_Residual (0.00~0.10 mm)',
+                        data: residualData,
                         borderColor: '#22c55e',
-                        tension: 0.3
+                        backgroundColor: 'rgba(34, 197, 94, 0.08)',
+                        borderWidth: 2,
+                        yAxisID: 'y2',
+                        tension: 0.3,
+                        pointRadius: 2
                     }
                 ]
             },
             options: {
                 responsive: true,
                 maintainAspectRatio: false,
-                plugins: { legend: { labels: { color: '#94a3b8' } } },
+                animation: { duration: 200 },
+                interaction: { mode: 'index', intersect: false },
+                plugins: {
+                    legend: { labels: { color: '#94a3b8' } }
+                },
                 scales: {
-                    x: { ticks: { color: '#94a3b8' }, grid: { color: '#334155' } },
-                    y: { ticks: { color: '#94a3b8' }, grid: { color: '#334155' } }
+                    x: { ticks: { color: '#94a3b8', maxTicksLimit: 10 }, grid: { color: '#334155' } },
+                    y1: {
+                        type: 'linear', display: true, position: 'left',
+                        min: 0, max: 1.0,
+                        title: { display: true, text: 'DV 異常分數', color: '#38bdf8' },
+                        ticks: { color: '#38bdf8' }, grid: { color: '#334155' }
+                    },
+                    y2: {
+                        type: 'linear', display: true, position: 'right',
+                        min: 0, max: 0.1,
+                        title: { display: true, text: 'Position_Residual (mm)', color: '#22c55e' },
+                        ticks: { color: '#22c55e' }, grid: { drawOnChartArea: false }
+                    }
                 }
             }
         });
 
-        // 控制按鈕 AJAX
+        // ── 每秒輪詢後端 /api/v1/l1/realtime ──────────────────────────
+        function pollMotorRealtime() {
+            fetch('http://127.0.0.1:8000/api/v1/l1/realtime?scenario_id=01_Pick_and_Place')
+                .then(res => res.json())
+                .then(data => {
+                    const rt = data.motor_realtime || {};
+                    const dv = rt.dv_point ?? data.predictions?.DV_mean ?? 0;
+                    const residual = rt.position_residual_mm ?? 0.020;
+                    const now = new Date().toLocaleTimeString('zh-TW', {hour12: false});
+
+                    // 推入新資料
+                    tsLabels.push(now);
+                    dvData.push(parseFloat(dv.toFixed(4)));
+                    residualData.push(parseFloat(residual.toFixed(5)));
+                    if (tsLabels.length > MAX_POINTS) {
+                        tsLabels.shift(); dvData.shift(); residualData.shift();
+                    }
+                    chart.update('none');
+
+                    // 同步更新頂部與 SVG 動態機台數值
+                    const dvEl = document.getElementById('val-dv');
+                    if (dvEl) dvEl.textContent = dv.toFixed(3);
+                    const latEl = document.getElementById('val-latency');
+                    if (latEl) {
+                        const lat = data.latency?.mean_ms;
+                        if (lat !== undefined) latEl.textContent = lat.toFixed(1) + ' ms';
+                    }
+
+                    // SVG 流程圖與焦點數據動態連線
+                    const tempEl = document.getElementById('val-temp');
+                    if (tempEl) tempEl.textContent = (42.0 + dv * 10).toFixed(1) + ' °C';
+                    
+                    const torqueEl = document.getElementById('val-torque');
+                    if (torqueEl) torqueEl.textContent = (1.20 + dv * 1.5).toFixed(2) + ' Nm';
+                    
+                    const resBox = document.getElementById('val-residual-box');
+                    if (resBox) resBox.textContent = residual.toFixed(3) + ' mm';
+
+                    const posSvg = document.getElementById('svg-pos-val');
+                    if (posSvg) posSvg.textContent = `X: ${(120.0 + (residual * 100)).toFixed(1)}mm`;
+
+                    // 狀態指示器：DV > 0.5 為 ALARM，> 0.8 為 ERROR
+                    const statusEl = document.getElementById('status-indicator');
+                    if (statusEl) {
+                        if (dv > 0.8) {
+                            statusEl.innerHTML = '<i class="fa-solid fa-circle-exclamation me-2"></i>ERROR';
+                            statusEl.className = 'fs-4 fw-bold text-danger';
+                        } else if (dv > 0.5) {
+                            statusEl.innerHTML = '<i class="fa-solid fa-triangle-exclamation me-2"></i>ALARM';
+                            statusEl.className = 'fs-4 fw-bold text-warning';
+                        } else {
+                            statusEl.innerHTML = '<i class="fa-solid fa-circle-check me-2"></i>NORMAL';
+                            statusEl.className = 'fs-4 fw-bold text-success';
+                        }
+                    }
+                })
+                .catch(() => {});
+        }
+
+        startHmiDynamicTimer(pollMotorRealtime, 1000);
+
+        // ── 控制按紐防呆與二次確認處理 ──────────────────────────────────
+        document.getElementById('btn-power-on').addEventListener('click', function() {
+            fetch('/api/ui/commands/power/on', { method: 'POST' })
+                .then(res => res.json())
+                .then(data => alert("✅ 伺服驅動器致能 ON 成功"));
+        });
+
+        document.getElementById('btn-power-off').addEventListener('click', function() {
+            showSafetyConfirm(
+                "停能操作確認 (Power Off Confirmation)",
+                "確定要將伺服驅動器切換為停能狀態 (POWER OFF) 嗎？停止後馬達將無保持力矩。",
+                "確定 OFF 停能",
+                "btn-warning",
+                function() {
+                    fetch('/api/ui/commands/power/off', { method: 'POST' })
+                        .then(res => res.json())
+                        .then(data => alert("⚠️ 伺服系統已停能 OFF"));
+                }
+            );
+        });
+
         document.getElementById('btn-cycle-start').addEventListener('click', function() {
             fetch('/api/ui/commands/cycle/start', { method: 'POST' })
                 .then(res => res.json())
-                .then(data => alert(data.message));
+                .then(data => alert("▶️ CYCLE START 運轉啟動"));
         });
 
         document.getElementById('btn-cycle-stop').addEventListener('click', function() {
-            fetch('/api/ui/commands/cycle/stop', { method: 'POST' })
-                .then(res => res.json())
-                .then(data => alert(data.message));
+            showSafetyConfirm(
+                "週期停止確認 (Cycle Stop)",
+                "確定要發送 CYCLE STOP 指令嗎？目前運行的加工 Cycle 將於步階完成後安全停止。",
+                "確定 STOP",
+                "btn-warning",
+                function() {
+                    fetch('/api/ui/commands/cycle/stop', { method: 'POST' })
+                        .then(res => res.json())
+                        .then(data => alert("⏸️ CYCLE STOP 已送出"));
+                }
+            );
         });
 
         document.getElementById('btn-estop-request').addEventListener('click', function() {
-            if(confirm("確定要發送緊急停機請求 (E-Stop Request) 嗎？")) {
-                fetch('/api/ui/emergency-stop-request', { method: 'POST' })
-                    .then(res => res.json())
-                    .then(data => alert(data.message));
-            }
+            triggerGlobalEstop();
         });
     });
 </script>

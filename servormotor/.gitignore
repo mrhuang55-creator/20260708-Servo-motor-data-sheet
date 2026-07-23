@@ -1,0 +1,63 @@
+# ── Python 虛擬環境 ──
+venv/
+.venv/
+env/
+ENV/
+**/venv/
+**/.venv/
+**/env/
+**/myenv/
+
+# ── 大數據集與資料庫 (Parquet, CSV, MAT) ──
+*.parquet
+**/*.parquet
+*.csv
+*.mat
+
+# ── Python 編譯與測試快取 ──
+__pycache__/
+**/__pycache__/
+*.pyc
+**/*.pyc
+*.pyo
+**/*.pyo
+*.pyd
+**/*.pyd
+.pytest_cache/
+**/.pytest_cache/
+.coverage
+htmlcov/
+**/.ipynb_checkpoints/
+
+# ── 二進位與大型文件 ──
+*.pdf
+*.zip
+*.tar.gz
+*.pkl
+!**/演算法核心.pkl
+
+# ── IDE 設定與系統暫存 ──
+.vscode/
+.idea/
+*.swp
+*.swo
+*.user
+.DS_Store
+Thumbs.db
+desktop.ini
+*.tmp
+
+# ── 暫存模型與測試輸出 ──
+**/*.npz
+*.log
+
+# ── 對話紀錄與 Agent 專用目錄 ──
+.agents/
+.gemini/
+scratch/
+**/對話紀錄.md
+**/update_dialogue_history.py
+
+# ── 環境變數檔 ──
+.env
+.env.local

@@ -1,9 +1,9 @@
 {% extends "base.html" %}
-{% block title %}41 Scenarios 工業診斷對照庫 — AI SERVO PLATFORM{% endblock %}
+{% block title %}L6. 41 Scenarios 工業診斷對照庫 — AI SERVO PLATFORM{% endblock %}
 {% block content %}
 <div class="d-flex justify-content-between align-items-center mb-3">
     <div>
-        <h3 class="fw-bold mb-1"><i class="fa-solid fa-cubes text-warning me-2"></i>41 Scenarios 全工業診斷與運轉問題庫</h3>
+        <h3 class="fw-bold mb-1"><i class="fa-solid fa-cubes text-warning me-2"></i>L6. 41 Scenarios 全工業診斷與運轉問題庫</h3>
         <p class="text-muted fs-7 mb-0">包含位置定位、負載扭矩、電網通訊、傳動劣化、電氣故障與複合過載 41 種真實工況</p>
     </div>
     <span class="badge bg-success fs-6 py-2 px-3">已載入 41/41 項工況模組</span>
@@ -103,84 +103,142 @@
 
 {% block extra_js %}
 <script>
+    const API_BASE = window.location.port === '5000' ? `http://${window.location.hostname}:8000` : '';
+
     // 隨運轉動態更新即時警告視窗 (AJAX 輪詢對接 FastAPI /api/v1/diagnose)
     function fetchActiveDiagnose() {
-        fetch('http://127.0.0.1:8000/api/v1/diagnose')
+        fetch(API_BASE + '/api/v1/diagnose')
             .then(response => response.json())
             .then(data => {
-                const disp = data.診斷狀態_前端顯示 || {};
-                const currentScenario = disp.current_scenario || 1;
-                const riskLevel = disp.risk_level || 'Normal';
-                const healthIndex = disp.health_index || 95.0;
-                const rec = data.建議調整參數_後端執行 || {};
-                const rootCause = rec.root_cause || 'normal';
-                const action = rec.action || '系統運作正常';
+                const disp    = data['診斷狀態_前端顯示'] || {};
+                const rec     = data['建議調整參數_後端執行'] || {};
+                const snap    = data['即時遙測快照'] || {};
+                const eng     = data['診斷依據與可解釋性_工程師審核'] || {};
 
-                const card = document.getElementById('warning-window-card');
-                const title = document.getElementById('warning-window-title');
-                const badge = document.getElementById('warning-window-badge');
+                const currentScenario = disp.current_scenario || 1;
+                const riskLevel       = disp.risk_level || 'Normal';
+                const healthIndex     = disp.health_index || 95.0;
+                const rulSec          = disp.rul_sec;
+                const rootCause       = rec.root_cause || 'normal';
+                const action          = rec.action || '系統運作正常';
+                const confidence      = eng.confidence || 0.99;
+
+                // 即時遙測數值
+                const tempC   = snap.motor_temp_c    !== undefined ? snap.motor_temp_c.toFixed(1) + ' °C' : '—';
+                const currA   = snap.current_rms_a   !== undefined ? snap.current_rms_a.toFixed(2) + ' A'  : '—';
+                const feErr   = snap.following_error_abs_pulse !== undefined ? snap.following_error_abs_pulse.toFixed(1) + ' pulse' : '—';
+                const vibG    = snap.vibration_rms_g !== undefined ? snap.vibration_rms_g.toFixed(3) + ' g'  : '—';
+
+                // RUL 顯示
+                let rulText = '';
+                if (rulSec === -1) { rulText = 'E-Stop 停機中'; }
+                else if (rulSec === 0) { rulText = '⚠ 須立即停機'; }
+                else if (rulSec !== undefined && rulSec < 999999) {
+                    const h = Math.floor(rulSec / 3600);
+                    const m = Math.floor((rulSec % 3600) / 60);
+                    rulText = `預估剩餘壽命：約 ${h}h ${m}m`;
+                }
+
+                // 信心度顯示
+                const confPct = (confidence * 100).toFixed(0);
+
+                const card      = document.getElementById('warning-window-card');
+                const title     = document.getElementById('warning-window-title');
+                const badge     = document.getElementById('warning-window-badge');
                 const container = document.getElementById('active-warnings-container');
+                const sId       = currentScenario < 10 ? '0' + currentScenario : currentScenario;
+
+                // 遙測數值快照 HTML (共用於三種等級)
+                const snapHtml = `
+                    <div class="row g-2 mt-2 fs-8">
+                        <div class="col-6 col-md-3">
+                            <div class="p-2 rounded" style="background:rgba(255,255,255,0.05)">
+                                <div class="text-muted">🌡 馬達溫度</div>
+                                <div class="fw-bold text-light">${tempC}</div>
+                            </div>
+                        </div>
+                        <div class="col-6 col-md-3">
+                            <div class="p-2 rounded" style="background:rgba(255,255,255,0.05)">
+                                <div class="text-muted">⚡ 電流 RMS</div>
+                                <div class="fw-bold text-light">${currA}</div>
+                            </div>
+                        </div>
+                        <div class="col-6 col-md-3">
+                            <div class="p-2 rounded" style="background:rgba(255,255,255,0.05)">
+                                <div class="text-muted">📍 跟蹤誤差</div>
+                                <div class="fw-bold text-light">${feErr}</div>
+                            </div>
+                        </div>
+                        <div class="col-6 col-md-3">
+                            <div class="p-2 rounded" style="background:rgba(255,255,255,0.05)">
+                                <div class="text-muted">📳 振動 RMS</div>
+                                <div class="fw-bold text-light">${vibG}</div>
+                            </div>
+                        </div>
+                    </div>
+                    ${rulText ? `<div class="mt-2 fs-8 text-info"><i class="fa-solid fa-clock me-1"></i>${rulText}</div>` : ''}
+                    <div class="mt-1 fs-8 text-muted">AI 診斷信心度：${confPct}%</div>
+                `;
 
                 if (riskLevel === 'Normal' && healthIndex >= 90) {
-                    // 正常狀態
                     card.className = "glass-card p-4 mb-4 border-success";
                     title.className = "fw-bold m-0 text-success";
                     title.innerHTML = '<i class="fa-solid fa-circle-check me-2"></i>即時運轉異常與警告動態視窗 (系統運作正常)';
-                    badge.innerHTML = '<span class="badge bg-success fs-7"><i class="fa-solid fa-check me-1"></i>系統無活動中警告 (Health: ' + healthIndex + '%)</span>';
-                    
+                    badge.innerHTML = `<span class="badge bg-success fs-7"><i class="fa-solid fa-check me-1"></i>系統無活動中警告 (Health: ${healthIndex}%)</span>`;
                     container.innerHTML = `
                         <div class="col-12">
-                            <div class="p-3 bg-dark rounded border border-success d-flex align-items-center justify-content-between">
-                                <div>
-                                    <span class="badge bg-success me-2">Normal Status</span>
-                                    <strong class="text-light">目前運轉 Scenario: S${currentScenario < 10 ? '0' + currentScenario : currentScenario}</strong>
-                                    <div class="fs-7 text-muted mt-1">數位雙生殘差與遙測特徵均在 ISO 正常規格範圍內。${action}</div>
+                            <div class="p-3 bg-dark rounded border border-success">
+                                <div class="d-flex justify-content-between align-items-center mb-2">
+                                    <div>
+                                        <span class="badge bg-success me-2">S${sId} Normal</span>
+                                        <strong class="text-light">根因：${rootCause}</strong>
+                                    </div>
+                                    <span class="fs-4 text-success fw-bold">${healthIndex}%</span>
                                 </div>
-                                <span class="fs-4 text-success fw-bold">${healthIndex}%</span>
+                                <div class="fs-7 text-muted">${action}</div>
+                                ${snapHtml}
                             </div>
                         </div>
                     `;
                 } else if (riskLevel === 'Critical' || healthIndex < 60) {
-                    // 嚴重警告狀態
                     card.className = "glass-card p-4 mb-4 border-danger";
                     title.className = "fw-bold m-0 text-danger";
                     title.innerHTML = '<i class="fa-solid fa-circle-exclamation me-2"></i>即時運轉異常與警告動態視窗 (臨界異常觸發！)';
-                    badge.innerHTML = '<span class="badge bg-danger fs-7"><i class="fa-solid fa-triangle-exclamation me-1"></i>CRITICAL ALARM ACTIVE (Health: ' + healthIndex + '%)</span>';
-
+                    badge.innerHTML = `<span class="badge bg-danger fs-7"><i class="fa-solid fa-triangle-exclamation me-1"></i>CRITICAL ALARM ACTIVE (Health: ${healthIndex}%)</span>`;
                     container.innerHTML = `
                         <div class="col-12">
                             <div class="p-3 bg-dark rounded border border-danger">
                                 <div class="d-flex justify-content-between align-items-center mb-2">
-                                    <span class="badge bg-danger fw-bold">S${currentScenario < 10 ? '0' + currentScenario : currentScenario} CRITICAL FAULT</span>
-                                    <span class="fs-8 text-muted">目前切換即時監控中</span>
+                                    <span class="badge bg-danger fw-bold">S${sId} CRITICAL FAULT</span>
+                                    <span class="fs-8 text-muted">即時監控中</span>
                                 </div>
                                 <div class="fw-bold text-light mb-1">根因定位：${rootCause.toUpperCase()}</div>
-                                <div class="fs-7 text-muted">健康指數降至 ${healthIndex}%，特徵與擺動超標。</div>
+                                <div class="fs-7 text-danger-emphasis">健康指數降至 ${healthIndex}%，特徵超標。</div>
                                 <div class="mt-2 pt-2 border-top border-secondary fs-8 text-danger fw-bold">
                                     <i class="fa-solid fa-screwdriver-wrench me-1"></i>建議處置：${action}
                                 </div>
+                                ${snapHtml}
                             </div>
                         </div>
                     `;
                 } else {
-                    // 一般警告狀態
                     card.className = "glass-card p-4 mb-4 border-warning";
                     title.className = "fw-bold m-0 text-warning";
                     title.innerHTML = '<i class="fa-solid fa-triangle-exclamation me-2"></i>即時運轉異常與警告動態視窗 (系統警告)';
-                    badge.innerHTML = '<span class="badge bg-warning text-dark fs-7"><i class="fa-solid fa-triangle-exclamation me-1"></i>WARNING ACTIVE (Health: ' + healthIndex + '%)</span>';
-
+                    badge.innerHTML = `<span class="badge bg-warning text-dark fs-7"><i class="fa-solid fa-triangle-exclamation me-1"></i>WARNING ACTIVE (Health: ${healthIndex}%)</span>`;
                     container.innerHTML = `
                         <div class="col-12">
                             <div class="p-3 bg-dark rounded border border-warning">
                                 <div class="d-flex justify-content-between align-items-center mb-2">
-                                    <span class="badge bg-warning text-dark fw-bold">S${currentScenario < 10 ? '0' + currentScenario : currentScenario} WARNING</span>
-                                    <span class="fs-8 text-muted">目前切換即時監控中</span>
+                                    <span class="badge bg-warning text-dark fw-bold">S${sId} WARNING</span>
+                                    <span class="fs-8 text-muted">即時監控中</span>
                                 </div>
                                 <div class="fw-bold text-light mb-1">診斷根因：${rootCause}</div>
                                 <div class="fs-7 text-muted">健康指數 ${healthIndex}%。</div>
                                 <div class="mt-2 pt-2 border-top border-secondary fs-8 text-warning fw-bold">
                                     <i class="fa-solid fa-wrench me-1"></i>建議處置：${action}
                                 </div>
+                                ${snapHtml}
                             </div>
                         </div>
                     `;
@@ -193,15 +251,11 @@
 
     // 模擬動態切換工況測試函數
     function switchScenario(id) {
-        fetch('http://127.0.0.1:8000/api/v1/switch_scenario/' + id, { method: 'POST' })
+        fetch(API_BASE + '/api/v1/switch_scenario/' + id, { method: 'POST' })
             .then(res => res.json())
-            .then(data => {
-                fetchActiveDiagnose();
-            });
+            .then(() => { fetchActiveDiagnose(); });
     }
 
-    // 每 2 秒自動動態對接更新
-    setInterval(fetchActiveDiagnose, 2000);
-    document.addEventListener("DOMContentLoaded", fetchActiveDiagnose);
+    startHmiDynamicTimer(fetchActiveDiagnose, 1000);
 </script>
 {% endblock %}

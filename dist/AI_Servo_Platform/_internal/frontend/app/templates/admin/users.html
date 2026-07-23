@@ -1,17 +1,284 @@
 {% extends "base.html" %}
-{% block title %}使用者與 RBAC — AI SERVO PLATFORM{% endblock %}
+{% block title %}SQL 員工帳號與權限管理 — AI SERVO PLATFORM{% endblock %}
+
 {% block content %}
-<h3 class="fw-bold mb-3"><i class="fa-solid fa-users-gear text-info me-2"></i>使用者與角色 RBAC 管理</h3>
-<div class="glass-card p-4">
-    <div class="table-responsive">
-        <table class="table table-dark table-hover fs-7">
-            <thead><tr><th>使用者帳號</th><th>對應角色</th><th>Operator ID</th><th>建立時間</th><th>操作</th></tr></thead>
-            <tbody>
-                <tr><td>admin</td><td><span class="badge badge-Administrator">Administrator</span></td><td>Admin_01</td><td>2026-07-22</td><td><button class="btn btn-sm btn-outline-info">編輯</button></td></tr>
-                <tr><td>engineer</td><td><span class="badge badge-Engineer">Engineer</span></td><td>Engineer_01</td><td>2026-07-22</td><td><button class="btn btn-sm btn-outline-info">編輯</button></td></tr>
-                <tr><td>operator</td><td><span class="badge badge-Operator">Operator</span></td><td>Operator_01</td><td>2026-07-22</td><td><button class="btn btn-sm btn-outline-info">編輯</button></td></tr>
-            </tbody>
-        </table>
+<div class="container-fluid p-0">
+    <!-- 頁頭標題與新增員工按鈕 -->
+    <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2 glass-card p-3 border-info">
+        <div>
+            <h4 class="fw-bold mb-1 text-light"><i class="fa-solid fa-users-gear text-info me-2"></i>管理者專屬 — SQL 員工帳號、權限身分與修改歷史紀錄</h4>
+            <p class="text-muted fs-7 mb-0">即時 SQL 資料庫 CRUD 操作：新增/刪除員工、變更身分權限、重設密碼與全留痕歷史紀錄</p>
+        </div>
+        <div class="d-flex gap-2">
+            <button class="btn btn-primary btn-sm hmi-btn-lg" data-bs-toggle="modal" data-bs-target="#addUserModal">
+                <i class="fa-solid fa-user-plus me-1"></i>新增員工帳號
+            </button>
+        </div>
+    </div>
+
+    <!-- 員工數量統計卡片 -->
+    <div class="row g-3 mb-4">
+        <div class="col-md-3">
+            <div class="glass-card p-3 border-start border-4 border-info">
+                <div class="text-muted fs-8 text-uppercase">總員工帳號數</div>
+                <div class="fs-3 fw-bold text-info mt-1">{{ users_list | length }}</div>
+                <div class="fs-8 text-muted">SQLite users.db 持久化</div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="glass-card p-3 border-start border-4 border-danger">
+                <div class="text-muted fs-8 text-uppercase">最高管理者 (Admin)</div>
+                <div class="fs-3 fw-bold text-danger mt-1">
+                    {{ users_list | selectattr('role', 'equalto', 'Administrator') | list | length }}
+                </div>
+                <div class="fs-8 text-muted">具全站最高寫入與核准權限</div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="glass-card p-3 border-start border-4 border-warning">
+                <div class="text-muted fs-8 text-uppercase">研發工程師 (Engineer)</div>
+                <div class="fs-3 fw-bold text-warning mt-1">
+                    {{ users_list | selectattr('role', 'equalto', 'Engineer') | list | length }}
+                </div>
+                <div class="fs-8 text-muted">具備 L2/L3 調參與模型權限</div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="glass-card p-3 border-start border-4 border-success">
+                <div class="text-muted fs-8 text-uppercase">現場操作員 (Operator)</div>
+                <div class="fs-3 fw-bold text-success mt-1">
+                    {{ users_list | selectattr('role', 'equalto', 'Operator') | list | length }}
+                </div>
+                <div class="fs-8 text-muted">現場主控台與警報監控權限</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- SQL 員工帳號列表 -->
+    <div class="glass-card p-3 mb-4 border border-secondary">
+        <h6 class="fw-bold mb-3"><i class="fa-solid fa-address-book text-info me-2"></i>SQL 員工帳號與權限身分清單</h6>
+        <div class="table-responsive">
+            <table class="table table-dark table-hover fs-7 align-middle mb-0">
+                <thead>
+                    <tr class="text-muted">
+                        <th>#ID</th>
+                        <th>帳號名稱 (Username)</th>
+                        <th>權限身分 (Role)</th>
+                        <th>工號 (Operator ID)</th>
+                        <th>建立時間</th>
+                        <th>操作 (Actions)</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for u in users_list %}
+                    <tr>
+                        <td class="font-monospace text-muted">#{{ u.id }}</td>
+                        <td class="fw-bold text-light"><i class="fa-solid fa-user me-2 text-secondary"></i>{{ u.username }}</td>
+                        <td>
+                            {% if u.role == 'Administrator' %}
+                            <span class="badge bg-danger"><i class="fa-solid fa-crown me-1"></i>Administrator (最高權限)</span>
+                            {% elif u.role == 'Engineer' %}
+                            <span class="badge bg-warning text-dark"><i class="fa-solid fa-code me-1"></i>Engineer (工程師)</span>
+                            {% else %}
+                            <span class="badge bg-info"><i class="fa-solid fa-display me-1"></i>Operator (操作員)</span>
+                            {% endif %}
+                        </td>
+                        <td class="font-monospace text-info">{{ u.operator_id }}</td>
+                        <td class="text-muted fs-8">{{ u.created_at }}</td>
+                        <td>
+                            <button class="btn btn-xs btn-outline-info me-1" 
+                                    onclick="openEditModal({{ u.id }}, '{{ u.username }}', '{{ u.role }}', '{{ u.operator_id }}')">
+                                <i class="fa-solid fa-user-pen me-1"></i>修改身分/密碼
+                            </button>
+                            {% if u.username != 'admin' %}
+                            <button class="btn btn-xs btn-outline-danger" 
+                                    onclick="openDeleteModal({{ u.id }}, '{{ u.username }}')">
+                                <i class="fa-solid fa-user-minus me-1"></i>刪除
+                            </button>
+                            {% else %}
+                            <span class="badge bg-secondary">保護中</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% else %}
+                    <tr><td colspan="6" class="text-center text-muted">尚無員工帳號資料。</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- SQL 修改歷史紀錄 Table (User Audit History Logs) -->
+    <div class="glass-card p-3 border border-warning">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <h6 class="fw-bold text-warning mb-0"><i class="fa-solid fa-clock-rotate-left me-2"></i>員工帳號與權限修改歷史紀錄 (SQL Audit Trail)</h6>
+            <span class="badge bg-dark text-warning border border-warning fs-8">ISO 55000 全留痕紀錄</span>
+        </div>
+        <div class="table-responsive">
+            <table class="table table-dark table-hover fs-7 align-middle mb-0">
+                <thead>
+                    <tr class="text-muted">
+                        <th>時間</th>
+                        <th>執行管理者</th>
+                        <th>動作類型</th>
+                        <th>目標員工帳號</th>
+                        <th>詳細變更說明 (修改紀錄)</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for log in audit_logs %}
+                    <tr>
+                        <td class="font-monospace text-muted fs-8">{{ log.timestamp }}</td>
+                        <td class="fw-bold text-info"><i class="fa-solid fa-user-shield me-1"></i>{{ log.operator }}</td>
+                        <td>
+                            {% if log.action == 'CREATE_USER' or log.action == 'CREATE_INIT' %}
+                            <span class="badge bg-success">新增員工</span>
+                            {% elif log.action == 'UPDATE_USER' %}
+                            <span class="badge bg-warning text-dark">修改身分/密碼</span>
+                            {% elif log.action == 'DELETE_USER' %}
+                            <span class="badge bg-danger">刪除員工</span>
+                            {% else %}
+                            <span class="badge bg-secondary">{{ log.action }}</span>
+                            {% endif %}
+                        </td>
+                        <td class="fw-bold text-light">{{ log.target_username }}</td>
+                        <td class="text-muted">{{ log.details }}</td>
+                    </tr>
+                    {% else %}
+                    <tr><td colspan="5" class="text-center text-muted">尚無異動紀錄。</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
     </div>
 </div>
+
+<!-- Modal 1: 新增員工帳號 Modal -->
+<div class="modal fade" id="addUserModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content bg-dark border-secondary">
+            <form method="POST" action="{{ url_for('admin.users') }}">
+                <input type="hidden" name="action" value="create">
+                <div class="modal-header border-secondary">
+                    <h5 class="modal-title fw-bold text-primary"><i class="fa-solid fa-user-plus me-2"></i>新增員工帳號與權限</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body fs-7">
+                    <div class="mb-3">
+                        <label class="form-label text-muted">帳號名稱 (Username)</label>
+                        <input type="text" name="username" class="form-control bg-dark border-secondary text-light" required placeholder="如: engineer_02">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label text-muted">預設密碼 (Password)</label>
+                        <input type="password" name="password" class="form-control bg-dark border-secondary text-light" required placeholder="如: eng123">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label text-muted">權限身分選擇 (Role)</label>
+                        <select name="role" class="form-select bg-dark border-secondary text-light" required>
+                            <option value="Operator">Operator (現場操作員)</option>
+                            <option value="Engineer">Engineer (研發工程師)</option>
+                            <option value="Administrator">Administrator (最高管理者)</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label text-muted">工號 (Operator ID)</label>
+                        <input type="text" name="operator_id" class="form-control bg-dark border-secondary text-light" placeholder="自動生成或輸入 (如: OP_102)">
+                    </div>
+                </div>
+                <div class="modal-footer border-secondary">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
+                    <button type="submit" class="btn btn-primary fw-bold"><i class="fa-solid fa-check me-1"></i>確認新增</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Modal 2: 編輯員工身分與密碼 Modal -->
+<div class="modal fade" id="editUserModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content bg-dark border-secondary">
+            <form method="POST" action="{{ url_for('admin.users') }}">
+                <input type="hidden" name="action" value="update">
+                <input type="hidden" name="user_id" id="edit-user-id">
+                <div class="modal-header border-secondary">
+                    <h5 class="modal-title fw-bold text-warning"><i class="fa-solid fa-user-pen me-2"></i>修改員工身分權限與密碼</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body fs-7">
+                    <div class="mb-3">
+                        <label class="form-label text-muted">帳號名稱 (Username)</label>
+                        <input type="text" name="username" id="edit-username" class="form-control bg-dark border-secondary text-light" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label text-muted">權限身分選擇 (Role)</label>
+                        <select name="role" id="edit-role" class="form-select bg-dark border-secondary text-light" required>
+                            <option value="Operator">Operator (現場操作員)</option>
+                            <option value="Engineer">Engineer (研發工程師)</option>
+                            <option value="Administrator">Administrator (最高管理者)</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label text-muted">工號 (Operator ID)</label>
+                        <input type="text" name="operator_id" id="edit-operator-id" class="form-control bg-dark border-secondary text-light">
+                    </div>
+                    <div class="mb-3 border-top border-secondary pt-3">
+                        <label class="form-label text-warning fw-bold"><i class="fa-solid fa-key me-1"></i>重設新密碼 (若留空則不修改)</label>
+                        <input type="password" name="new_password" class="form-control bg-dark border-secondary text-light" placeholder="輸入新密碼…">
+                    </div>
+                </div>
+                <div class="modal-footer border-secondary">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
+                    <button type="submit" class="btn btn-warning fw-bold"><i class="fa-solid fa-floppy-disk me-1"></i>儲存變更</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Modal 3: 刪除員工 Modal -->
+<div class="modal fade" id="deleteUserModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content bg-dark border-danger">
+            <form method="POST" action="{{ url_for('admin.users') }}">
+                <input type="hidden" name="action" value="delete">
+                <input type="hidden" name="user_id" id="delete-user-id">
+                <input type="hidden" name="username" id="delete-username-val">
+                <div class="modal-header border-danger bg-danger bg-opacity-10">
+                    <h5 class="modal-title fw-bold text-danger"><i class="fa-solid fa-triangle-exclamation me-2"></i>刪除員工帳號確認</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body fs-6 p-4">
+                    確定要刪除員工帳號 <strong class="text-danger fs-5" id="delete-username-display"></strong> 嗎？<br>
+                    此操作將寫入 SQL 修改歷史紀錄且無法復原。
+                </div>
+                <div class="modal-footer border-danger">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
+                    <button type="submit" class="btn btn-danger fw-bold"><i class="fa-solid fa-user-slash me-1"></i>確定刪除</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    function openEditModal(id, username, role, operatorId) {
+        document.getElementById('edit-user-id').value = id;
+        document.getElementById('edit-username').value = username;
+        document.getElementById('edit-role').value = role;
+        document.getElementById('edit-operator-id').value = operatorId;
+        const modal = new bootstrap.Modal(document.getElementById('editUserModal'));
+        modal.show();
+    }
+
+    function openDeleteModal(id, username) {
+        document.getElementById('delete-user-id').value = id;
+        document.getElementById('delete-username-val').value = username;
+        document.getElementById('delete-username-display').textContent = username;
+        const modal = new bootstrap.Modal(document.getElementById('deleteUserModal'));
+        modal.show();
+    }
+</script>
 {% endblock %}

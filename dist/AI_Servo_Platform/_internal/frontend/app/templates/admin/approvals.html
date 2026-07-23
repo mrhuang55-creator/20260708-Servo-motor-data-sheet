@@ -13,14 +13,14 @@
         </div>
     </div>
 
-    <!-- 4 張待辦計數卡 -->
+    <!-- 4 張待辦動態計數卡 -->
     <div class="row g-3 mb-4">
         <div class="col-md-3">
             <div class="glass-card p-3 d-flex align-items-center">
                 <div class="fs-1 text-warning me-3"><i class="fa-solid fa-brain"></i></div>
                 <div>
                     <div class="text-muted fs-7">模型 Promotion</div>
-                    <div class="fs-3 metric-val text-warning">1 件待核准</div>
+                    <div class="fs-3 metric-val text-warning">{{ approvals.counts.model_promotion if approvals else 0 }} 件待核准</div>
                     <div class="fs-8 text-muted">v3.2.0 → v3.2.1</div>
                 </div>
             </div>
@@ -30,7 +30,7 @@
                 <div class="fs-1 text-info me-3"><i class="fa-solid fa-cubes"></i></div>
                 <div>
                     <div class="text-muted fs-7">Scenario 審查</div>
-                    <div class="fs-3 metric-val text-info">1 件待審查</div>
+                    <div class="fs-3 metric-val text-info">{{ approvals.counts.scenario_review if approvals else 0 }} 件待審查</div>
                     <div class="fs-8 text-muted">S04_高轉速輕載</div>
                 </div>
             </div>
@@ -40,7 +40,7 @@
                 <div class="fs-1 text-danger me-3"><i class="fa-solid fa-sliders"></i></div>
                 <div>
                     <div class="text-muted fs-7">高風險調參申請</div>
-                    <div class="fs-3 metric-val text-danger">1 件待核准</div>
+                    <div class="fs-3 metric-val text-danger">{{ approvals.counts.parameter_write if approvals else 0 }} 件待核准</div>
                     <div class="fs-8 text-muted">MR-J5 PA01 增益</div>
                 </div>
             </div>
@@ -57,49 +57,46 @@
         </div>
     </div>
 
-    <!-- 待核准列表 (最舊在上) -->
+    <!-- 待核准列表 (動態渲染) -->
     <div class="glass-card p-4 mb-4">
         <h5 class="fw-bold mb-3"><i class="fa-solid fa-list-check text-warning me-2"></i>待核准事項清單 (Pending Approvals)</h5>
         
-        <div class="card bg-dark border-secondary mb-3">
-            <div class="card-body">
-                <div class="d-flex justify-content-between align-items-start mb-2">
-                    <div>
-                        <span class="badge bg-warning text-dark me-2">模型 Promotion 申請</span>
-                        <span class="fw-bold fs-6">模型版本推升：v3.2.0 → v3.2.1</span>
+        {% if approvals and approvals.pending_items %}
+            {% for item in approvals.pending_items %}
+                <div class="card bg-dark border-secondary mb-3">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-start mb-2">
+                            <div>
+                                {% if item.type == 'model_promotion' %}
+                                    <span class="badge bg-warning text-dark me-2">模型 Promotion 申請</span>
+                                {% else %}
+                                    <span class="badge bg-danger me-2">高風險參數寫入</span>
+                                {% endif %}
+                                <span class="fw-bold fs-6">{{ item.title }}</span>
+                            </div>
+                            <span class="fs-8 text-muted">提出時間：{{ item.created_at }}</span>
+                        </div>
+                        <p class="fs-7 text-muted mb-2">
+                            提案工程師：{{ item.applicant }}<br>
+                            評估數據：{{ item.detail }}
+                        </p>
+                        <form action="{{ url_for('admin.approvals') }}" method="POST" class="d-flex gap-2 mt-3">
+                            <input type="hidden" name="item_id" value="{{ item.id }}">
+                            <button type="submit" name="action" value="approve" class="btn btn-sm btn-success fw-bold px-3">
+                                <i class="fa-solid fa-check me-1"></i>{% if item.type == 'model_promotion' %}同意核准上線{% else %}核准寫入{% endif %}
+                            </button>
+                            <button type="submit" name="action" value="reject" class="btn btn-sm btn-outline-danger px-3">
+                                <i class="fa-solid fa-xmark me-1"></i>{% if item.type == 'model_promotion' %}退回修正{% else %}拒絕{% endif %}
+                            </button>
+                        </form>
                     </div>
-                    <span class="fs-8 text-muted">提出時間：2026-07-22 14:00</span>
                 </div>
-                <p class="fs-7 text-muted mb-2">
-                    提案工程師：張工 (Engineer_01)<br>
-                    評估數據：Shadow 模式驗證完成 (600 Cycles)，RMSE 改善率達到 <strong>+14.8%</strong> (自 4.832 降至 4.118)，符合 ISO 55000 認證規範。
-                </p>
-                <div class="d-flex gap-2 mt-3">
-                    <button class="btn btn-sm btn-success fw-bold px-3" onclick="alert('已成功核准新模型 v3.2.1 上線！系統已執行原子切換。')"><i class="fa-solid fa-check me-1"></i>同意核准上線</button>
-                    <button class="btn btn-sm btn-outline-danger px-3" onclick="alert('已退回此模型 Promotion 申請。')"><i class="fa-solid fa-xmark me-1"></i>退回修正</button>
-                </div>
+            {% endfor %}
+        {% else %}
+            <div class="alert alert-success p-3 text-center mb-0 fs-7">
+                <i class="fa-solid fa-circle-check me-2"></i>所有待審核事項已全部核准處理完畢！系統運作正常。
             </div>
-        </div>
-
-        <div class="card bg-dark border-secondary">
-            <div class="card-body">
-                <div class="d-flex justify-content-between align-items-start mb-2">
-                    <div>
-                        <span class="badge bg-danger me-2">高風險參數寫入</span>
-                        <span class="fw-bold fs-6">三菱 MR-J5 驅動器 PA01 位置環增益寫入 (1000)</span>
-                    </div>
-                    <span class="fs-8 text-muted">提出時間：2026-07-22 13:30</span>
-                </div>
-                <p class="fs-7 text-muted mb-2">
-                    提案工程師：李工 (Engineer_02)<br>
-                    物理步階響應模擬驗證：整定時間 0.82s，相位裕度 54.2° (符合 >45° 標準規格)。
-                </p>
-                <div class="d-flex gap-2 mt-3">
-                    <button class="btn btn-sm btn-success fw-bold px-3" onclick="alert('已核准參數寫入。')"><i class="fa-solid fa-check me-1"></i>核准寫入</button>
-                    <button class="btn btn-sm btn-outline-danger px-3" onclick="alert('已拒絕參數寫入。')"><i class="fa-solid fa-xmark me-1"></i>拒絕</button>
-                </div>
-            </div>
-        </div>
+        {% endif %}
     </div>
 
     <!-- 系統整合狀態 -->

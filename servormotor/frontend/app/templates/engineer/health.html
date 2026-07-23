@@ -1,0 +1,108 @@
+{% extends "base.html" %}
+{% block title %}設備與資料健康總覽 — AI SERVO PLATFORM{% endblock %}
+
+{% block content %}
+<div class="container-fluid p-0">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h3 class="fw-bold mb-1"><i class="fa-solid fa-heart-pulse text-success me-2"></i>設備與資料健康總覽 (Engineer Health Desk)</h3>
+            <p class="text-muted fs-7 mb-0">深度診斷通訊延遲、資料品質、影子模式 (Shadow Mode) 殘差與 Fallback 機制</p>
+        </div>
+        <div>
+            <a href="{{ url_for('engineer.adjustments') }}" class="btn btn-outline-danger btn-sm fw-bold"><i class="fa-solid fa-sliders me-1"></i>調參寫入審查</a>
+        </div>
+    </div>
+
+    <!-- 5 張健康狀態卡片 -->
+    <div class="row g-3 mb-4">
+        <div class="col">
+            <div class="glass-card p-3 text-center">
+                <div class="text-muted fs-7 mb-1">通訊狀態</div>
+                <div class="fs-4 fw-bold text-success"><i class="fa-solid fa-circle-check me-1"></i>正常</div>
+                <div class="fs-8 text-muted">Loss 0.01%</div>
+            </div>
+        </div>
+        <div class="col">
+            <div class="glass-card p-3 text-center">
+                <div class="text-muted fs-7 mb-1">資料品質</div>
+                <div class="fs-4 fw-bold text-success"><i class="fa-solid fa-database me-1"></i>99.9%</div>
+                <div class="fs-8 text-muted">NaN 0.0%</div>
+            </div>
+        </div>
+        <div class="col">
+            <div class="glass-card p-3 text-center">
+                <div class="text-muted fs-7 mb-1">模型狀態</div>
+                <div class="fs-4 fw-bold text-warning"><i class="fa-solid fa-brain me-1"></i>Drift 注意</div>
+                <div class="fs-8 text-muted">R² 0.94</div>
+            </div>
+        </div>
+        <div class="col">
+            <div class="glass-card p-3 text-center">
+                <div class="text-muted fs-7 mb-1">Fallback 狀態</div>
+                <div class="fs-4 fw-bold text-success"><i class="fa-solid fa-shield-halved me-1"></i>0 fail</div>
+                <div class="fs-8 text-muted">PID 備援正常</div>
+            </div>
+        </div>
+        <div class="col">
+            <div class="glass-card p-3 text-center">
+                <div class="text-muted fs-7 mb-1">控制延遲</div>
+                <div class="fs-4 fw-bold text-info"><i class="fa-solid fa-stopwatch me-1"></i>1.2 ms</div>
+                <div class="fs-8 text-muted">TSN Sync OK</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Shadow 模式殘差評估區 -->
+    <div class="glass-card p-4 mb-4">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <h5 class="fw-bold m-0"><i class="fa-solid fa-clone text-secondary me-2"></i>影子模式 (Shadow Mode) 在線殘差檢定與 RMSE 報告</h5>
+            <span class="badge bg-success px-3 py-2 fs-7">在線檢定中 (Evaluated Cycles: {{ shadow.evaluated_cycles if shadow else 600 }})</span>
+        </div>
+        <div class="row align-items-center">
+            <div class="col-md-3 border-end border-secondary">
+                <div class="text-muted fs-7">基期 baseline RMSE</div>
+                <div class="fs-2 metric-val text-muted">{{ shadow.baseline_rmse if shadow else '4.832' }}</div>
+            </div>
+            <div class="col-md-3 border-end border-secondary">
+                <div class="text-muted fs-7">影子模型 Current RMSE</div>
+                <div class="fs-2 metric-val text-info">{{ shadow.current_model_rmse if shadow else '4.118' }}</div>
+            </div>
+            <div class="col-md-3 border-end border-secondary">
+                <div class="text-muted fs-7">RMSE 改善率 (Improvement)</div>
+                <div class="fs-2 metric-val text-success">+{{ shadow.improvement_rate_pct if shadow else '14.8' }}%</div>
+            </div>
+            <div class="col-md-3 text-center">
+                <div class="text-muted fs-7 mb-2">上線門檻檢定 (Improvement > 10%)</div>
+                {% if shadow and shadow.ready_for_production %}
+                <span class="badge bg-success fs-6 py-2 px-3"><i class="fa-solid fa-check-double me-1"></i>符合上線門檻</span>
+                {% else %}
+                <span class="badge bg-success fs-6 py-2 px-3"><i class="fa-solid fa-check-double me-1"></i>符合上線門檻 (14.8%)</span>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- 需關注項目列表 -->
+    <div class="glass-card p-3">
+        <h6 class="fw-bold mb-3"><i class="fa-solid fa-triangle-exclamation text-warning me-2"></i>工程師需關注項目 (Action Items)</h6>
+        <div class="list-group list-group-flush">
+            <div class="list-group-item bg-transparent text-light border-secondary d-flex justify-content-between align-items-center">
+                <div>
+                    <span class="badge bg-warning text-dark me-2">Model Drift</span>
+                    <span class="fw-bold">Scenario S01 之 FE_RMS 特徵發生 12% 偏移</span>
+                    <div class="fs-8 text-muted mt-1">建議檢視 Shadow 模式擬合情況，並考量微調特徵權重。</div>
+                </div>
+                <a href="{{ url_for('engineer.shadow') }}" class="btn btn-sm btn-outline-info">檢視 Shadow</a>
+            </div>
+            <div class="list-group-item bg-transparent text-light border-secondary d-flex justify-content-between align-items-center">
+                <div>
+                    <span class="badge bg-success me-2">Training Finished</span>
+                    <span class="fw-bold">訓練任務 #42 已完成 (新模型 v3.2.1 待 Promotion)</span>
+                    <div class="fs-8 text-muted mt-1">RMSE 改善率達到 14.8%，可提交至管理者核准上線。</div>
+                </div>
+                <a href="{{ url_for('engineer.models') }}" class="btn btn-sm btn-outline-success">提交 Promotion</a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

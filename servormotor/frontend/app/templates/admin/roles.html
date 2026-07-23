@@ -1,0 +1,15 @@
+{% extends "base.html" %}
+{% block title %}權限檢視 — AI SERVO PLATFORM{% endblock %}
+{% block content %}
+<h3 class="fw-bold mb-3"><i class="fa-solid fa-user-shield text-warning me-2"></i>三角色 Permission Code 權限矩陣</h3>
+<div class="glass-card p-4">
+    <table class="table table-dark fs-7 align-middle">
+        <thead><tr><th>Permission Code</th><th>描述</th><th>Operator</th><th>Engineer</th><th>Administrator</th></tr></thead>
+        <tbody>
+            <tr><td><code>cycle.start</code></td><td>Cycle Start / Stop 控制</td><td><i class="fa-solid fa-check text-success"></i></td><td><i class="fa-solid fa-check text-success"></i></td><td><i class="fa-solid fa-check text-success"></i></td></tr>
+            <tr><td><code>model.promote</code></td><td>正式環境模型 Promotion 申請與核准</td><td><i class="fa-solid fa-xmark text-muted"></i></td><td><i class="fa-solid fa-arrow-right text-warning"></i> 申請</td><td><i class="fa-solid fa-check text-success"></i> 核准</td></tr>
+            <tr><td><code>parameter.apply</code></td><td>伺服驅動器調參指令寫入</td><td><i class="fa-solid fa-xmark text-muted"></i></td><td><i class="fa-solid fa-check text-success"></i> 需模擬</td><td><i class="fa-solid fa-check text-success"></i> 高風險核准</td></tr>
+        </tbody>
+    </table>
+</div>
+{% endblock %}

@@ -1,15 +1,235 @@
 {% extends "base.html" %}
-{% block title %}警報中心 — AI SERVO PLATFORM{% endblock %}
+{% block title %}警報管理與歷史分析 — AI SERVO PLATFORM{% endblock %}
+
 {% block content %}
-<h3 class="fw-bold mb-3"><i class="fa-solid fa-triangle-exclamation text-warning me-2"></i>警報中心 (Alarms Center)</h3>
-<div class="glass-card p-4">
-    <div class="d-flex gap-2 mb-3">
-        <button class="btn btn-sm btn-info">Active (0)</button>
-        <button class="btn btn-sm btn-outline-secondary">Acknowledged</button>
-        <button class="btn btn-sm btn-outline-secondary">Resolved</button>
+<div class="container-fluid p-0">
+    <!-- 頁頭標題與報表匯出按紐 -->
+    <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2 glass-card p-3 border-warning">
+        <div>
+            <h4 class="fw-bold mb-1 text-light"><i class="fa-solid fa-triangle-exclamation text-warning me-2"></i>警報管理中心 (Alarm Management & History)</h4>
+            <p class="text-muted fs-7 mb-0">實時警報推播、視覺跳色反饋、詳細故障排除 SOP 指引與 ISO 55000 歷史報表</p>
+        </div>
+        <div class="d-flex gap-2 flex-wrap">
+            <button class="btn btn-outline-warning btn-sm" onclick="loadAlarmsData()"><i class="fa-solid fa-rotate me-1"></i>刷新警報</button>
+            <button class="btn btn-success btn-sm" onclick="exportAlarmCSV()"><i class="fa-solid fa-file-csv me-1"></i>匯出 ISO 警報日誌 (CSV)</button>
+        </div>
     </div>
-    <div class="alert alert-secondary text-center p-4">
-        目前無活動中警報。系統運行正常。
+
+    <!-- 警報統計數據橫列 -->
+    <div class="row g-3 mb-4">
+        <div class="col-md-3">
+            <div class="glass-card p-3 border-start border-4 border-danger">
+                <div class="text-muted fs-8 text-uppercase">活動中緊急警報 (Active Critical)</div>
+                <div class="fs-3 fw-bold text-danger mt-1" id="stat-active-critical">0</div>
+                <div class="fs-8 text-muted">需要立即對應與處置</div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="glass-card p-3 border-start border-4 border-warning">
+                <div class="text-muted fs-8 text-uppercase">預警數量 (Warning)</div>
+                <div class="fs-3 fw-bold text-warning mt-1" id="stat-warning-count">2</div>
+                <div class="fs-8 text-muted">包含滾珠螺桿熱膨脹與微振</div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="glass-card p-3 border-start border-4 border-info">
+                <div class="text-muted fs-8 text-uppercase">已確認數量 (Acknowledged)</div>
+                <div class="fs-3 fw-bold text-info mt-1" id="stat-ack-count">5</div>
+                <div class="fs-8 text-muted">維修人員已接單對應</div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="glass-card p-3 border-start border-4 border-success">
+                <div class="text-muted fs-8 text-uppercase">已排除總計 (Cleared)</div>
+                <div class="fs-3 fw-bold text-success mt-1" id="stat-cleared-count">128</div>
+                <div class="fs-8 text-muted">近 30 天紀錄</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 警報篩選與搜尋列 -->
+    <div class="glass-card p-3 mb-4">
+        <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
+            <div class="btn-group" role="group" id="alarm-filter-btns">
+                <button class="btn btn-sm btn-outline-danger active" onclick="filterAlarms('ACTIVE', this)">活動中警報 (Active)</button>
+                <button class="btn btn-sm btn-outline-warning" onclick="filterAlarms('WARNING', this)">警告預警 (Warning)</button>
+                <button class="btn btn-sm btn-outline-info" onclick="filterAlarms('ACK', this)">已確認 (Acknowledged)</button>
+                <button class="btn btn-sm btn-outline-secondary" onclick="filterAlarms('ALL', this)">全部歷史紀錄 (All Logs)</button>
+            </div>
+            <div class="d-flex gap-2" style="width: 280px;">
+                <input type="text" class="form-control form-control-sm bg-dark border-secondary text-light" id="alarm-search-input" placeholder="搜尋工況 S01-S41 或代碼…" onkeyup="searchAlarms()">
+            </div>
+        </div>
+    </div>
+
+    <!-- 實時警報清單與排查指引區 -->
+    <div class="row g-3 mb-4">
+        <!-- 警報卡片與清單 -->
+        <div class="col-lg-8">
+            <div class="glass-card p-3">
+                <h6 class="fw-bold mb-3"><i class="fa-solid fa-list-ul text-warning me-2"></i>實時警報列表 (Real-time Alarm Push Queue)</h6>
+                <div class="table-responsive">
+                    <table class="table table-dark table-hover fs-7 align-middle mb-0">
+                        <thead>
+                            <tr class="text-muted">
+                                <th>警報等級</th><th>時間</th><th>工況與代碼</th><th>警報內容說明</th><th>殘差/DV</th><th>動作</th>
+                            </tr>
+                        </thead>
+                        <tbody id="alarms-tbody">
+                            <tr><td colspan="6" class="text-center text-muted">載入中…</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- 故障排除處置指引 SOP (Troubleshooting Guidance) -->
+        <div class="col-lg-4">
+            <div class="glass-card p-3 h-100">
+                <h6 class="fw-bold mb-3 text-warning"><i class="fa-solid fa-screwdriver-wrench me-2"></i>故障排除與處置 SOP 指引</h6>
+                <div id="sop-detail-box">
+                    <div class="alert alert-secondary p-3 text-muted fs-7">
+                        <i class="fa-solid fa-hand-pointer me-2"></i>請點擊左側警報卡片中的「查看 SOP」以載入機械根因與對應處置步驟。
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
 </div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    const API = 'http://127.0.0.1:8000';
+    let _allAlarms = [
+        { id: 'ALM-20260723-01', severity: 'CRITICAL', scenario: 'S28 (緊急停機)', code: 'ERR_ESTOP_ACTIVE', msg: 'PLC 觸發 E-STOP 機械緊急停機防禦', residual: '0.085mm', dv: '0.92', status: 'ACTIVE', time: '14:22:10', sop: '1. 檢查周邊光柵防護閘門狀態<br>2. 確認加工物料無撞機卡死<br>3. 於主主控制台點擊 POWER ON 復歸 PLC 狀態' },
+        { id: 'ALM-20260723-02', severity: 'WARNING', scenario: 'S26 (機械共振)', code: 'WRN_RESONANCE_FREQ', msg: 'PA18 頻域 780Hz 諧振峰值超過 3σ 門檻', residual: '0.042mm', dv: '0.58', status: 'ACTIVE', time: '14:10:05', sop: '1. 前往 L2 畫面檢視 FFT 1x 振幅<br>2. 點擊「發起調參提案」將 PA18 調整至 850Hz<br>3. 送出後通知 Administrator 核准寫入' },
+        { id: 'ALM-20260723-03', severity: 'WARNING', scenario: 'S18 (螺桿熱膨脹)', code: 'WRN_THERMAL_EXP', msg: '滾珠螺桿預載力下降，位置殘差飄移', residual: '0.038mm', dv: '0.52', status: 'ACK', time: '13:45:00', sop: '1. 檢查潤滑油路壓力與冷卻機狀態<br>2. 執行數位雙生熱補償動態修正' },
+        { id: 'ALM-20260723-04', severity: 'NORMAL', scenario: 'S01 (基期取放)', code: 'INFO_CYCLE_DONE', msg: 'Cycle 加工週期正常完成', residual: '0.021mm', dv: '0.13', status: 'CLEARED', time: '12:00:00', sop: '系統運行正常，無需處置。' }
+    ];
+
+    function loadAlarmsData() {
+        // 從後端拉取最新 Fallback 與警報數據
+        fetch(`${API}/api/v1/fallback/events?limit=20`)
+            .then(r => r.json()).then(d => {
+                const events = d.events || [];
+                if (events.length) {
+                    _allAlarms = events.map((ev, i) => ({
+                        id: `ALM-${ev.id || i}`,
+                        severity: ev.level >= 3 ? 'CRITICAL' : ev.level === 2 ? 'WARNING' : 'NORMAL',
+                        scenario: ev.scenario_id || 'S01',
+                        code: ev.trigger_reason || 'EVT_LOG',
+                        msg: ev.action_taken || '狀態變更紀錄',
+                        residual: `${(0.02 + (ev.level || 1)*0.01).toFixed(3)}mm`,
+                        dv: (0.1 + (ev.level || 1)*0.2).toFixed(2),
+                        status: ev.level >= 2 ? 'ACTIVE' : 'CLEARED',
+                        time: ev.timestamp ? ev.timestamp.slice(11,19) : '14:00:00',
+                        sop: `後端紀錄：${ev.action_taken}。請檢查相應伺服驅動器暫存器與 TSN 網路通信狀態。`
+                    }));
+                }
+                renderAlarmsTable(_allAlarms);
+            })
+            .catch(() => {
+                renderAlarmsTable(_allAlarms);
+            });
+    }
+
+    function renderAlarmsTable(alarms) {
+        let activeCrit = 0, warnCount = 0, ackCount = 0, clearedCount = 0;
+        
+        alarms.forEach(a => {
+            if (a.severity === 'CRITICAL' && a.status === 'ACTIVE') activeCrit++;
+            if (a.severity === 'WARNING') warnCount++;
+            if (a.status === 'ACK') ackCount++;
+            if (a.status === 'CLEARED') clearedCount++;
+        });
+
+        document.getElementById('stat-active-critical').textContent = activeCrit;
+        document.getElementById('stat-warning-count').textContent = warnCount;
+        document.getElementById('stat-ack-count').textContent = ackCount;
+        document.getElementById('stat-cleared-count').textContent = clearedCount;
+
+        const tbody = document.getElementById('alarms-tbody');
+        if (!alarms.length) {
+            tbody.innerHTML = '<tr><td colspan="6" class="text-center text-muted">目前無符合條件之警報。</td></tr>';
+            return;
+        }
+
+        tbody.innerHTML = alarms.map(a => {
+            const badgeClass = a.severity === 'CRITICAL' ? 'bg-danger animate-pulse' : a.severity === 'WARNING' ? 'bg-warning text-dark' : 'bg-success';
+            return `
+                <tr class="${a.severity === 'CRITICAL' && a.status === 'ACTIVE' ? 'table-danger bg-opacity-25' : ''}">
+                    <td><span class="badge ${badgeClass}">${a.severity}</span></td>
+                    <td class="font-monospace">${a.time}</td>
+                    <td class="fw-bold">${a.scenario}<br><span class="fs-8 text-muted">${a.code}</span></td>
+                    <td>${a.msg}</td>
+                    <td class="font-monospace text-warning">${a.residual}<br><span class="fs-8 text-muted">DV: ${a.dv}</span></td>
+                    <td>
+                        <button class="btn btn-xs btn-outline-info me-1" onclick="showSop('${a.id}')"><i class="fa-solid fa-file-lines me-1"></i>SOP</button>
+                        ${a.status === 'ACTIVE' ? `<button class="btn btn-xs btn-outline-warning" onclick="ackAlarm('${a.id}')">確認</button>` : '<span class="fs-8 text-muted">已處理</span>'}
+                    </td>
+                </tr>
+            `;
+        }).join('');
+    }
+
+    function filterAlarms(type, btn) {
+        document.querySelectorAll('#alarm-filter-btns button').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+
+        if (type === 'ACTIVE') renderAlarmsTable(_allAlarms.filter(a => a.status === 'ACTIVE'));
+        else if (type === 'WARNING') renderAlarmsTable(_allAlarms.filter(a => a.severity === 'WARNING'));
+        else if (type === 'ACK') renderAlarmsTable(_allAlarms.filter(a => a.status === 'ACK'));
+        else renderAlarmsTable(_allAlarms);
+    }
+
+    function searchAlarms() {
+        const q = document.getElementById('alarm-search-input').value.toLowerCase();
+        renderAlarmsTable(_allAlarms.filter(a => a.scenario.toLowerCase().includes(q) || a.code.toLowerCase().includes(q) || a.msg.toLowerCase().includes(q)));
+    }
+
+    function showSop(id) {
+        const item = _allAlarms.find(a => a.id === id);
+        if (!item) return;
+        
+        document.getElementById('sop-detail-box').innerHTML = `
+            <div class="p-3 border border-warning rounded bg-dark">
+                <div class="d-flex justify-content-between align-items-center mb-2">
+                    <span class="badge bg-warning text-dark">${item.severity}</span>
+                    <span class="fs-8 text-muted">${item.id}</span>
+                </div>
+                <h6 class="fw-bold text-light mb-1">${item.scenario} - ${item.code}</h6>
+                <p class="fs-7 text-muted mb-3">${item.msg}</p>
+                <div class="border-top border-secondary pt-2">
+                    <div class="fw-bold text-warning fs-7 mb-2"><i class="fa-solid fa-list-check me-1"></i>標準排除作業程序 (SOP)：</div>
+                    <div class="fs-7 text-light lh-base">${item.sop}</div>
+                </div>
+            </div>
+        `;
+    }
+
+    function ackAlarm(id) {
+        const item = _allAlarms.find(a => a.id === id);
+        if (item) {
+            item.status = 'ACK';
+            renderAlarmsTable(_allAlarms);
+        }
+    }
+
+    function exportAlarmCSV() {
+        let csv = 'Time,Severity,Scenario,Code,Message,Residual,DV,Status\n';
+        _allAlarms.forEach(a => {
+            csv += `"${a.time}","${a.severity}","${a.scenario}","${a.code}","${a.msg}","${a.residual}","${a.dv}","${a.status}"\n`;
+        });
+        const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+        const link = document.createElement('a');
+        link.href = URL.createObjectURL(blob);
+        link.download = `ISO_55000_Alarm_Report_${new Date().toISOString().slice(0,10)}.csv`;
+        link.click();
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+        startHmiDynamicTimer(loadAlarmsData, 2000);
+    });
+</script>
 {% endblock %}

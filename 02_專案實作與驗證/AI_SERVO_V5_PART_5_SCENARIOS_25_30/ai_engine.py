@@ -19,9 +19,12 @@ def _score(df, col, threshold):
     return float(np.clip(df[col].fillna(0).abs().mean() / threshold, 0, 1))
 
 def compute_cross_correlation(x, y, max_lag=5):
-    # 進行特徵標準化
-    x_norm = (x - x.mean()) / (x.std() + 1e-8)
-    y_norm = (y - y.mean()) / (y.std() + 1e-8)
+    if len(x) <= 1:
+        return 0.0, 0
+    x_std = x.std(ddof=0)
+    y_std = y.std(ddof=0)
+    x_norm = (x - x.mean()) / (x_std + 1e-8)
+    y_norm = (y - y.mean()) / (y_std + 1e-8)
     n = len(x)
     best_corr = 0.0
     best_lag = 0

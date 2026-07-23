@@ -89,15 +89,54 @@
     <!-- Header 全站狀態列 -->
     <header class="header-status-bar d-flex justify-content-between align-items-center">
         <div class="d-flex align-items-center gap-3">
-            <span class="fw-bold text-info"><i class="fa-solid fa-microchip me-2"></i>AI SERVO PLATFORM</span>
-            <span class="badge bg-secondary"><i class="fa-solid fa-layer-group me-1"></i>Scenario: S01</span>
-            <span class="badge bg-success"><i class="fa-solid fa-gauge-high me-1"></i>Mode: Normal</span>
+            <span class="fw-bold text-info fs-6"><i class="fa-solid fa-microchip me-2"></i>AI SERVO PLATFORM</span>
+            <span class="badge bg-secondary fs-7"><i class="fa-solid fa-layer-group me-1"></i>Scenario: S01</span>
+            <span class="badge bg-success fs-7" id="global-status-badge"><i class="fa-solid fa-gauge-high me-1"></i>Mode: Normal</span>
             <span class="text-muted">|</span>
-            <span class="text-success"><i class="fa-solid fa-circle-dot me-1"></i>TSN ONLINE (1.2ms)</span>
+            <div class="dropdown">
+                <button class="btn btn-sm btn-outline-info dropdown-toggle fw-bold" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                    <i class="fa-solid fa-compass me-1"></i>9 大畫面快速切換
+                </button>
+                <ul class="dropdown-menu dropdown-menu-dark fs-7 shadow border-secondary">
+                    <li><a class="dropdown-item" href="{{ url_for('operator.console') }}"><i class="fa-solid fa-display text-info me-2"></i>L1. 主畫面 (即時控制台)</a></li>
+                    <li><a class="dropdown-item" href="{{ url_for('engineer.adjustments') }}"><i class="fa-solid fa-sliders text-danger me-2"></i>L2. 微調狀態與 Notch 審查</a></li>
+                    <li><a class="dropdown-item" href="{{ url_for('engineer.models') }}"><i class="fa-solid fa-brain text-primary me-2"></i>L3. AutoML 排行榜</a></li>
+                    <li><a class="dropdown-item" href="{{ url_for('engineer.shadow') }}"><i class="fa-solid fa-clone text-secondary me-2"></i>L4. Shadow 影子模式 A/B 比對</a></li>
+                    <li><a class="dropdown-item" href="{{ url_for('engineer.health') }}"><i class="fa-solid fa-heart-pulse text-success me-2"></i>L5. 特徵與健康總覽</a></li>
+                    <li><a class="dropdown-item" href="{{ url_for('engineer.scenarios') }}"><i class="fa-solid fa-cubes text-warning me-2"></i>L6. 41 工況情境庫</a></li>
+                    <li><a class="dropdown-item" href="{{ url_for('engineer.fallbacks') }}"><i class="fa-solid fa-clock-rotate-left text-warning me-2"></i>L7. 歷史事件與 Fallback 日誌</a></li>
+                    <li><a class="dropdown-item" href="{{ url_for('operator.alarms') }}"><i class="fa-solid fa-triangle-exclamation text-warning me-2"></i>L8. 警報管理中心</a></li>
+                    <li><a class="dropdown-item" href="{{ url_for('operator.diagnosis') }}"><i class="fa-solid fa-stethoscope text-success me-2"></i>L9. SHAP 根因診斷中心</a></li>
+                </ul>
+            </div>
+            <span class="text-muted">|</span>
+            <!-- 數據更新頻率動態選擇下拉選單 (消除寫死頻率) -->
+            <div class="dropdown">
+                <button class="btn btn-sm btn-outline-warning dropdown-toggle fw-bold" type="button" data-bs-toggle="dropdown" id="refreshRateBtn">
+                    <i class="fa-solid fa-clock me-1"></i>數據更新頻率: <span id="currentRefreshRateText">1秒 (高頻即時)</span>
+                </button>
+                <ul class="dropdown-menu dropdown-menu-dark fs-7 shadow border-secondary">
+                    <li><a class="dropdown-item" href="javascript:void(0)" onclick="setHmiRefreshRate(500, '0.5秒 (超高頻)')"><i class="fa-solid fa-bolt text-danger me-2"></i>0.5 秒 (超高頻 2Hz)</a></li>
+                    <li><a class="dropdown-item" href="javascript:void(0)" onclick="setHmiRefreshRate(1000, '1秒 (高頻即時)')"><i class="fa-solid fa-gauge-high text-info me-2"></i>1.0 秒 (高頻即時 1Hz)</a></li>
+                    <li><a class="dropdown-item" href="javascript:void(0)" onclick="setHmiRefreshRate(2000, '2秒 (標準監控)')"><i class="fa-solid fa-stopwatch text-success me-2"></i>2.0 秒 (標準 0.5Hz)</a></li>
+                    <li><a class="dropdown-item" href="javascript:void(0)" onclick="setHmiRefreshRate(5000, '5秒 (省能模式)')"><i class="fa-solid fa-leaf text-warning me-2"></i>5.0 秒 (省能 0.2Hz)</a></li>
+                    <li><a class="dropdown-item" href="javascript:void(0)" onclick="setHmiRefreshRate(10000, '10秒 (低頻輪詢)')"><i class="fa-solid fa-hourglass-half text-secondary me-2"></i>10 秒 (低頻輪詢)</a></li>
+                    <li><hr class="dropdown-divider border-secondary"></li>
+                    <li><a class="dropdown-item" href="javascript:void(0)" onclick="setHmiRefreshRate(0, '手動刷新 (暫停)')"><i class="fa-solid fa-pause text-muted me-2"></i>暫停自動更新</a></li>
+                </ul>
+            </div>
         </div>
+
         <div class="d-flex align-items-center gap-3">
+            <!-- 常駐鮮紅 E-STOP 按紐 (防誤觸: 觸控極致尺寸 110px x 42px) -->
+            <button class="btn btn-danger fw-bold shadow-lg d-flex align-items-center px-3 py-2 text-white border border-light" 
+                    style="background-color: #ef4444; font-size: 0.95rem; min-height: 44px; letter-spacing: 0.5px; animation: pulse-estop 2s infinite;"
+                    onclick="triggerGlobalEstop()">
+                <i class="fa-solid fa-triangle-exclamation fa-lg me-2"></i>E-STOP 緊急停機
+            </button>
+            <span class="text-muted">|</span>
             {% if user %}
-            <span class="text-light"><i class="fa-solid fa-user me-1"></i>{{ user.username }}</span>
+            <span class="text-light fs-7"><i class="fa-solid fa-user me-1"></i>{{ user.username }}</span>
             <span class="badge badge-role badge-{{ user.role }}">{{ user.role }}</span>
             <a href="{{ url_for('auth.logout') }}" class="btn btn-sm btn-outline-danger ms-2"><i class="fa-solid fa-right-from-bracket me-1"></i>登出</a>
             {% else %}
@@ -114,121 +153,154 @@
                 {% if user and user.role == 'Operator' %}
                 <li class="nav-item">
                     <a class="nav-link {% if request.endpoint == 'operator.console' %}active{% endif %}" href="{{ url_for('operator.console') }}">
-                        <i class="fa-solid fa-display me-2 text-info"></i>主控制台
+                        <i class="fa-solid fa-display me-2 text-info"></i>L1. 主畫面 — 即時控制台
                     </a>
                 </li>
                 <li class="nav-item">
                     <a class="nav-link {% if request.endpoint == 'operator.alarms' %}active{% endif %}" href="{{ url_for('operator.alarms') }}">
-                        <i class="fa-solid fa-triangle-exclamation me-2 text-warning"></i>警報中心
+                        <i class="fa-solid fa-triangle-exclamation me-2 text-warning"></i>L8. 警報管理中心
                     </a>
                 </li>
                 <li class="nav-item">
                     <a class="nav-link {% if request.endpoint == 'operator.diagnosis' %}active{% endif %}" href="{{ url_for('operator.diagnosis') }}">
-                        <i class="fa-solid fa-stethoscope me-2 text-success"></i>診斷中心
+                        <i class="fa-solid fa-stethoscope me-2 text-success"></i>L9. SHAP 根因診斷中心
                     </a>
                 </li>
                 <li class="nav-item">
                     <a class="nav-link {% if request.endpoint == 'operator.cycles' %}active{% endif %}" href="{{ url_for('operator.cycles') }}">
-                        <i class="fa-solid fa-rotate me-2 text-primary"></i>Cycle 紀錄
+                        <i class="fa-solid fa-rotate me-2 text-primary"></i>Cycle 運轉紀錄
                     </a>
                 </li>
                 <li class="nav-item">
                     <a class="nav-link {% if request.endpoint == 'operator.maintenance' %}active{% endif %}" href="{{ url_for('operator.maintenance') }}">
-                        <i class="fa-solid fa-wrench me-2 text-secondary"></i>維修回報
+                        <i class="fa-solid fa-wrench me-2 text-secondary"></i>維修工單回報
                     </a>
                 </li>
                 {% elif user and user.role == 'Engineer' %}
                 <li class="nav-item">
-                    <a class="nav-link {% if request.endpoint == 'engineer.health' %}active{% endif %}" href="{{ url_for('engineer.health') }}">
-                        <i class="fa-solid fa-heart-pulse me-2 text-success"></i>健康總覽
-                    </a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link {% if request.endpoint == 'engineer.features' %}active{% endif %}" href="{{ url_for('engineer.features') }}">
-                        <i class="fa-solid fa-chart-line me-2 text-info"></i>特徵監控
-                    </a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link {% if request.endpoint == 'engineer.scenarios' %}active{% endif %}" href="{{ url_for('engineer.scenarios') }}">
-                        <i class="fa-solid fa-cubes me-2 text-warning"></i>Scenario 庫
-                    </a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link {% if request.endpoint == 'engineer.models' %}active{% endif %}" href="{{ url_for('engineer.models') }}">
-                        <i class="fa-solid fa-brain me-2 text-primary"></i>模型登錄
-                    </a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link {% if request.endpoint == 'engineer.shadow' %}active{% endif %}" href="{{ url_for('engineer.shadow') }}">
-                        <i class="fa-solid fa-clone me-2 text-secondary"></i>Shadow 比較
+                    <a class="nav-link {% if request.endpoint == 'operator.console' %}active{% endif %}" href="{{ url_for('operator.console') }}">
+                        <i class="fa-solid fa-display me-2 text-info"></i>L1. 主畫面 — 即時控制台
                     </a>
                 </li>
                 <li class="nav-item">
                     <a class="nav-link {% if request.endpoint == 'engineer.adjustments' %}active{% endif %}" href="{{ url_for('engineer.adjustments') }}">
-                        <i class="fa-solid fa-sliders me-2 text-danger"></i>調參寫入審查
-                    </a>
-                </li>
-                <div class="px-3 my-2 text-uppercase fs-8 text-muted fw-bold border-top border-secondary pt-2">操作員工作臺權限 (Engineer 包含)</div>
-                <li class="nav-item">
-                    <a class="nav-link {% if request.endpoint == 'operator.console' %}active{% endif %}" href="{{ url_for('operator.console') }}">
-                        <i class="fa-solid fa-display me-2 text-info"></i>操作員主控制台
+                        <i class="fa-solid fa-sliders me-2 text-danger"></i>L2. 微調狀態與 Notch 審查
                     </a>
                 </li>
                 <li class="nav-item">
-                    <a class="nav-link {% if request.endpoint == 'operator.alarms' %}active{% endif %}" href="{{ url_for('operator.alarms') }}">
-                        <i class="fa-solid fa-triangle-exclamation me-2 text-warning"></i>警報中心
+                    <a class="nav-link {% if request.endpoint == 'engineer.models' %}active{% endif %}" href="{{ url_for('engineer.models') }}">
+                        <i class="fa-solid fa-brain me-2 text-primary"></i>L3. AutoML 排行榜
                     </a>
                 </li>
                 <li class="nav-item">
-                    <a class="nav-link {% if request.endpoint == 'operator.diagnosis' %}active{% endif %}" href="{{ url_for('operator.diagnosis') }}">
-                        <i class="fa-solid fa-stethoscope me-2 text-success"></i>診斷中心
-                    </a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link {% if request.endpoint == 'operator.cycles' %}active{% endif %}" href="{{ url_for('operator.cycles') }}">
-                        <i class="fa-solid fa-rotate me-2 text-primary"></i>Cycle 紀錄
-                    </a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link {% if request.endpoint == 'operator.maintenance' %}active{% endif %}" href="{{ url_for('operator.maintenance') }}">
-                        <i class="fa-solid fa-wrench me-2 text-secondary"></i>維修回報
-                    </a>
-                </li>
-                {% elif user and user.role == 'Administrator' %}
-                <li class="nav-item">
-                    <a class="nav-link {% if request.endpoint == 'admin.approvals' %}active{% endif %}" href="{{ url_for('admin.approvals') }}">
-                        <i class="fa-solid fa-stamp me-2 text-warning"></i>待核准事項
-                    </a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link {% if request.endpoint == 'admin.users' %}active{% endif %}" href="{{ url_for('admin.users') }}">
-                        <i class="fa-solid fa-users-gear me-2 text-info"></i>使用者與 RBAC
-                    </a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link {% if request.endpoint == 'admin.audit' %}active{% endif %}" href="{{ url_for('admin.audit') }}">
-                        <i class="fa-solid fa-clipboard-check me-2 text-success"></i>ISO 稽核中心
-                    </a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link {% if request.endpoint == 'admin.integrations' %}active{% endif %}" href="{{ url_for('admin.integrations') }}">
-                        <i class="fa-solid fa-network-wired me-2 text-primary"></i>系統整合狀態
-                    </a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link {% if request.endpoint == 'admin.settings' %}active{% endif %}" href="{{ url_for('admin.settings') }}">
-                        <i class="fa-solid fa-gears me-2 text-secondary"></i>全域設定
-                    </a>
-                </li>
-                <div class="px-3 my-2 text-uppercase fs-8 text-muted fw-bold border-top border-secondary pt-2">全站跨角色工作臺 (全權限)</div>
-                <li class="nav-item">
-                    <a class="nav-link {% if request.endpoint == 'operator.console' %}active{% endif %}" href="{{ url_for('operator.console') }}">
-                        <i class="fa-solid fa-display me-2 text-info"></i>操作員主控制台
+                    <a class="nav-link {% if request.endpoint == 'engineer.shadow' %}active{% endif %}" href="{{ url_for('engineer.shadow') }}">
+                        <i class="fa-solid fa-clone me-2 text-secondary"></i>L4. Shadow 影子模式 A/B 比對
                     </a>
                 </li>
                 <li class="nav-item">
                     <a class="nav-link {% if request.endpoint == 'engineer.health' %}active{% endif %}" href="{{ url_for('engineer.health') }}">
-                        <i class="fa-solid fa-heart-pulse me-2 text-success"></i>工程師健康總覽
+                        <i class="fa-solid fa-heart-pulse me-2 text-success"></i>L5. 特徵與健康總覽
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link {% if request.endpoint == 'engineer.scenarios' %}active{% endif %}" href="{{ url_for('engineer.scenarios') }}">
+                        <i class="fa-solid fa-cubes me-2 text-warning"></i>L6. 41 工況情境庫
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link {% if request.endpoint == 'engineer.fallbacks' %}active{% endif %}" href="{{ url_for('engineer.fallbacks') }}">
+                        <i class="fa-solid fa-clock-rotate-left me-2 text-warning"></i>L7. 歷史事件與 Fallback 日誌
+                    </a>
+                </li>
+                <div class="px-3 my-2 text-uppercase fs-8 text-muted fw-bold border-top border-secondary pt-2">操作員工作臺權限 (Engineer 包含)</div>
+                <li class="nav-item">
+                    <a class="nav-link {% if request.endpoint == 'operator.alarms' %}active{% endif %}" href="{{ url_for('operator.alarms') }}">
+                        <i class="fa-solid fa-triangle-exclamation me-2 text-warning"></i>L8. 警報管理中心
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link {% if request.endpoint == 'operator.diagnosis' %}active{% endif %}" href="{{ url_for('operator.diagnosis') }}">
+                        <i class="fa-solid fa-stethoscope me-2 text-success"></i>L9. SHAP 根因診斷中心
+                    </a>
+                </li>
+                {% elif user and user.role and user.role.lower() in ['administrator', 'admin'] %}
+                <!-- 最高權限管理者專屬工作臺 (Super User) -->
+                <li class="nav-item">
+                    <a class="nav-link {% if request.endpoint == 'admin.approvals' %}active{% endif %}" href="{{ url_for('admin.approvals') }}">
+                        <i class="fa-solid fa-stamp me-2 text-warning"></i>1. 待核准事項 (審核)
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link {% if request.endpoint == 'admin.users' %}active{% endif %}" href="{{ url_for('admin.users') }}">
+                        <i class="fa-solid fa-users-gear me-2 text-info"></i>2. 使用者與 RBAC 管理
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link {% if request.endpoint == 'admin.audit' %}active{% endif %}" href="{{ url_for('admin.audit') }}">
+                        <i class="fa-solid fa-clipboard-check me-2 text-success"></i>3. ISO 稽核中心
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link {% if request.endpoint == 'admin.integrations' %}active{% endif %}" href="{{ url_for('admin.integrations') }}">
+                        <i class="fa-solid fa-network-wired me-2 text-primary"></i>4. 系統整合與通訊狀態
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link {% if request.endpoint == 'admin.settings' %}active{% endif %}" href="{{ url_for('admin.settings') }}">
+                        <i class="fa-solid fa-gears me-2 text-secondary"></i>5. 全域系統設定
+                    </a>
+                </li>
+
+                <div class="px-3 my-2 text-uppercase fs-8 text-warning fw-bold border-top border-secondary pt-2">
+                    <i class="fa-solid fa-crown me-1"></i>工程師研發工作臺 (Admin 最高權限)
+                </div>
+                <li class="nav-item">
+                    <a class="nav-link {% if request.endpoint == 'operator.console' %}active{% endif %}" href="{{ url_for('operator.console') }}">
+                        <i class="fa-solid fa-display me-2 text-info"></i>L1. 主畫面 — 即時控制台
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link {% if request.endpoint == 'engineer.adjustments' %}active{% endif %}" href="{{ url_for('engineer.adjustments') }}">
+                        <i class="fa-solid fa-sliders me-2 text-danger"></i>L2. 微調狀態與 Notch 審查
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link {% if request.endpoint == 'engineer.models' %}active{% endif %}" href="{{ url_for('engineer.models') }}">
+                        <i class="fa-solid fa-brain me-2 text-primary"></i>L3. AutoML 排行榜
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link {% if request.endpoint == 'engineer.shadow' %}active{% endif %}" href="{{ url_for('engineer.shadow') }}">
+                        <i class="fa-solid fa-clone me-2 text-secondary"></i>L4. Shadow 影子模式 A/B 比對
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link {% if request.endpoint == 'engineer.health' %}active{% endif %}" href="{{ url_for('engineer.health') }}">
+                        <i class="fa-solid fa-heart-pulse me-2 text-success"></i>L5. 特徵與健康總覽
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link {% if request.endpoint == 'engineer.scenarios' %}active{% endif %}" href="{{ url_for('engineer.scenarios') }}">
+                        <i class="fa-solid fa-cubes me-2 text-warning"></i>L6. 41 工況情境庫
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link {% if request.endpoint == 'engineer.fallbacks' %}active{% endif %}" href="{{ url_for('engineer.fallbacks') }}">
+                        <i class="fa-solid fa-clock-rotate-left me-2 text-warning"></i>L7. 歷史事件與 Fallback 日誌
+                    </a>
+                </li>
+
+                <div class="px-3 my-2 text-uppercase fs-8 text-info fw-bold border-top border-secondary pt-2">
+                    <i class="fa-solid fa-display me-1"></i>現場操作員工作臺 (Admin 最高權限)
+                </div>
+                <li class="nav-item">
+                    <a class="nav-link {% if request.endpoint == 'operator.alarms' %}active{% endif %}" href="{{ url_for('operator.alarms') }}">
+                        <i class="fa-solid fa-triangle-exclamation me-2 text-warning"></i>L8. 警報管理中心
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link {% if request.endpoint == 'operator.diagnosis' %}active{% endif %}" href="{{ url_for('operator.diagnosis') }}">
+                        <i class="fa-solid fa-stethoscope me-2 text-success"></i>L9. SHAP 根因診斷中心
                     </a>
                 </li>
                 {% endif %}
@@ -252,9 +324,157 @@
         </main>
     </div>
 
+    <!-- 全站通用二次安全確認防呆 Modal (Industrial Double Confirmation) -->
+    <div class="modal fade" id="globalSafetyConfirmModal" tabindex="-1" aria-hidden="true" data-bs-backdrop="static">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content bg-dark text-light border border-secondary shadow-lg">
+                <div class="modal-header border-secondary bg-opacity-10" id="globalConfirmHeader">
+                    <h5 class="modal-title fw-bold" id="globalConfirmTitle">
+                        <i class="fa-solid fa-shield-halved text-warning me-2"></i>工控安全操作二次確認
+                    </h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body p-4 fs-6" id="globalConfirmMessage">
+                    您確定要執行此操作嗎？
+                </div>
+                <div class="modal-footer border-secondary">
+                    <button type="button" class="btn btn-secondary px-4 py-2" data-bs-dismiss="modal">取消 (Cancel)</button>
+                    <button type="button" class="btn btn-danger px-4 py-2 fw-bold" id="globalConfirmExecuteBtn">
+                        <i class="fa-solid fa-check me-1"></i>確認執行 (Confirm)
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- Bootstrap 5 JS Bundle -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <script>
+        // 工控通用二次確認防呆機制 (Industrial Safety Double Confirmation)
+        let _confirmCallback = null;
+
+        function showSafetyConfirm(title, message, confirmBtnText, confirmBtnClass, onConfirm) {
+            document.getElementById('globalConfirmTitle').innerHTML = `<i class="fa-solid fa-triangle-exclamation text-warning me-2"></i>${title}`;
+            document.getElementById('globalConfirmMessage').innerHTML = message;
+            
+            const btn = document.getElementById('globalConfirmExecuteBtn');
+            btn.className = `btn ${confirmBtnClass || 'btn-danger'} px-4 py-2 fw-bold`;
+            btn.innerHTML = `<i class="fa-solid fa-check me-1"></i>${confirmBtnText || '確認執行'}`;
+            
+            _confirmCallback = onConfirm;
+            const modal = new bootstrap.Modal(document.getElementById('globalSafetyConfirmModal'));
+            modal.show();
+        }
+
+        // 全域數據更新頻率管理 (HMI Dynamic Refresh Rate Manager)
+        window.hmiRefreshIntervalMs = parseInt(localStorage.getItem('hmi_refresh_interval_ms')) || 1000;
+
+        function updateRefreshRateLabel() {
+            const txtEl = document.getElementById('currentRefreshRateText');
+            if (!txtEl) return;
+            const ms = window.hmiRefreshIntervalMs;
+            if (ms === 500) txtEl.textContent = '0.5秒 (超高頻)';
+            else if (ms === 1000) txtEl.textContent = '1秒 (高頻即時)';
+            else if (ms === 2000) txtEl.textContent = '2秒 (標準監控)';
+            else if (ms === 5000) txtEl.textContent = '5秒 (省能模式)';
+            else if (ms === 10000) txtEl.textContent = '10秒 (低頻輪詢)';
+            else if (ms === 0) txtEl.textContent = '手動刷新 (暫停)';
+            else txtEl.textContent = `${ms}ms`;
+        }
+
+        function setHmiRefreshRate(intervalMs, labelText) {
+            window.hmiRefreshIntervalMs = intervalMs;
+            localStorage.setItem('hmi_refresh_interval_ms', intervalMs);
+            updateRefreshRateLabel();
+            window.dispatchEvent(new CustomEvent('hmiRefreshRateChanged', { detail: { intervalMs: intervalMs } }));
+        }
+
+        document.addEventListener('DOMContentLoaded', updateRefreshRateLabel);
+
+        function startHmiDynamicTimer(fetchFn, defaultMs = 1000) {
+            let timerId = null;
+
+            function scheduleNext() {
+                if (timerId) clearTimeout(timerId);
+                const ms = (window.hmiRefreshIntervalMs !== undefined && window.hmiRefreshIntervalMs >= 0) ? window.hmiRefreshIntervalMs : defaultMs;
+                if (ms <= 0) {
+                    return; // 暫停自動更新
+                }
+                timerId = setTimeout(async () => {
+                    try {
+                        await fetchFn();
+                    } catch (e) {
+                        console.error("Dynamic Timer Fetch Error:", e);
+                    }
+                    scheduleNext();
+                }, ms);
+            }
+
+            window.addEventListener('hmiRefreshRateChanged', (evt) => {
+                scheduleNext();
+            });
+
+            fetchFn();
+            scheduleNext();
+        }
+
+        document.getElementById('globalConfirmExecuteBtn').addEventListener('click', function() {
+            const modalEl = document.getElementById('globalSafetyConfirmModal');
+            const modal = bootstrap.Modal.getInstance(modalEl);
+            if (modal) modal.hide();
+            if (_confirmCallback && typeof _confirmCallback === 'function') {
+                _confirmCallback();
+                _confirmCallback = null;
+            }
+        });
+
+        // 常駐鮮紅 E-STOP 緊急停機觸發
+        function triggerGlobalEstop() {
+            showSafetyConfirm(
+                "【全站最高權限】緊急停機 (E-STOP)",
+                "<div class='alert alert-danger p-3 mb-0'><i class='fa-solid fa-circle-exclamation fa-lg me-2'></i><strong>警告：</strong>觸發緊急停機將立即停止實體伺服驅動器輸出脈沖，並鎖定 PLC 狀態機為 Emergency Stop 狀態！確定執行？</div>",
+                "立即執行 E-STOP",
+                "btn-danger",
+                function() {
+                    fetch('/api/ui/emergency-stop-request', { method: 'POST' })
+                        .then(res => res.json())
+                        .then(data => {
+                            alert("🚨 【EMERGENCY STOP 觸發成功】系統已強制切換至 S28 緊急停機狀態！");
+                            window.location.href = "{{ url_for('operator.console') }}";
+                        })
+                        .catch(err => {
+                            alert("🚨 E-STOP 指令已廣播！");
+                            window.location.href = "{{ url_for('operator.console') }}";
+                        });
+                }
+            );
+        }
+    </script>
+    <style>
+        @keyframes pulse-estop {
+            0% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.7); }
+            70% { box-shadow: 0 0 0 10px rgba(239, 68, 68, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); }
+        }
+        .hmi-btn-lg {
+            min-height: 48px;
+            font-size: 1rem;
+            font-weight: 600;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0.6rem 1.25rem;
+            border-radius: 0.5rem;
+        }
+        .hmi-metric-card {
+            background: rgba(15, 23, 42, 0.85);
+            border: 1px solid #334155;
+            border-radius: 0.5rem;
+            padding: 0.75rem 1rem;
+        }
+    </style>
     {% block extra_js %}{% endblock %}
 </body>
 </html>

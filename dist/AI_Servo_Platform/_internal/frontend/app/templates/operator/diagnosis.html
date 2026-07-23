@@ -1,13 +1,190 @@
 {% extends "base.html" %}
-{% block title %}診斷中心 — AI SERVO PLATFORM{% endblock %}
+{% block title %}SHAP 根因分析 + 設備建議 — AI SERVO PLATFORM{% endblock %}
+
 {% block content %}
-<h3 class="fw-bold mb-3"><i class="fa-solid fa-stethoscope text-success me-2"></i>診斷中心 (Diagnosis & SHAP Analysis)</h3>
-<div class="glass-card p-4 mb-4">
-    <h5 class="fw-bold mb-3">SHAP 根因可解釋性分析</h5>
-    <p class="text-muted fs-7">目前 Scenario: S01 (基期標準工況)。信賴度 99%，判定結果：正常 (Normal)。</p>
-    <div class="p-3 bg-dark rounded border border-secondary">
-        <div class="fw-bold text-success mb-1">機械檢查建議：</div>
-        <div class="fs-7 text-muted">無異常特徵觸發，不需進行機械拆檢。</div>
+<div class="container-fluid p-0">
+    <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2 glass-card p-3 border-success">
+        <div>
+            <h4 class="fw-bold mb-1 text-light"><i class="fa-solid fa-stethoscope text-success me-2"></i>SHAP 畫面 — 根因分析 + 設備建議 + 圖表</h4>
+            <p class="text-muted fs-7 mb-0">即時 SHAP 可解釋性分析、故障根因定位、設備處置建議</p>
+        </div>
+        <div class="d-flex gap-2 flex-wrap">
+            <select class="form-select form-select-sm bg-dark border-secondary text-light" style="width:230px" id="shap-scenario-select" onchange="loadShapData()">
+                <option value="01_Pick_and_Place">S01: 基期正常</option>
+                <option value="06_Bearing_Wear">S06: 軸承早期磨損</option>
+                <option value="25_Gain_Instability">S25: Gain 不穩定</option>
+                <option value="26_Resonance">S26: 機械共振</option>
+                <option value="28_Emergency_Stop">S28: 緊急停機</option>
+            </select>
+            <button class="btn btn-success btn-sm" onclick="loadShapData()"><i class="fa-solid fa-rotate me-1"></i>刷新分析</button>
+        </div>
+    </div>
+
+    <!-- 診斷結論橫列（從 API 填入） -->
+    <div class="row g-3 mb-4">
+        <div class="col-md-4">
+            <div class="glass-card p-3 border-start border-4" id="shap-status-card" style="border-color:#22c55e !important">
+                <div class="text-muted fs-8">診斷結論</div>
+                <div class="fs-5 fw-bold mt-1" id="shap-status-text"><i class="fa-solid fa-circle-notch fa-spin me-1"></i>載入中…</div>
+                <div class="fs-8 text-muted" id="shap-severity">—</div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="glass-card p-3 border-start border-4 border-info">
+                <div class="text-muted fs-8">最主要根因特徵</div>
+                <div class="fs-5 fw-bold text-info mt-1" id="shap-top-feature">—</div>
+                <div class="fs-8 text-muted">SHAP 貢獻度: <span id="shap-top-pct">—</span></div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="glass-card p-3 border-start border-4 border-warning">
+                <div class="text-muted fs-8">建議動作</div>
+                <div class="fs-6 fw-bold text-warning mt-1" id="shap-action">—</div>
+                <div class="fs-8 text-muted" id="shap-parameter">—</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- SHAP 瀑布圖 + 設備建議 -->
+    <div class="row g-3 mb-4">
+        <div class="col-md-8">
+            <div class="glass-card p-3">
+                <h6 class="fw-bold mb-3"><i class="fa-solid fa-chart-bar text-info me-2"></i>SHAP 特徵歸因瀑布圖 (Waterfall)</h6>
+                <div style="height: 280px;"><canvas id="chart-shap-waterfall"></canvas></div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="glass-card p-3 h-100">
+                <h6 class="fw-bold mb-3"><i class="fa-solid fa-wrench text-warning me-2"></i>設備處置建議</h6>
+                <div id="device-suggestions-list">
+                    <div class="text-muted fs-7 text-center py-3">載入中…</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- SHAP 根因排名表格 -->
+    <div class="glass-card p-3">
+        <h6 class="fw-bold mb-3"><i class="fa-solid fa-list-ol text-secondary me-2"></i>SHAP 特徵重要性排名 (Root Cause Rank)</h6>
+        <div class="table-responsive">
+            <table class="table table-dark table-hover fs-7 align-middle mb-0">
+                <thead><tr class="text-muted"><th>排名</th><th>特徵名稱</th><th>均值|SHAP|</th><th>當前值</th><th>貢獻度</th></tr></thead>
+                <tbody id="shap-rank-tbody"><tr><td colspan="5" class="text-center text-muted">載入中…</td></tr></tbody>
+            </table>
+        </div>
     </div>
 </div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    const API = 'http://127.0.0.1:8000';
+    let shapChart = null;
+
+    function loadShapData() {
+        const scen = document.getElementById('shap-scenario-select').value;
+
+        fetch(`${API}/api/v1/shap/diagnosis?scenario_id=${scen}`)
+            .then(r => r.json()).then(d => {
+                const trig = d.trigger || {};
+                const shap = d.shap_values || {};
+                const rc = d.root_cause_rank || [];
+                const ds = d.device_suggestions || [];
+
+                // 狀態指示
+                const sev = trig.severity || 'normal';
+                const statusEl = document.getElementById('shap-status-text');
+                const cardEl = document.getElementById('shap-status-card');
+                if (sev === 'high') {
+                    statusEl.innerHTML = '<i class="fa-solid fa-circle-exclamation me-1 text-danger"></i>HIGH';
+                    cardEl.style.borderColor = '#ef4444';
+                } else if (sev === 'medium') {
+                    statusEl.innerHTML = '<i class="fa-solid fa-triangle-exclamation me-1 text-warning"></i>MEDIUM';
+                    cardEl.style.borderColor = '#f59e0b';
+                } else {
+                    statusEl.innerHTML = '<i class="fa-solid fa-circle-check me-1 text-success"></i>NORMAL';
+                    cardEl.style.borderColor = '#22c55e';
+                }
+                document.getElementById('shap-severity').textContent = `DV Actual: ${trig.DV_actual ?? '—'} / Predicted: ${trig.DV_predicted ?? '—'}`;
+
+                // 最主要根因
+                if (rc.length) {
+                    document.getElementById('shap-top-feature').textContent = rc[0].feature;
+                    document.getElementById('shap-top-pct').textContent = rc[0].mean_contribution_pct + '%';
+                }
+
+                // 建議動作
+                if (ds.length) {
+                    document.getElementById('shap-action').textContent = ds[0].suggested_action;
+                    document.getElementById('shap-parameter').textContent = ds[0].parameter;
+                }
+
+                // 瀑布圖
+                const wf = shap.waterfall || {};
+                const steps = wf.steps || shap.force_plot_data || [];
+                const wfLabels = ['base_value', ...steps.map(s => s.feature || s.feature), 'output'];
+                const wfData = [wf.base || shap.expected_value || 0.5, ...steps.map(s => s.effect !== undefined ? s.effect : s.shap), null];
+                // 填充 output 值
+                const lastCumul = steps.length ? (steps[steps.length-1].cumulative ?? d.trigger?.DV_predicted) : wf.base;
+                wfData[wfData.length - 1] = lastCumul ?? 0.13;
+                const colors = wfData.map(v => v === null ? '#94a3b8' : v >= 0 ? '#22c55e' : '#ef4444');
+                const ctx = document.getElementById('chart-shap-waterfall').getContext('2d');
+                if (shapChart) shapChart.destroy();
+                shapChart = new Chart(ctx, {
+                    type: 'bar',
+                    data: {
+                        labels: wfLabels,
+                        datasets: [{ label: 'SHAP 貢獻值', data: wfData, backgroundColor: colors, borderRadius: 4 }]
+                    },
+                    options: {
+                        responsive: true, maintainAspectRatio: false,
+                        plugins: { legend: { display: false } },
+                        scales: {
+                            x: { ticks: { color: '#94a3b8' }, grid: { color: '#334155' } },
+                            y: { ticks: { color: '#94a3b8' }, grid: { color: '#334155' },
+                                 title: { display: true, text: 'SHAP 貢獻值', color: '#94a3b8' } }
+                        }
+                    }
+                });
+
+                // 設備建議
+                const sugEl = document.getElementById('device-suggestions-list');
+                if (ds.length) {
+                    sugEl.innerHTML = ds.map(s => `
+                        <div class="p-3 rounded border border-${sev === 'high' ? 'danger' : sev === 'medium' ? 'warning' : 'success'} mb-2">
+                            <div class="fw-bold text-${sev === 'high' ? 'danger' : sev === 'medium' ? 'warning' : 'success'} mb-1">
+                                <i class="fa-solid fa-wrench me-1"></i>${s.feature} (${s.shap_contribution_pct}%)
+                            </div>
+                            <div class="fs-7 text-muted">${s.parameter}: <strong class="text-light">${s.suggested_action}</strong></div>
+                            <div class="fs-8 text-muted">當前值: ${s.current_value}</div>
+                        </div>`).join('');
+                } else {
+                    sugEl.innerHTML = '<div class="p-3 rounded border border-success"><div class="fw-bold text-success">✅ 無異常，無需處置</div></div>';
+                }
+
+                // 根因排名表格（從 global_feature_importance 填）
+                const gfi = d.global_feature_importance || [];
+                const tbody = document.getElementById('shap-rank-tbody');
+                if (gfi.length) {
+                    const maxV = gfi[0].mean_abs_shap;
+                    tbody.innerHTML = gfi.map((f, i) => {
+                        const pct = Math.round((f.mean_abs_shap / maxV) * 100);
+                        return `<tr>
+                            <td>${i + 1}</td>
+                            <td class="text-info">${f.feature}</td>
+                            <td>${f.mean_abs_shap}</td>
+                            <td>—</td>
+                            <td><div class="progress bg-dark" style="height:6px"><div class="progress-bar bg-info" style="width:${pct}%"></div></div></td>
+                        </tr>`;
+                    }).join('');
+                }
+            }).catch(e => {
+                document.getElementById('shap-status-text').textContent = '⚠ API 無法連線';
+            });
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+        startHmiDynamicTimer(loadShapData, 3000);
+    });
+</script>
 {% endblock %}

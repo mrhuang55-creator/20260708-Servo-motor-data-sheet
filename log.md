@@ -1,4 +1,38 @@
-# 執行日誌 (log.md)
+# 專案執行與測試日誌 (Project Execution & Testing Log)
+
+---
+
+## 📅 2026-07-23 - 0723 規格全量對齊、41 工況擴充與 E2E 自動化測試全量 PASS 紀錄
+
+### 1. 本次自動化 E2E 測試驗證清單與結果
+
+| 測試腳本 / 模組 | 測試內容與對向 | 測試結果 |
+| :--- | :--- | :--- |
+| **`test_frontend_routes.py`** | Web 前端 BFF 10 大視窗與 E2E 登入與管理動態扣減 | **6/6 PASS (0.48s)** |
+| **`test_server_v1_api.py`** | 8000 埠 FastAPI 全 19 個 REST API 端點與 41 工況讀寫 | **16/16 PASS (0.03s)** |
+| **`test_async_diagnose.py`** | 異步佇列診斷事件處理與佇列流測試 | **PASS** |
+| **`test_dsp_analytics.py`** | DSP Bode 波德圖共振分析 (290Hz) / 卡爾曼過濾器 / ARIMA 預測 | **PASS** |
+| **`test_ml_automl.py`** | ML 模型競賽平台與 GA / Optuna 基因演算法超參數優化 | **PASS** |
+| **`test_deep_learning.py`** | 深度學習模型 (MLP / Bi-GRU + Attention) 殘差診斷與效能比對 | **PASS** |
+| **`test_slmp_closed_loop.py`** | 三菱 MR-J5/SLMP MC 3E 協議連線、D1000 暫存器寫入與原子 Rollback 回滾 | **PASS** |
+
+### 2. 重構與修復總結
+1. **全 41 工況支援**：`server.py` 已升級為包含 S01 至 S41 全 41 個真實工業工況之 `SCENARIOS_41_MASTER`。
+2. **UI 畫面動態化**：`adjustments.html` 改為動態渲染 41 個 `<option>`，支援切換、調參寫入與即時顯示。
+3. **管理者動態審核**：`approvals.html` 與 `/api/v1/admin/approve` 實作動態核准，扣減待辦卡片並寫入 ISO 55000 防篡改 SHA-256 哈希鏈。
+4. **.exe 重新打包與防閃退**：補齊 `flask` 套件、`multiprocessing.freeze_support()` 與 `sys._MEIPASS` 路徑修正，產出最新被驗證可穩定發布的 `dist/AI_Servo_Platform/AI_Servo_Platform.exe`。
+
+---
+
+### [2026-07-23 10:08] 0723 前後端規格對齊重構與全量除錯完成
+- **0723 前後端規格書對齊**：重構 `server.py`，全量實作 19 個 `/api/v1/` REST API 端點（涵蓋 L1/L2/L3、SHAP 瀑布圖/Beeswarm、Fallback 分頁與統計、殘差 3σ 調度監控、Scenario 模型庫與主控制台）。
+- **SHA-256 Fallback 稽核鏈**：整合 `fallback_logs.db` SQLite 儲存庫，實作符合 ISO 55000 防篡改規範之 Fallback SHA-256 鏈式日誌。
+- **WebSocket Topic 頻道廣播**：升級 `WSManager` 支援多頻道（`ws/l1/summary`、`ws/control/status`、`ws/l2/finetune` 等）獨立訂閱與即時廣播。
+- **全量 Bug 修復**：
+  - 修復 `slmp_client.py` 之 `read_mr_j5_parameter` 中 `NameError: name 'addr' is not defined`。
+  - 修復 `test_slmp_closed_loop.py` 中 `KeyError: 'PB07'` (變數名稱由 `backup` 統一修正為 `backup_params`)。
+  - 修復 `ai_engine.py` 中 `compute_cross_correlation` 單筆串流數據致 `x.std()` 回傳 `NaN` 之 NumPy `RuntimeWarning`。
+- **單元測試全數 PASS**：6 大單元測試腳本（`test_server_v1_api.py`、`test_async_diagnose.py`、`test_dsp_analytics.py`、`test_ml_automl.py`、`test_deep_learning.py`、`test_slmp_closed_loop.py`）驗證 100% 通過（`Exit Code: 0`）。
 
 ### [2026-07-07 09:52] 專案初始化與計畫確認
 - 接收並分析工業 AI 系統架構師對於伺服系統進階故障場景（Scenario 25–30）特徵分析與標籤映射的設計要求。

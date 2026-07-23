@@ -117,23 +117,23 @@ def test_slmp_closed_loop():
         
         # 執行回滾
         print("  [步驟 6.2：參數恢復] 開始寫入備份參數暫存器...")
-        client.write_d_registers(start_addr=1002, values=[backup["PE02"]])
-        client.write_d_registers(start_addr=1007, values=[backup["PE07"]])
+        client.write_d_registers(start_addr=1002, values=[backup_params["PE02"]])
+        client.write_d_registers(start_addr=1007, values=[backup_params["PE07"]])
         
         # 驗證回滾結果
         pe02_roll = client.read_d_registers(start_addr=1002, points=1)[0]
         pe07_roll = client.read_d_registers(start_addr=1007, points=1)[0]
         print(f"  [步驟 7：驗證回滾] 回滾後 D1002 (PE02)={pe02_roll}, D1007 (PE07)={pe07_roll}")
-        assert pe02_roll == backup["PE02"], "PE02 回滾失敗！"
-        assert pe07_roll == backup["PE07"], "PE07 回滾失敗！"
+        assert pe02_roll == backup_params["PE02"], "PE02 回滾失敗！"
+        assert pe07_roll == backup_params["PE07"], "PE07 回滾失敗！"
         print("  [PASS] 一鍵安全減速與回滾 (Rollback) 測試成功！")
         # 執行全暫存器回滾
-        client.write_mr_j5_parameter("PE02", backup["PE02"])
-        client.write_mr_j5_parameter("PE07", backup["PE07"])
-        client.write_mr_j5_parameter("PB07", backup["PB07"])
-        client.write_mr_j5_parameter("PB08", backup["PB08"])
-        client.write_mr_j5_parameter("PA11", backup["PA11"])
-        client.write_mr_j5_parameter("PC24", backup["PC24"])
+        client.write_mr_j5_parameter("PE02", backup_params["PE02"])
+        client.write_mr_j5_parameter("PE07", backup_params["PE07"])
+        client.write_mr_j5_parameter("PB07", backup_params["PB07"])
+        client.write_mr_j5_parameter("PB08", backup_params["PB08"])
+        client.write_mr_j5_parameter("PA11", backup_params["PA11"])
+        client.write_mr_j5_parameter("PC24", backup_params["PC24"])
         pe02_roll = client.read_mr_j5_parameter("PE02")
         pe07_roll = client.read_mr_j5_parameter("PE07")
         pb07_roll = client.read_mr_j5_parameter("PB07")
@@ -141,10 +141,10 @@ def test_slmp_closed_loop():
         pa11_roll = client.read_mr_j5_parameter("PA11")
         pc24_roll = client.read_mr_j5_parameter("PC24")
         print(f"  [步驟 7：驗證回滾] 回滾後 PE02={pe02_roll}, PE07={pe07_roll}, PB07={pb07_roll}, PB08={pb08_roll}, PA11={pa11_roll}, PC24={pc24_roll}")
-        assert pb07_roll == backup["PB07"], "PB07 回滾失敗！"
-        assert pb08_roll == backup["PB08"], "PB08 回滾失敗！"
-        assert pa11_roll == backup["PA11"], "PA11 回滾失敗！"
-        assert pc24_roll == backup["PC24"], "PC24 回滾失敗！"
+        assert pb07_roll == backup_params["PB07"], "PB07 回滾失敗！"
+        assert pb08_roll == backup_params["PB08"], "PB08 回滾失敗！"
+        assert pa11_roll == backup_params["PA11"], "PA11 回滾失敗！"
+        assert pc24_roll == backup_params["PC24"], "PC24 回滾失敗！"
         print("  [PASS] 一鍵安全減速與全參數回滾 (Rollback) 測試成功！")
         
     finally:
