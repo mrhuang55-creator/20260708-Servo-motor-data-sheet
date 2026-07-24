@@ -3,7 +3,35 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
     <title>{% block title %}AI SERVO PLATFORM{% endblock %}</title>
+    <script>
+        // 開啟新頁面/新分頁時自動轉頁至帳號輸入區的安全檢驗機制
+        (function() {
+            const path = window.location.pathname;
+            const isLoginPage = path === '/login' || path.includes('/login');
+            if (!isLoginPage) {
+                const hasValidSession = sessionStorage.getItem('phm_valid_user_session');
+                if (!hasValidSession) {
+                    // 開啟新頁面/新分頁時，自動無痛轉頁至帳號輸入區 (/login)
+                    window.location.replace('/login');
+                }
+            }
+        })();
+
+        // 防止瀏覽器上一頁快取 (bfcache) 導致舊狀態殘留
+        window.addEventListener('pageshow', function(event) {
+            if (event.persisted || (window.performance && window.performance.navigation.type === 2)) {
+                window.location.reload(true);
+            }
+        });
+    </script>
+
+
+
+
     <!-- Bootstrap 5 CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
     <!-- FontAwesome Icons -->
@@ -137,13 +165,134 @@
             <span class="text-muted">|</span>
             {% if user %}
             <span class="text-light fs-7"><i class="fa-solid fa-user me-1"></i>{{ user.username }}</span>
-            <span class="badge badge-role badge-{{ user.role }}">{{ user.role }}</span>
-            <a href="{{ url_for('auth.logout') }}" class="btn btn-sm btn-outline-danger ms-2"><i class="fa-solid fa-right-from-bracket me-1"></i>登出</a>
+            <span class="badge badge-role badge-{{ user.role }} me-2">{{ user.role }}</span>
+            <button class="btn btn-sm btn-outline-info me-1" data-bs-toggle="modal" data-bs-target="#quickSwitchAccountModal"><i class="fa-solid fa-rotate me-1"></i>切換帳號</button>
+            <a href="{{ url_for('auth.logout') }}" class="btn btn-sm btn-outline-danger"><i class="fa-solid fa-right-from-bracket me-1"></i>登出</a>
             {% else %}
             <a href="{{ url_for('auth.login') }}" class="btn btn-sm btn-primary">登入</a>
             {% endif %}
         </div>
     </header>
+
+    <!-- 快速切換帳號模態視窗 (Quick Switch Account Modal) -->
+    <div class="modal fade" id="quickSwitchAccountModal" tabindex="-1" aria-labelledby="quickSwitchAccountModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content bg-dark text-light border border-secondary shadow-lg">
+                <div class="modal-header border-secondary">
+                    <h5 class="modal-title fw-bold text-info" id="quickSwitchAccountModalLabel"><i class="fa-solid fa-user-gear me-2"></i>快速切換使用者帳號</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body p-4">
+                    <p class="text-muted fs-7 mb-3">無須先登出，點擊快捷按鈕或輸入新帳密，一鍵完成身份切換與權限更新：</p>
+                    <form action="{{ url_for('auth.login') }}" method="POST" id="quick-switch-form" onsubmit="sessionStorage.setItem('phm_valid_user_session', 'ACTIVE_' + Date.now());">
+                        <div class="mb-3">
+                            <label class="form-label fs-7 text-muted">使用者帳號</label>
+                            <input type="text" class="form-control bg-dark border-secondary text-light" id="qs-username" name="username" required placeholder="請輸入使用者帳號" autocomplete="off">
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label fs-7 text-muted">密碼</label>
+                            <input type="password" class="form-control bg-dark border-secondary text-light" id="qs-password" name="password" required placeholder="請輸入密碼" autocomplete="off">
+                        </div>
+                        <button type="submit" class="btn btn-info w-100 fw-bold text-dark"><i class="fa-solid fa-right-to-bracket me-2"></i>切換身份登入</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 特權權限 30 分鐘時間上限續期預警 Modal -->
+    <div class="modal fade" id="privilegeTimeoutWarningModal" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content bg-dark text-light border border-warning shadow-lg">
+                <div class="modal-header border-warning bg-warning-subtle text-warning">
+                    <h5 class="modal-title fw-bold text-dark"><i class="fa-solid fa-shield-cat me-2"></i>特權操作時間即將到期預警</h5>
+                </div>
+                <div class="modal-body p-4 text-center">
+                    <div class="fs-1 text-warning mb-2"><i class="fa-solid fa-clock-rotate-left animate-pulse"></i></div>
+                    <h5 class="fw-bold mb-2">特權操作將於 <span id="span-privilege-countdown" class="text-danger fw-bold fs-4">120</span> 秒後到期</h5>
+                    <p class="text-muted fs-7 mb-4">
+                        為了防止忘記登出或腳本繞過，Engineer / Admin 身分硬性限制 30 分鐘操作上限。<br>
+                        若您仍在現場維護，請點擊下方按鈕無縫延長 30 分鐘。
+                    </p>
+                    <div class="d-flex justify-content-center gap-3">
+                        <button type="button" class="btn btn-warning btn-lg fw-bold px-4 text-dark" id="btn-extend-privilege-session">
+                            <i class="fa-solid fa-rotate-right me-2"></i>無縫延長 30 分鐘
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 特權身份 (Engineer / Admin) 30 分鐘硬性絕對壽命控制
+        {% if user and user.role in ['Engineer', 'Administrator'] %}
+        (function() {
+            let privilegeTimer = null;
+            let countdownInterval = null;
+            let remainingSeconds = 120;
+            const TOTAL_LIFESPAN_MS = 28 * 60 * 1000; // 第 28 分鐘彈出預警
+
+            function startPrivilegeLifespanTimer() {
+                if (privilegeTimer) clearTimeout(privilegeTimer);
+                if (countdownInterval) clearInterval(countdownInterval);
+
+                privilegeTimer = setTimeout(function() {
+                    // 第 28 分鐘跳出續期預警對話框
+                    const warningModalEl = document.getElementById('privilegeTimeoutWarningModal');
+                    if (warningModalEl && typeof bootstrap !== 'undefined') {
+                        const modal = new bootstrap.Modal(warningModalEl);
+                        modal.show();
+                    }
+
+                    remainingSeconds = 120;
+                    document.getElementById('span-privilege-countdown').innerText = remainingSeconds;
+
+                    countdownInterval = setInterval(function() {
+                        remainingSeconds--;
+                        const span = document.getElementById('span-privilege-countdown');
+                        if (span) span.innerText = remainingSeconds;
+
+                        if (remainingSeconds <= 0) {
+                            clearInterval(countdownInterval);
+                            // 滿 30 分鐘零回應，強制銷毀 Session 並導向帳號輸入區 (/login)
+                            sessionStorage.removeItem('phm_valid_user_session');
+                            fetch('/logout', { method: 'POST' }).finally(function() {
+                                window.location.replace('/login');
+                            });
+                        }
+                    }, 1000);
+                }, TOTAL_LIFESPAN_MS);
+            }
+
+            // 初始化啟動 30 分鐘倒數
+            startPrivilegeLifespanTimer();
+
+            // 點擊【無縫延長 30 分鐘】
+            document.addEventListener('DOMContentLoaded', function() {
+                const btnExtend = document.getElementById('btn-extend-privilege-session');
+                if (btnExtend) {
+                    btnExtend.addEventListener('click', function() {
+                        fetch('/api/v1/auth/extend_session', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ operator_role: '{{ user.role }}', operator_id: '{{ user.username }}' })
+                        }).then(res => res.json()).then(data => {
+                            if (data.status === 'success') {
+                                const warningModalEl = document.getElementById('privilegeTimeoutWarningModal');
+                                const modalInstance = bootstrap.Modal.getInstance(warningModalEl);
+                                if (modalInstance) modalInstance.hide();
+                                startPrivilegeLifespanTimer();
+                            }
+                        }).catch(() => {
+                            startPrivilegeLifespanTimer();
+                        });
+                    });
+                }
+            });
+        })();
+        {% endif %}
+    </script>
 
     <div class="d-flex flex-grow-1">
         <!-- 側欄選單 (依角色動態顯示) -->

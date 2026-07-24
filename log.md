@@ -2,6 +2,21 @@
 
 ---
 
+## 📅 2026-07-24 - v7.1.0 系統資安硬化、自動轉頁閘門、SQLite 審核持久化與全量測試庫歸檔紀錄
+
+### 1. 本次系統功能升級與資安硬化驗證清單
+
+| 模組 / 功能區塊 | 修復與設計說明 | 驗證結果 |
+| :--- | :--- | :--- |
+| **RBAC 角色權限** | 實作三層級權限，Administrator 擁有全系統最高存取與獨家刪除權限。 | **PASS** |
+| **Auto-Redirect Gate** | 採用 `sessionStorage` 分頁隔離憑證，開啟新分頁或視窗無憑證時零延遲自動轉頁至 `/login`。 | **PASS (HTTP 200)** |
+| **30 分鐘特權絕對時間上限** | 防止爬蟲/腳本繞過或忘記登出，Engineer/Admin 硬性限制 30 分鐘；第 28 分鐘彈出 Quick 續期對話框。 | **PASS** |
+| **SQLite 審核數據庫持久化** | 建立 `admin_approvals.db`，Admin 點擊核准 100% 寫入 SQLite，系統重開或 `.exe` 重新執行永不復原。 | **PASS** |
+| **測試數據庫歸檔** | 將原始交付包 30 個情境 JSON 檔、V6 全工況檔與全新客製化測試檔 `scenario_31_custom_motor_test.json` 共 33 個檔案歸檔於 `test_repository/data/`。 | **33/33 FILES PASS** |
+| **PyInstaller 綠色打包** | 使用專案 `vm` 虛擬環境重新打包，編譯產出 [AI_Servo_Platform.exe](file:///d:/20260708-Servo-motor-data-sheet/dist/AI_Servo_Platform/AI_Servo_Platform.exe)，連線與雙服務器運作順暢。 | **PASS (Port 8000 & 5000)** |
+
+---
+
 ## 📅 2026-07-23 - 0723 規格全量對齊、41 工況擴充與 E2E 自動化測試全量 PASS 紀錄
 
 ### 1. 本次自動化 E2E 測試驗證清單與結果

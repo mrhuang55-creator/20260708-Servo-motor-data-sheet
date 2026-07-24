@@ -12,6 +12,15 @@
         
         <!-- 手動 / 自動模式切換與人體工學觸控控制項 (48px Touch Standard) -->
         <div class="d-flex flex-wrap gap-3 align-items-center">
+            <!-- 數據源動態通知 Badge 與 RBAC 下拉切換器 -->
+            <div class="d-flex align-items-center bg-dark p-1 px-2 rounded-3 border border-info gap-2" id="container-datasource-selector">
+                <span class="badge bg-warning text-dark id="badge-datasource-status" style="font-size: 0.85rem;"><i class="fa-solid fa-microchip me-1"></i>[🟡 測試檔案: V6_41_scenarios.json]</span>
+                <select class="form-select form-select-sm bg-dark text-light border-secondary" id="select-datasource" style="width: auto; max-width: 220px; font-size: 0.8rem;">
+                    <option value="HARDWARE_SLMP">🟢 實體馬達 (SLMP MC 3E)</option>
+                    <option value="FILE_V6_41_scenarios.json" selected>🟡 測試檔: V6_41_scenarios.json</option>
+                </select>
+            </div>
+
             <!-- 模式切換 Toggle -->
             <div class="d-flex align-items-center bg-dark p-1 rounded-3 border border-secondary">
                 <span class="fs-8 fw-bold me-2 ms-2 text-muted" id="label-mode-manual">MANUAL</span>

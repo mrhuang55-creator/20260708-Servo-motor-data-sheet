@@ -1,0 +1,46 @@
+
+// D:\AI\TOPIC\FMCRD_Data\40scenarios對應的Tag.xlsx
+// 从原始标签（Raw Tags）衍生出统计特征（Statistical Features），并进行特征选择（Feature Selection）
+
+{
+  "scenario_id": "01_Pick_and_Place",
+  "scenario_name": "定位到位时间优化",
+  "raw_tags": ["time", "rod_demand_pos", "rod_actual_pos", "Following Error", "Velocity"],
+  "feature_groups": [
+    {
+      "feature_name": "Following_Error_Statistics",
+      "based_on": "Following Error",
+      "derived_features": [
+        {"function": "rms", "output": "FE_RMS"},
+        {"function": "peak", "output": "FE_Peak"},
+        {"function": "std", "output": "FE_Std"},
+        {"function": "spectral_dominant_freq", "output": "FE_MainFreq"}
+      ]
+    },
+    {
+      "feature_name": "Velocity_Statistics",
+      "based_on": "Velocity",
+      "derived_features": [
+        {"function": "rms", "output": "Vel_RMS"},
+        {"function": "peak", "output": "Vel_Peak"},
+        {"function": "std", "output": "Vel_Std"},
+        {"function": "spectral_dominant_freq", "output": "Vel_MainFreq"}
+      ]
+    },
+    {
+      "feature_name": "Position_Tracking_Quality",
+      "based_on": ["rod_demand_pos", "rod_actual_pos"],
+      "derived_features": [
+        {"function": "max_absolute_error", "output": "Pos_MaxAbsErr"},
+        {"function": "settling_time", "output": "Pos_SettlingTime"}
+      ]
+    }
+  ],
+  "selected_features_for_model": [
+    "FE_RMS", "FE_Peak", "Vel_RMS", "Vel_Peak", "Pos_MaxAbsErr", "Pos_SettlingTime"
+  ]
+}
+
+//模板可以直接用程序解析，未来扩展到40个场景时，只需要把 raw_tags 和 derived_features 替换掉就行
+
+

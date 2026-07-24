@@ -29,6 +29,7 @@ def permission_required(*allowed_roles):
     return decorator
 
 @auth_bp.route("/login", methods=["GET", "POST"])
+@auth_bp.route("/auth/login", methods=["GET", "POST"])
 def login():
     if request.method == "POST":
         username = request.form.get("username")
@@ -57,8 +58,10 @@ def login():
     return render_template("auth/login.html")
 
 @auth_bp.route("/logout", methods=["GET", "POST"])
+@auth_bp.route("/auth/logout", methods=["GET", "POST"])
 def logout():
     session.clear()
+    flash("您已成功登出系統。", "info")
     if request.method == "POST" or request.headers.get("X-Requested-With") == "XMLHttpRequest":
         return jsonify({"status": "success", "message": "已成功自動登出"})
     return redirect(url_for("auth.login"))

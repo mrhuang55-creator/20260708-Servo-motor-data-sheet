@@ -1,0 +1,54 @@
+
+// D:\AI\TOPIC\FMCRD_Data\40scenarios對應的Tag_含採集優先級.xlsx
+// Scenario 18: Ball Screw - 滾珠螺桿磨損 / 間隙導致方向誤差
+
+{
+  "scenario_id": "18_Ball_Screw",
+  "scenario_name": "滾珠螺桿背隙與剛性退化",
+  "raw_tags": ["rod_demand_pos", "rod_actual_pos", "Following Error", "Backlash", "Stiffness"],
+  "feature_groups": [
+    {
+      "feature_name": "Backlash_Characterization",
+      "based_on": ["rod_demand_pos", "rod_actual_pos", "Following Error"],
+      "derived_features": [
+        {"function": "reversal_error", "output": "BL_ReversalErr"},
+        {"function": "dead_zone_width", "output": "BL_DeadZone"},
+        {"function": "hysteresis_area", "output": "BL_Hysteresis"},
+        {"function": "direction_dependent_following_error", "output": "BL_DirFE"}
+      ]
+    },
+    {
+      "feature_name": "Stiffness_Degradation",
+      "based_on": ["rod_actual_pos", "Following Error", "Stiffness"],
+      "derived_features": [
+        {"function": "force_displacement_slope", "output": "STIFF_Slope"},
+        {"function": "compliance_std", "output": "STIFF_ComplianceStd"},
+        {"function": "elastic_region_width", "output": "STIFF_ElasticRegion"}
+      ]
+    },
+    {
+      "feature_name": "Friction_Pattern",
+      "based_on": ["Following Error", "rod_actual_pos"],
+      "derived_features": [
+        {"function": "stribeck_curve_parameter", "output": "FR_Stribeck"},
+        {"function": "coulomb_friction_estimate", "output": "FR_Coulomb"},
+        {"function": "viscous_friction_coeff", "output": "FR_Viscous"}
+      ]
+    },
+    {
+      "feature_name": "Wear_Progression",
+      "based_on": ["Stiffness", "Backlash", "Following Error"],
+      "derived_features": [
+        {"function": "trend_slope_over_cycles", "output": "WEAR_TrendSlope"},
+        {"function": "backlash_to_stiffness_ratio", "output": "WEAR_BL_StiffRatio"},
+        {"function": "position_error_asymmetry", "output": "WEAR_Asymmetry"}
+      ]
+    }
+  ],
+  "selected_features_for_model": [
+    "BL_ReversalErr", "BL_DeadZone", "BL_Hysteresis", "BL_DirFE",
+    "STIFF_Slope", "STIFF_ComplianceStd",
+    "FR_Coulomb", "FR_Viscous",
+    "WEAR_TrendSlope", "WEAR_BL_StiffRatio", "WEAR_Asymmetry"
+  ]
+}

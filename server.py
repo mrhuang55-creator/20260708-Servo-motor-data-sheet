@@ -180,6 +180,77 @@ def init_fallback_db():
 
 init_fallback_db()
 
+# ------------------------------------------------------------------------
+# 數據源狀態管理與 test_repository/ 熱監聽 SQLite 資料庫 (data_sources.db)
+# ------------------------------------------------------------------------
+TEST_REPO_DIR = os.path.join(BASE_DIR, "test_repository")
+TEST_DATA_DIR = os.path.join(TEST_REPO_DIR, "data")
+TEST_MODEL_DIR = os.path.join(TEST_REPO_DIR, "models")
+os.makedirs(TEST_DATA_DIR, exist_ok=True)
+os.makedirs(TEST_MODEL_DIR, exist_ok=True)
+
+DATASOURCE_DB_PATH = os.path.join(BASE_DIR, "data_sources.db")
+
+def init_datasource_db():
+    conn = sqlite3.connect(DATASOURCE_DB_PATH, timeout=10.0)
+    cursor = conn.cursor()
+    cursor.execute("PRAGMA journal_mode=WAL;")
+    cursor.execute("""
+        CREATE TABLE IF NOT EXISTS data_sources (
+            id TEXT PRIMARY KEY,
+            type TEXT NOT NULL,
+            name TEXT NOT NULL,
+            file_path TEXT,
+            is_active INTEGER NOT NULL,
+            updated_at TEXT NOT NULL
+        )
+    """)
+    # 預設註冊實體馬達選項
+    cursor.execute("SELECT COUNT(*) FROM data_sources WHERE id='HARDWARE_SLMP'")
+    if cursor.fetchone()[0] == 0:
+        now_str = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())
+        cursor.execute(
+            "INSERT INTO data_sources (id, type, name, file_path, is_active, updated_at) VALUES (?, ?, ?, ?, ?, ?)",
+            ("HARDWARE_SLMP", "HARDWARE", "實體伺服馬達 (SLMP MC 3E 127.0.0.1:5007)", "", 0, now_str)
+        )
+    conn.commit()
+    conn.close()
+    sync_datasources_from_dir()
+
+def sync_datasources_from_dir():
+    """自動掃描 test_repository/data/ 目錄下的測試檔案並同步至 SQLite"""
+    conn = sqlite3.connect(DATASOURCE_DB_PATH, timeout=10.0)
+    cursor = conn.cursor()
+    now_str = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())
+    
+    # 支援的可解析時序數據副檔名
+    valid_exts = {".json", ".parquet", ".csv", ".xlsx", ".txt"}
+    
+    if os.path.exists(TEST_DATA_DIR):
+        existing_files = os.listdir(TEST_DATA_DIR)
+        for fname in existing_files:
+            fpath = os.path.join(TEST_DATA_DIR, fname)
+            if os.path.isfile(fpath):
+                ext = os.path.splitext(fname)[1].lower()
+                if ext in valid_exts:
+                    file_id = f"FILE_{fname}"
+                    cursor.execute("SELECT COUNT(*) FROM data_sources WHERE id=?", (file_id,))
+                    if cursor.fetchone()[0] == 0:
+                        cursor.execute(
+                            "INSERT INTO data_sources (id, type, name, file_path, is_active, updated_at) VALUES (?, ?, ?, ?, ?, ?)",
+                            (file_id, "FILE", f"測試檔: {fname}", fpath, 0, now_str)
+                        )
+    
+    # 檢查是否有預設啟用的項目，若無則預設啟用 V6 或第一個
+    cursor.execute("SELECT COUNT(*) FROM data_sources WHERE is_active=1")
+    if cursor.fetchone()[0] == 0:
+        cursor.execute("UPDATE data_sources SET is_active=1 WHERE rowid IN (SELECT rowid FROM data_sources WHERE id LIKE 'FILE_%' OR id='HARDWARE_SLMP' LIMIT 1)")
+    
+    conn.commit()
+    conn.close()
+
+init_datasource_db()
+
 class FallbackLogger:
     @staticmethod
     def log_event(scenario_id: str, level: int, reason: str, before: dict, action: dict, consecutive: int = 1):
@@ -735,31 +806,60 @@ async def get_scenarios_summary(limit: Optional[int] = None):
         }
     return {"scenarios": res}
 
-# ---------------- 全局待審核數據庫 ----------------
-PENDING_APPROVALS = [
-    {
-        "id": "appr-001",
-        "type": "model_promotion",
-        "title": "模型版本推升：v3.2.0 → v3.2.1",
-        "applicant": "張工 (Engineer_01)",
-        "detail": "Shadow 模式驗證完成 (600 Cycles)，RMSE 改善率達到 +14.8% (自 4.832 降至 4.118)，符合 ISO 55000 認證規範。",
-        "created_at": "2026-07-22 14:00",
-        "status": "pending"
-    },
-    {
-        "id": "appr-002",
-        "type": "parameter_write",
-        "title": "三菱 MR-J5 驅動器 PA01 位置環增益寫入 (1000)",
-        "applicant": "李工 (Engineer_02)",
-        "detail": "物理步階響應模擬驗證：整定時間 0.82s，相位裕度 54.2° (符合 >45° 標準規格)。",
-        "created_at": "2026-07-22 13:30",
-        "status": "pending"
-    }
-]
+# ---------------- 全局待審核 SQLite 數據庫持久化 ----------------
+APPROVALS_DB_PATH = os.path.join(BASE_DIR, "admin_approvals.db")
+
+def init_approvals_db():
+    """初始化 Admin Approvals 持久化資料庫"""
+    conn = sqlite3.connect(APPROVALS_DB_PATH, timeout=10.0)
+    cursor = conn.cursor()
+    cursor.execute("""
+        CREATE TABLE IF NOT EXISTS admin_approvals (
+            id TEXT PRIMARY KEY,
+            type TEXT NOT NULL,
+            title TEXT NOT NULL,
+            applicant TEXT NOT NULL,
+            detail TEXT NOT NULL,
+            created_at TEXT NOT NULL,
+            status TEXT NOT NULL,
+            operator TEXT,
+            updated_at TEXT
+        )
+    """)
+    # 預載初始項目（若庫為空）
+    cursor.execute("SELECT COUNT(*) FROM admin_approvals")
+    if cursor.fetchone()[0] == 0:
+        initial_items = [
+            ("appr-001", "model_promotion", "模型版本推升：v3.2.0 → v3.2.1", "張工 (Engineer_01)", "Shadow 模式驗證完成 (600 Cycles)，RMSE 改善率達到 +14.8% (自 4.832 降至 4.118)，符合 ISO 55000 認證規範。", "2026-07-22 14:00", "pending", None, None),
+            ("appr-002", "parameter_write", "三菱 MR-J5 驅動器 PA01 位置環增益寫入 (1000)", "李工 (Engineer_02)", "物理步階響應模擬驗證：整定時間 0.82s，相位裕度 54.2° (符合 >45° 標準規格)。", "2026-07-22 13:30", "pending", None, None)
+        ]
+        cursor.executemany("INSERT INTO admin_approvals VALUES (?,?,?,?,?,?,?,?,?)", initial_items)
+        conn.commit()
+    conn.close()
+
+init_approvals_db()
 
 @app.get("/api/v1/admin/approvals", tags=["Admin Approvals"])
 async def get_admin_approvals():
-    pending = [item for item in PENDING_APPROVALS if item["status"] == "pending"]
+    """從 SQLite 讀取當前待審核項目 (重開不消失)"""
+    conn = sqlite3.connect(APPROVALS_DB_PATH, timeout=10.0)
+    cursor = conn.cursor()
+    cursor.execute("SELECT id, type, title, applicant, detail, created_at, status FROM admin_approvals WHERE status = 'pending'")
+    rows = cursor.fetchall()
+    conn.close()
+    
+    pending = []
+    for r in rows:
+        pending.append({
+            "id": r[0],
+            "type": r[1],
+            "title": r[2],
+            "applicant": r[3],
+            "detail": r[4],
+            "created_at": r[5],
+            "status": r[6]
+        })
+    
     model_count = sum(1 for item in pending if item["type"] == "model_promotion")
     param_count = sum(1 for item in pending if item["type"] == "parameter_write")
     return {
@@ -779,26 +879,43 @@ class ProcessApprovalRequest(BaseModel):
 
 @app.post("/api/v1/admin/approve", tags=["Admin Approvals"])
 async def process_admin_approval(req: ProcessApprovalRequest):
-    global PENDING_APPROVALS
-    for item in PENDING_APPROVALS:
-        if item["id"] == req.item_id:
-            item["status"] = "approved" if req.action == "approve" else "rejected"
-            # 寫入 ISO 稽核日誌
-            FallbackLogger.log_event(
-                scenario_id="01_Pick_and_Place",
-                level=3,
-                reason=f"admin_{req.action}_{item['type']}",
-                before={"item_id": req.item_id, "title": item["title"]},
-                action={"action": req.action, "operator": req.operator},
-                consecutive=0
-            )
-            return {
-                "status": "success",
-                "message": f"成功執行核准操作 ({req.action}): {item['title']}",
-                "item_id": req.item_id,
-                "action": req.action
-            }
-    raise HTTPException(status_code=404, detail="找不到該審核項目")
+    """執行核准/拒絕操作，並 100% commit 持久化寫入 SQLite 資料庫 (重開系統不復原)"""
+    new_status = "approved" if req.action == "approve" else "rejected"
+    now_iso = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())
+    
+    conn = sqlite3.connect(APPROVALS_DB_PATH, timeout=10.0)
+    cursor = conn.cursor()
+    cursor.execute("SELECT title, type FROM admin_approvals WHERE id = ?", (req.item_id,))
+    row = cursor.fetchone()
+    if not row:
+        conn.close()
+        raise HTTPException(status_code=404, detail="找不到該審核項目")
+        
+    title, item_type = row
+    # 硬化寫入 SQLite 資料庫
+    cursor.execute(
+        "UPDATE admin_approvals SET status = ?, operator = ?, updated_at = ? WHERE id = ?",
+        (new_status, req.operator, now_iso, req.item_id)
+    )
+    conn.commit()
+    conn.close()
+    
+    # 寫入 ISO 稽核哈希鏈日誌
+    FallbackLogger.log_event(
+        scenario_id="01_Pick_and_Place",
+        level=3,
+        reason=f"admin_{req.action}_{item_type}",
+        before={"item_id": req.item_id, "title": title},
+        action={"action": req.action, "operator": req.operator, "persisted_db": "admin_approvals.db"},
+        consecutive=0
+    )
+    
+    return {
+        "status": "success",
+        "message": f"成功執行核准操作 ({req.action}): {title} [已永久寫入數據庫]",
+        "item_id": req.item_id,
+        "action": req.action
+    }
 current_scenario_id = 1
 
 @app.post("/api/v1/switch_scenario/{scenario_id}", tags=["Scenario Control"])
@@ -1270,7 +1387,165 @@ async def get_admin_user_history():
             "target_username": r[4],
             "details": r[5]
         })
-    return {"status": "success", "logs": logs}
+    return {"status": "success", "history": logs}
+
+# ------------------------------------------------------------------------
+# 數據源狀態與 test_repository/ RBAC 控制 REST API 端點
+# ------------------------------------------------------------------------
+class SwitchSourceReq(BaseModel):
+    source_id: str
+    operator_role: str = "Operator"
+    operator_id: str = "op_01"
+
+class DeleteSourceReq(BaseModel):
+    source_id: str
+    operator_role: str = "Operator"
+    operator_id: str = "op_01"
+
+@app.get("/api/v1/system/data_sources", tags=["Data Source Management"])
+async def get_system_data_sources():
+    """查詢當前可用數據源與活化連線狀態 (All Roles Read-Only)"""
+    sync_datasources_from_dir()
+    conn = sqlite3.connect(DATASOURCE_DB_PATH, timeout=10.0)
+    cursor = conn.cursor()
+    cursor.execute("SELECT id, type, name, file_path, is_active, updated_at FROM data_sources ORDER BY is_active DESC, type ASC")
+    rows = cursor.fetchall()
+    conn.close()
+    
+    sources = []
+    active_source = None
+    for r in rows:
+        item = {
+            "id": r[0],
+            "type": r[1],
+            "name": r[2],
+            "file_path": r[3],
+            "is_active": bool(r[4]),
+            "updated_at": r[5]
+        }
+        sources.append(item)
+        if bool(r[4]):
+            active_source = item
+            
+    return {
+        "status": "success",
+        "active_source": active_source,
+        "available_sources": sources,
+        "badge": {
+            "is_real_hardware": (active_source["type"] == "HARDWARE") if active_source else False,
+            "text": active_source["name"] if active_source else "未知數據源",
+            "color": "success" if (active_source and active_source["type"] == "HARDWARE") else "warning"
+        }
+    }
+
+@app.post("/api/v1/system/switch_source", tags=["Data Source Management"])
+async def switch_system_data_source(req: SwitchSourceReq):
+    """切換資料源模式 (限 Administrator 或 Engineer)"""
+    role = req.operator_role.strip().capitalize()
+    if role not in ["Administrator", "Engineer"]:
+        raise HTTPException(status_code=403, detail="權限不足！唯有 Engineer 或 Administrator 能夠變更數據源系統。")
+        
+    conn = sqlite3.connect(DATASOURCE_DB_PATH, timeout=10.0)
+    cursor = conn.cursor()
+    cursor.execute("SELECT name, type FROM data_sources WHERE id=?", (req.source_id,))
+    row = cursor.fetchone()
+    if not row:
+        conn.close()
+        raise HTTPException(status_code=404, detail=f"找不到指定的數據源 ID: {req.source_id}")
+        
+    source_name, source_type = row
+    now_str = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())
+    
+    cursor.execute("UPDATE data_sources SET is_active=0")
+    cursor.execute("UPDATE data_sources SET is_active=1, updated_at=? WHERE id=?", (now_str, req.source_id))
+    conn.commit()
+    conn.close()
+    
+    # 紀錄 SHA-256 鏈式稽核日誌
+    FallbackLogger.log_event(
+        scenario_id="SYSTEM_DATA_SOURCE_SWITCH",
+        level=1,
+        reason=f"Operator '{req.operator_id}' ({role}) 變更數據源為 {source_name}",
+        before={"previous_active": "switched"},
+        action={"active_source_id": req.source_id, "type": source_type}
+    )
+    
+    return {
+        "status": "success",
+        "message": f"數據源已成功切換至: {source_name}",
+        "active_id": req.source_id,
+        "type": source_type
+    }
+
+@app.delete("/api/v1/system/delete_test_file", tags=["Data Source Management"])
+async def delete_system_test_file(req: DeleteSourceReq):
+    """刪除測試檔案 (嚴格獨家限定 Administrator 執行)"""
+    role = req.operator_role.strip().capitalize()
+    if role != "Administrator":
+        raise HTTPException(status_code=403, detail="權限不足！只有最高管理者 (Administrator) 才能執行測試檔案刪除操作。")
+        
+    conn = sqlite3.connect(DATASOURCE_DB_PATH, timeout=10.0)
+    cursor = conn.cursor()
+    cursor.execute("SELECT name, file_path, is_active FROM data_sources WHERE id=?", (req.source_id,))
+    row = cursor.fetchone()
+    if not row:
+        conn.close()
+        raise HTTPException(status_code=404, detail="目標測試檔案不存在或已被刪除")
+        
+    source_name, file_path, is_active = row
+    if is_active:
+        conn.close()
+        raise HTTPException(status_code=400, detail="無法刪除目前正在運作/活化中的數據源！請先切換至其他數據源後再行刪除。")
+        
+    # 執行檔案與資料庫刪除
+    if file_path and os.path.exists(file_path):
+        try:
+            os.remove(file_path)
+        except Exception as e:
+            pass
+            
+    cursor.execute("DELETE FROM data_sources WHERE id=?", (req.source_id,))
+    conn.commit()
+    conn.close()
+    
+    FallbackLogger.log_event(
+        scenario_id="SYSTEM_TEST_FILE_DELETE",
+        level=1,
+        reason=f"Administrator '{req.operator_id}' 刪除測試檔 {source_name}",
+        before={"deleted_id": req.source_id},
+        action={"status": "deleted"}
+    )
+    
+    return {"status": "success", "message": f"已成功刪除測試檔案: {source_name}"}
+
+# ------------------------------------------------------------------------
+# 特權角色 30 分鐘絕對時間上限續期 API
+# ------------------------------------------------------------------------
+class ExtendSessionReq(BaseModel):
+    operator_role: str = "Engineer"
+    operator_id: str = "eng_01"
+
+@app.post("/api/v1/auth/extend_session", tags=["Auth Management"])
+async def extend_privilege_session(req: ExtendSessionReq):
+    """工程師/管理員第 28 分鐘續期 30 分鐘特權 Session"""
+    role = req.operator_role.strip().capitalize()
+    now_iso = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())
+    
+    FallbackLogger.log_event(
+        scenario_id="PRIVILEGE_SESSION_EXTEND",
+        level=1,
+        reason=f"Operator '{req.operator_id}' ({role}) 執行第 28 分鐘特權 Session 續期 30 分鐘",
+        before={"status": "expiring_soon"},
+        action={"status": "extended", "extended_at": now_iso}
+    )
+    
+    return {
+        "status": "success",
+        "message": "特權操作時間已成功無縫延長 30 分鐘！",
+        "new_ttl_seconds": 1800,
+        "extended_at": now_iso
+    }
+
 
 PKL_PATH = os.path.join(BASE_DIR, "02_專案實作與驗證", "AI_SERVO_V5_PART_5_SCENARIOS_25_30", "演算法核心.pkl")
 

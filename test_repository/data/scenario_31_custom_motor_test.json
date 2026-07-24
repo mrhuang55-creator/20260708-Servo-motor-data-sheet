@@ -1,0 +1,54 @@
+{
+  "scenario_info": {
+    "scenario_id": "31_Custom_Motor_Test",
+    "name": "Scenario 31: 全新客製化測試馬達 (現場連線驗證檔)",
+    "description": "2026-07-24 現場測試馬達動態數據，包含 21 維 PHM 殘差與 Ethernet/IP 通訊品質特徵",
+    "created_at": "2026-07-24T12:28:47+08:00",
+    "motor_model": "MR-J5-40G",
+    "rated_power_kw": 0.4
+  },
+  "time_series_data": [
+    {
+      "timestamp_ms": 100,
+      "fft_1x_amp": 0.015,
+      "resonance_amp": 0.003,
+      "digital_twin_pos_residual": 0.0012,
+      "ethercat_packet_loss_pct": 0.0,
+      "network_jitter_ms": 0.45,
+      "plc_estop_active": false,
+      "motor_current_u": 1.25,
+      "motor_current_v": 1.24,
+      "motor_current_w": 1.26,
+      "bus_voltage": 325.0,
+      "temperature_c": 42.5
+    },
+    {
+      "timestamp_ms": 200,
+      "fft_1x_amp": 0.016,
+      "resonance_amp": 0.004,
+      "digital_twin_pos_residual": 0.0015,
+      "ethercat_packet_loss_pct": 0.0,
+      "network_jitter_ms": 0.48,
+      "plc_estop_active": false,
+      "motor_current_u": 1.26,
+      "motor_current_v": 1.25,
+      "motor_current_w": 1.25,
+      "bus_voltage": 324.8,
+      "temperature_c": 42.6
+    },
+    {
+      "timestamp_ms": 300,
+      "fft_1x_amp": 0.018,
+      "resonance_amp": 0.003,
+      "digital_twin_pos_residual": 0.0014,
+      "ethercat_packet_loss_pct": 0.0,
+      "network_jitter_ms": 0.50,
+      "plc_estop_active": false,
+      "motor_current_u": 1.27,
+      "motor_current_v": 1.26,
+      "motor_current_w": 1.27,
+      "bus_voltage": 325.1,
+      "temperature_c": 42.6
+    }
+  ]
+}

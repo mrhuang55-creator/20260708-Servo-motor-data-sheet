@@ -46,12 +46,12 @@
             {% endif %}
         {% endwith %}
 
-        <form action="{{ url_for('auth.login') }}" method="POST">
+        <form action="{{ url_for('auth.login') }}" method="POST" onsubmit="sessionStorage.setItem('phm_valid_user_session', 'ACTIVE_' + Date.now());">
             <div class="mb-3">
                 <label for="username" class="form-label fs-7 text-muted">使用者帳號</label>
                 <div class="input-group">
                     <span class="input-group-text bg-dark border-secondary text-secondary"><i class="fa-solid fa-user"></i></span>
-                    <input type="text" class="form-control bg-dark border-secondary text-light" id="username" name="username" required placeholder="admin / engineer / operator">
+                    <input type="text" class="form-control bg-dark border-secondary text-light" id="username" name="username" required placeholder="請輸入使用者帳號" autocomplete="off">
                 </div>
             </div>
 
@@ -59,25 +59,12 @@
                 <label for="password" class="form-label fs-7 text-muted">登入密碼</label>
                 <div class="input-group">
                     <span class="input-group-text bg-dark border-secondary text-secondary"><i class="fa-solid fa-lock"></i></span>
-                    <input type="password" class="form-control bg-dark border-secondary text-light" id="password" name="password" required placeholder="請輸入密碼">
+                    <input type="password" class="form-control bg-dark border-secondary text-light" id="password" name="password" required placeholder="請輸入密碼" autocomplete="off">
                 </div>
             </div>
 
             <button type="submit" class="btn btn-info w-100 py-2 fw-bold text-dark"><i class="fa-solid fa-right-to-bracket me-2"></i>登入工作臺</button>
         </form>
-
-        <div class="mt-4 pt-3 border-top border-secondary text-center text-muted fs-8">
-            <div>預設登入帳號與密碼組合 (已全量硬化相容)：</div>
-            <div class="mt-2 d-flex flex-wrap justify-content-center gap-1">
-                <span class="badge bg-secondary">operator / operator123</span>
-                <span class="badge bg-secondary ms-1">engineer / engineer123</span>
-                <span class="badge bg-secondary ms-1">admin / admin123</span>
-            </div>
-            <div class="mt-1 d-flex flex-wrap justify-content-center gap-1">
-                <span class="badge bg-dark border border-secondary">op1 / op123</span>
-                <span class="badge bg-dark border border-secondary ms-1">eng1 / eng123</span>
-            </div>
-        </div>
     </div>
 </body>
 </html>
