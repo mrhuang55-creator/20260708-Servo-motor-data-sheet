@@ -146,6 +146,45 @@
    sudo systemctl restart nginx
 
 
+【類別 6：用 git 重新拉取最新程式碼並套用（2026-08-07 新增）】
+--------------------------------------------------
+1. 拉取最新程式碼並重啟兩個服務：
+   cd /opt/phm_system
+   git pull origin main
+   sudo systemctl restart phm-backend phm-frontend
+   sudo systemctl status phm-backend phm-frontend -l --no-pager
+
+2. 若本機有手動改動導致 pull 衝突，直接對齊遠端（會捨棄本機未提交修改）：
+   git fetch origin main
+   git reset --hard origin/main
+
+
+【類別 7：常見部署問題排查（2026-08-07 除錯記錄）】
+--------------------------------------------------
+1. 外部瀏覽器連 5000 或 8000 得到 ERR_CONNECTION_REFUSED（非逾時）：
+   - 通常代表該埠口沒有程式在穩定監聽，不一定是防火牆問題（防火牆擋下多半是逾時、不是 refused）。
+   - 先用 sudo ss -tlpn | grep -E '5000|8000' 確認系統層面到底有沒有在聽。
+   - 再用 sudo journalctl -u phm-backend -u phm-frontend -n 100 --no-pager 看實際 traceback。
+
+2. 實際案例：phm-frontend 開機即 ModuleNotFoundError: No module named 'httpx'，
+   systemctl 陷入無限自動重啟（restart counter 一路衝高），導致 5000 埠始終連不進去。
+   排查：sudo systemctl status phm-frontend -l --no-pager 會顯示
+   "Active: activating (auto-restart)" 而非 "active (running)"，加上 journalctl 裡的
+   ModuleNotFoundError 即為根因。
+   修法：
+   cd /opt/phm_system && source venv/bin/activate
+   pip install httpx scikit-learn joblib
+   sudo systemctl restart phm-frontend
+
+3. 確認 Flask 是否誤用開發除錯模式跑在正式環境：
+   sudo journalctl -u phm-frontend -n 20 --no-pager | grep -i debug
+   看到 "Debug mode: on" 代表 frontend/run_flask.py 的 app.run(..., debug=True)
+   仍未修正，除錯主控台可執行任意程式碼，務必改為 debug=False 並重啟。
+   正常情況 sudo systemctl status phm-frontend 的 CGroup 底下應只有 1 個 PID；
+   若看到 2 個 PID（一個 watcher + 一個 worker），代表 reloader 仍在運作，
+   同樣指向 debug=True 尚未修正。
+
+
 ================================================================================
 本說明檔已自動更新至：d:\20260708-Servo-motor-data-sheet\GCP部署與專案升級操作說明.txt
 ================================================================================

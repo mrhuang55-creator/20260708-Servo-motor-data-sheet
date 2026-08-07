@@ -34,6 +34,27 @@
 
 ---
 
+## 🚀 GCP / Linux 遠端部署注意事項（2026-08-07 更新）
+
+系統原本只在單機 Windows `.exe` 模式下測試過，這次配合 GCP Linux 主機（`systemd` + `phm-backend`/`phm-frontend` 兩個服務）重新部署時，修正並排除了以下問題：
+
+| # | 問題 | 修正 |
+| :-: | :--- | :--- |
+| 1 | 後端監聽位址寫死 `127.0.0.1`（`launcher.py`，僅影響 Windows `.exe` 路徑），遠端連不進來 | 改為可用 `AI_SERVO_BIND_HOST` 環境變數覆寫，預設 `0.0.0.0`。Linux 端 `systemd` 本來就是 `--host 0.0.0.0` / `frontend/run_flask.py` 的 `host="0.0.0.0"`，不受影響 |
+| 2 | 前端 12 個模板 JS 寫死 `http://127.0.0.1:8000`，瀏覽器端的 `127.0.0.1` 永遠代表使用者自己的電腦，前後端分離部署時所有即時 API 請求全部悄悄失敗 | 改用 `base.html` 全域 `window.FASTAPI_BASE`（依瀏覽器連線 hostname 動態組出） |
+| 3 | `phm-frontend.service` 開機即 `ModuleNotFoundError: No module named 'httpx'`，陷入無限重啟迴圈（`restart counter` 一路衝到 80+），導致 5000 埠對外顯示 `ERR_CONNECTION_REFUSED` | `pip install httpx`；部署文件的套件清單已同步更新 |
+| 4 | `frontend/run_flask.py` 用 `debug=True` 跑在對外公開的正式環境，未攔截例外會顯示可執行任意程式碼的 Werkzeug 除錯主控台，PIN 還會被印進 `journalctl` | 改為 `debug=False`（`frontend/run_flask.py` 與 `servormotor/frontend/run_flask.py` 皆已修正） |
+
+**部署所需完整 pip 套件清單**（GCP 部署文件原清單漏了 `httpx`）：
+
+```bash
+pip install flask requests httpx fastapi uvicorn pydantic pandas numpy scikit-learn joblib
+```
+
+完整 GCP Linux 部署指令與排錯記錄詳見 [`GCP部署與專案升級操作說明.txt`](file:///d:/20260708-Servo-motor-data-sheet/GCP部署與專案升級操作說明.txt) 與 [`log.md`](file:///d:/20260708-Servo-motor-data-sheet/log.md)。
+
+---
+
 ## 📂 專案目錄結構
 
 本專案的目錄劃分如下：

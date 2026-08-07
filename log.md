@@ -37,6 +37,19 @@
 - [ ] 讓前端「活化數據源」切換真正影響即時推論輸入，而非僅顯示名稱
 - [ ] README 已補上「Demo/Simulation 模式」聲明與三角色測試帳號，待正式上線前需移除或更新此聲明
 
+### 4. GCP Linux 遠端部署（`instance-20260722-072728`，104.199.203.160）重新上線排錯記錄
+
+推上 GitHub（commit `ccfe41e`）後於 VM 執行 `git pull` + `systemctl restart` 套用今天的修正，過程中發現並排除兩個與主線程式碼變更無關、但同樣影響對外連線的部署問題：
+
+| 現象 | 根因（`journalctl -u phm-frontend` 查出） | 修正 | commit |
+| :--- | :--- | :--- | :--- |
+| 外部瀏覽器打 `104.199.203.160:5000` 得到 `ERR_CONNECTION_REFUSED`（`:8000` 正常，回應 FastAPI 404 JSON） | `frontend/app/integrations/analysis_api.py` 的 `import httpx` 在 venv 內找不到套件，`phm-frontend.service` 開機即 `ModuleNotFoundError`，`systemctl` 自動重啟迴圈（`restart counter` 衝到 85+），5000 埠因此始終沒有穩定監聽 | VM 上 `pip install httpx`；GCP 部署文件 pip 清單同步補上 `httpx`、`scikit-learn`、`joblib` | （VM 端操作，非 git 變更） |
+| 排錯過程中同時發現：`frontend/run_flask.py` 以 `debug=True` 跑在對外公開環境，Werkzeug 除錯主控台（可執行任意程式碼）與 PIN 一併暴露、PIN 還被印進 `journalctl` | 舊程式碼本來就是 `debug=True`，非本次新增 | `frontend/run_flask.py` 與 `servormotor/frontend/run_flask.py` 改為 `debug=False` | `ac3199b` |
+
+**驗證結果**：`phm-frontend` 重啟後 `Tasks: 1`（單一 PID，reloader 的 watcher+worker 雙行程消失），確認 `debug=False` 生效；`phm-backend`/`phm-frontend` 皆為 `active (running)`。README 已新增「🚀 GCP / Linux 遠端部署注意事項」章節彙整上述四項修正（含今天稍早的 `127.0.0.1` 綁定/`FASTAPI_BASE` 修正）。
+
+- [ ] 待使用者從外部瀏覽器完整走一次登入 → 即時監控頁 → DevTools Network 確認 API 打的是 `104.199.203.160:8000` 而非 `127.0.0.1:8000`，完整收尾今天的部署驗證
+
 ---
 
 ## 📅 2026-07-24 - v7.1.0 系統資安硬化、自動轉頁閘門、SQLite 審核持久化與全量測試庫歸檔紀錄
