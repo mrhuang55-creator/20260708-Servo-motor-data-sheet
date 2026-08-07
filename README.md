@@ -92,10 +92,12 @@ pip install flask requests httpx fastapi uvicorn pydantic pandas numpy scikit-le
 ## ⚡ 測試環境與可執行檔執行 (Executable Packaging)
 
 ### 方式 A. 直接執行免安裝 `.exe` 可執行檔（推薦工廠現場）
-無需安裝 Python 或任何套件，隨身碟複製即可直接執行：
+無需安裝 Python 或任何套件，隨身碟複製即可直接執行。**路徑為相對於專案根目錄，不要寫死磁碟機代號**（隨身碟複製到別台電腦、或掛載到不同槽別時，磁碟機代號不會固定是 `D:`）：
 ```cmd
-d:\20260708-Servo-motor-data-sheet\dist\AI_Servo_Platform\AI_Servo_Platform.exe
+cd dist\AI_Servo_Platform
+AI_Servo_Platform.exe
 ```
+*   或直接在檔案總管內雙擊 `dist\AI_Servo_Platform\AI_Servo_Platform.exe`（相對於你複製這個專案資料夾的所在位置，不限定磁碟機代號）。
 *   執行後將自動於背景監聽 Port 8000 (FastAPI) 與 Port 5000 (Flask)，並自動啟動瀏覽器開啟主頁面 `http://127.0.0.1:5000/login`。
 
 ### 方式 B. 於 Python 虛擬環境中執行
