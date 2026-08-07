@@ -11,6 +11,7 @@
         </div>
         <div class="d-flex gap-2 flex-wrap">
             <button class="btn btn-outline-warning btn-sm" onclick="loadAlarmsData()"><i class="fa-solid fa-rotate me-1"></i>刷新警報</button>
+            <button class="btn btn-warning btn-sm fw-bold text-dark" onclick="ackAllAlarms()"><i class="fa-solid fa-check-double me-1"></i>一鍵消除所有活動警報</button>
             <button class="btn btn-success btn-sm" onclick="exportAlarmCSV()"><i class="fa-solid fa-file-csv me-1"></i>匯出 ISO 警報日誌 (CSV)</button>
         </div>
     </div>
@@ -28,21 +29,21 @@
             <div class="glass-card p-3 border-start border-4 border-warning">
                 <div class="text-muted fs-8 text-uppercase">預警數量 (Warning)</div>
                 <div class="fs-3 fw-bold text-warning mt-1" id="stat-warning-count">2</div>
-                <div class="fs-8 text-muted">包含滾珠螺桿熱膨脹與微振</div>
+                <div class="fs-8 text-muted" id="stat-warning-desc">包含工況殘差與微振統計</div>
             </div>
         </div>
         <div class="col-md-3">
             <div class="glass-card p-3 border-start border-4 border-info">
                 <div class="text-muted fs-8 text-uppercase">已確認數量 (Acknowledged)</div>
                 <div class="fs-3 fw-bold text-info mt-1" id="stat-ack-count">5</div>
-                <div class="fs-8 text-muted">維修人員已接單對應</div>
+                <div class="fs-8 text-muted" id="stat-ack-desc">工程人員已接單對應中</div>
             </div>
         </div>
         <div class="col-md-3">
             <div class="glass-card p-3 border-start border-4 border-success">
                 <div class="text-muted fs-8 text-uppercase">已排除總計 (Cleared)</div>
                 <div class="fs-3 fw-bold text-success mt-1" id="stat-cleared-count">128</div>
-                <div class="fs-8 text-muted">近 30 天紀錄</div>
+                <div class="fs-8 text-muted" id="stat-cleared-desc">即時 ISO 歷史紀錄</div>
             </div>
         </div>
     </div>
@@ -100,7 +101,7 @@
 
 {% block extra_js %}
 <script>
-    const API = 'http://127.0.0.1:8000';
+    const API = FASTAPI_BASE;
     let _allAlarms = [
         { id: 'ALM-20260723-01', severity: 'CRITICAL', scenario: 'S28 (緊急停機)', code: 'ERR_ESTOP_ACTIVE', msg: 'PLC 觸發 E-STOP 機械緊急停機防禦', residual: '0.085mm', dv: '0.92', status: 'ACTIVE', time: '14:22:10', sop: '1. 檢查周邊光柵防護閘門狀態<br>2. 確認加工物料無撞機卡死<br>3. 於主主控制台點擊 POWER ON 復歸 PLC 狀態' },
         { id: 'ALM-20260723-02', severity: 'WARNING', scenario: 'S26 (機械共振)', code: 'WRN_RESONANCE_FREQ', msg: 'PA18 頻域 780Hz 諧振峰值超過 3σ 門檻', residual: '0.042mm', dv: '0.58', status: 'ACTIVE', time: '14:10:05', sop: '1. 前往 L2 畫面檢視 FFT 1x 振幅<br>2. 點擊「發起調參提案」將 PA18 調整至 850Hz<br>3. 送出後通知 Administrator 核准寫入' },
@@ -171,6 +172,24 @@
                 </tr>
             `;
         }).join('');
+    }
+
+    function ackAllAlarms() {
+        showSafetyConfirm(
+            "一鍵批量 Ack 警報確認",
+            `<div class='alert alert-warning p-3 mb-0'><i class='fa-solid fa-triangle-exclamation me-2'></i>確定要將當前所有活動中警報一次性全部標記為已確認 (ACK) 並消除警報數嗎？</div>`,
+            "一鍵消除",
+            "btn-warning text-dark",
+            function() {
+                fetch(`${API}/api/v1/fallback/ack_all`, { method: 'POST' })
+                    .then(r => r.json()).then(d => {
+                        alert(d.message || "✅ 已成功消除全量警報！");
+                        loadAlarmsData();
+                    }).catch(() => {
+                        loadAlarmsData();
+                    });
+            }
+        );
     }
 
     function filterAlarms(type, btn) {

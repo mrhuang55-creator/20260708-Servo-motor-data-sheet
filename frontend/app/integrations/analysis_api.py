@@ -38,6 +38,26 @@ class FastAPIClient:
             return {"connected": False, "status": "後端服務離線"}
 
     @classmethod
+    def get_system_data_sources(cls):
+        url = cls._get_url("/api/v1/system/data_sources")
+        try:
+            resp = cls.get_client().get(url)
+            if resp.status_code == 200:
+                return resp.json()
+        except Exception:
+            pass
+        return {"available_sources": [], "active_source": None}
+
+    @classmethod
+    def switch_system_data_source(cls, data: dict):
+        url = cls._get_url("/api/v1/system/switch_source")
+        try:
+            resp = cls.get_client().post(url, json=data)
+            return resp.json() if resp.status_code == 200 else {"status": "error", "detail": "切換失敗"}
+        except Exception as e:
+            return {"status": "error", "detail": str(e)}
+
+    @classmethod
     def get_scenarios(cls):
         url = cls._get_url("/api/v1/scenarios")
         try:
@@ -77,13 +97,8 @@ class FastAPIClient:
         except Exception:
             pass
         return {
-            "pending_items": [
-                {
-                    "id": "appr-001", "type": "model_promotion", "title": "模型版本推升：v3.2.0 → v3.2.1",
-                    "applicant": "張工 (Engineer_01)", "detail": "Shadow 模式驗證完成 (600 Cycles)", "created_at": "2026-07-22 14:00"
-                }
-            ],
-            "counts": {"model_promotion": 1, "scenario_review": 0, "parameter_write": 1, "unauthorized": 0}
+            "pending_items": [],
+            "counts": {"model_promotion": 0, "scenario_review": 0, "parameter_write": 0, "unauthorized": 0}
         }
 
     @classmethod
@@ -204,6 +219,28 @@ class FastAPIClient:
             return {"status": "error", "detail": resp.json().get("detail", "刪除員工失敗")}
         except Exception as e:
             return {"status": "error", "detail": str(e)}
+
+    @classmethod
+    def submit_maintenance_log(cls, device: str, detail: str, operator: str):
+        url = cls._get_url("/api/v1/maintenance/submit")
+        try:
+            resp = cls.get_client().post(url, json={"device": device, "detail": detail, "operator": operator})
+            if resp.status_code == 200:
+                return resp.json()
+            return {"status": "error", "detail": resp.json().get("detail", "提交失敗")}
+        except Exception as e:
+            return {"status": "error", "detail": str(e)}
+
+    @classmethod
+    def get_maintenance_logs(cls, limit: int = 20):
+        url = cls._get_url("/api/v1/maintenance/logs")
+        try:
+            resp = cls.get_client().get(url, params={"limit": limit})
+            if resp.status_code == 200:
+                return resp.json().get("logs", [])
+        except Exception:
+            pass
+        return []
 
     @classmethod
     def get_admin_user_history(cls):

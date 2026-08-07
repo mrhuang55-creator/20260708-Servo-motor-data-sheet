@@ -4,12 +4,35 @@
 <h3 class="fw-bold mb-3"><i class="fa-solid fa-gears text-secondary me-2"></i>全域系統與告警門檻設定</h3>
 <div class="glass-card p-4">
     <div class="mb-3">
-        <label class="form-label text-muted fs-7">UI 數據更新頻率</label>
-        <select class="form-select bg-dark border-secondary text-light">
-            <option>1 秒 (預設)</option>
-            <option>500 ms (高頻)</option>
+        <label class="form-label text-muted fs-7">UI 數據更新頻率（與右上角導覽列刷新頻率選單共用同一設定）</label>
+        <select class="form-select bg-dark border-secondary text-light" id="settings-refresh-rate">
+            <option value="500">0.5 秒 (超高頻)</option>
+            <option value="1000">1.0 秒 (高頻即時，預設)</option>
+            <option value="2000">2.0 秒 (標準監控)</option>
+            <option value="5000">5.0 秒 (省能模式)</option>
+            <option value="10000">10 秒 (低頻輪詢)</option>
+            <option value="0">手動刷新 (暫停自動更新)</option>
         </select>
     </div>
-    <button class="btn btn-info fw-bold">儲存設定</button>
+    <button class="btn btn-info fw-bold" id="btn-save-settings">儲存設定</button>
+    <span class="fs-8 text-success ms-2 d-none" id="settings-saved-hint"><i class="fa-solid fa-check me-1"></i>已儲存</span>
 </div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const select = document.getElementById('settings-refresh-rate');
+        const current = (window.hmiRefreshIntervalMs !== undefined) ? window.hmiRefreshIntervalMs
+            : (parseInt(localStorage.getItem('hmi_refresh_interval_ms')) || 1000);
+        select.value = String(current);
+
+        document.getElementById('btn-save-settings').addEventListener('click', function() {
+            const ms = parseInt(select.value);
+            const label = select.options[select.selectedIndex].text;
+            setHmiRefreshRate(ms, label);
+            const hint = document.getElementById('settings-saved-hint');
+            hint.classList.remove('d-none');
+            setTimeout(() => hint.classList.add('d-none'), 2000);
+        });
+    });
+</script>
 {% endblock %}

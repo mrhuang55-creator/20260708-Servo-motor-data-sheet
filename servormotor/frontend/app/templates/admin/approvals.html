@@ -21,7 +21,7 @@
                 <div>
                     <div class="text-muted fs-7">模型 Promotion</div>
                     <div class="fs-3 metric-val text-warning">{{ approvals.counts.model_promotion if approvals else 0 }} 件待核准</div>
-                    <div class="fs-8 text-muted">v3.2.0 → v3.2.1</div>
+                    <div class="fs-8 text-muted">{{ approvals.latest_promotion_summary if (approvals and approvals.latest_promotion_summary) else '線上影子模型待推升' }}</div>
                 </div>
             </div>
         </div>

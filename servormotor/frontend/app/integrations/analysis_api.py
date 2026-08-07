@@ -77,13 +77,8 @@ class FastAPIClient:
         except Exception:
             pass
         return {
-            "pending_items": [
-                {
-                    "id": "appr-001", "type": "model_promotion", "title": "模型版本推升：v3.2.0 → v3.2.1",
-                    "applicant": "張工 (Engineer_01)", "detail": "Shadow 模式驗證完成 (600 Cycles)", "created_at": "2026-07-22 14:00"
-                }
-            ],
-            "counts": {"model_promotion": 1, "scenario_review": 0, "parameter_write": 1, "unauthorized": 0}
+            "pending_items": [],
+            "counts": {"model_promotion": 0, "scenario_review": 0, "parameter_write": 0, "unauthorized": 0}
         }
 
     @classmethod

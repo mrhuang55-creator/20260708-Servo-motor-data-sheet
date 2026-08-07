@@ -736,30 +736,51 @@ async def get_scenarios_summary(limit: Optional[int] = None):
     return {"scenarios": res}
 
 # ---------------- 全局待審核數據庫 ----------------
-PENDING_APPROVALS = [
-    {
-        "id": "appr-001",
-        "type": "model_promotion",
-        "title": "模型版本推升：v3.2.0 → v3.2.1",
-        "applicant": "張工 (Engineer_01)",
-        "detail": "Shadow 模式驗證完成 (600 Cycles)，RMSE 改善率達到 +14.8% (自 4.832 降至 4.118)，符合 ISO 55000 認證規範。",
-        "created_at": "2026-07-22 14:00",
-        "status": "pending"
-    },
-    {
-        "id": "appr-002",
-        "type": "parameter_write",
-        "title": "三菱 MR-J5 驅動器 PA01 位置環增益寫入 (1000)",
-        "applicant": "李工 (Engineer_02)",
-        "detail": "物理步階響應模擬驗證：整定時間 0.82s，相位裕度 54.2° (符合 >45° 標準規格)。",
-        "created_at": "2026-07-22 13:30",
-        "status": "pending"
-    }
-]
+APPROVALS_DB_PATH = os.path.join(BASE_DIR, "admin_approvals.db")
+
+def init_approvals_db():
+    conn = sqlite3.connect(APPROVALS_DB_PATH, timeout=10.0)
+    cursor = conn.cursor()
+    cursor.execute("""
+        CREATE TABLE IF NOT EXISTS admin_approvals (
+            id TEXT PRIMARY KEY,
+            type TEXT NOT NULL,
+            title TEXT NOT NULL,
+            applicant TEXT NOT NULL,
+            detail TEXT NOT NULL,
+            created_at TEXT NOT NULL,
+            status TEXT NOT NULL,
+            operator TEXT,
+            updated_at TEXT
+        )
+    """)
+    cursor.execute("SELECT COUNT(*) FROM admin_approvals")
+    if cursor.fetchone()[0] == 0:
+        now_time = time.strftime("%Y-%m-%d %H:%M", time.localtime())
+        initial_items = [
+            ("appr-001", "model_promotion", "線上影子模型推升審查 (Shadow Model Promotion)", "研發工程師 (Engineer_01)", "Shadow 影子模式動態殘差驗證完成，RMSE 改善率符合 ISO 55000 上線門檻。", now_time, "pending", None, None),
+            ("appr-002", "parameter_write", "MR-J5 伺服驅動器 Notch 濾波器防呆寫入", "現場工程師 (Engineer_02)", "物理步階響應模擬驗證完成：相位裕度符合 >45° 標準工業安全規格。", now_time, "pending", None, None)
+        ]
+        cursor.executemany("INSERT INTO admin_approvals VALUES (?,?,?,?,?,?,?,?,?)", initial_items)
+        conn.commit()
+    conn.close()
+
+init_approvals_db()
 
 @app.get("/api/v1/admin/approvals", tags=["Admin Approvals"])
 async def get_admin_approvals():
-    pending = [item for item in PENDING_APPROVALS if item["status"] == "pending"]
+    conn = sqlite3.connect(APPROVALS_DB_PATH, timeout=10.0)
+    cursor = conn.cursor()
+    cursor.execute("SELECT id, type, title, applicant, detail, created_at, status FROM admin_approvals WHERE status = 'pending'")
+    rows = cursor.fetchall()
+    conn.close()
+    
+    pending = []
+    for r in rows:
+        pending.append({
+            "id": r[0], "type": r[1], "title": r[2], "applicant": r[3], "detail": r[4], "created_at": r[5], "status": r[6]
+        })
+    
     model_count = sum(1 for item in pending if item["type"] == "model_promotion")
     param_count = sum(1 for item in pending if item["type"] == "parameter_write")
     return {

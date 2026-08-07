@@ -13,40 +13,40 @@
         </div>
     </div>
 
-    <!-- 5 張健康狀態卡片 -->
+    <!-- 5 張健康狀態卡片 (動態從 API 帶入，並每隔一段時間自動輪詢刷新) -->
     <div class="row g-3 mb-4">
         <div class="col">
             <div class="glass-card p-3 text-center">
                 <div class="text-muted fs-7 mb-1">通訊狀態</div>
-                <div class="fs-4 fw-bold text-success"><i class="fa-solid fa-circle-check me-1"></i>正常</div>
-                <div class="fs-8 text-muted">Loss 0.01%</div>
+                <div class="fs-4 fw-bold text-success" id="card-comm-status"><i class="fa-solid fa-circle-check me-1"></i>{{ '正常' if hw_status and hw_status.connected else '載入中…' }}</div>
+                <div class="fs-8 text-muted" id="card-comm-loss">{{ hw_status.protocol if hw_status and hw_status.protocol else '通訊協定讀取中…' }}</div>
             </div>
         </div>
         <div class="col">
             <div class="glass-card p-3 text-center">
                 <div class="text-muted fs-7 mb-1">資料品質</div>
-                <div class="fs-4 fw-bold text-success"><i class="fa-solid fa-database me-1"></i>99.9%</div>
-                <div class="fs-8 text-muted">NaN 0.0%</div>
+                <div class="fs-4 fw-bold text-success" id="card-data-quality"><i class="fa-solid fa-database me-1"></i>載入中…</div>
+                <div class="fs-8 text-muted" id="card-data-quality-detail">NaN/Inf 統計讀取中…</div>
             </div>
         </div>
         <div class="col">
             <div class="glass-card p-3 text-center">
                 <div class="text-muted fs-7 mb-1">模型狀態</div>
-                <div class="fs-4 fw-bold text-warning"><i class="fa-solid fa-brain me-1"></i>Drift 注意</div>
-                <div class="fs-8 text-muted">R² 0.94</div>
+                <div class="fs-4 fw-bold text-success" id="card-model-status"><i class="fa-solid fa-brain me-1"></i>{{ diagnose.risk_level if diagnose and diagnose.risk_level else '載入中…' }}</div>
+                <div class="fs-8 text-muted" id="card-model-r2">Health Index {{ diagnose.health_index if diagnose and diagnose.health_index is defined else '—' }}</div>
             </div>
         </div>
         <div class="col">
             <div class="glass-card p-3 text-center">
                 <div class="text-muted fs-7 mb-1">Fallback 狀態</div>
-                <div class="fs-4 fw-bold text-success"><i class="fa-solid fa-shield-halved me-1"></i>0 fail</div>
-                <div class="fs-8 text-muted">PID 備援正常</div>
+                <div class="fs-4 fw-bold text-success" id="card-fallback-fails"><i class="fa-solid fa-shield-halved me-1"></i>載入中…</div>
+                <div class="fs-8 text-muted" id="card-fallback-detail">PID 備援狀態讀取中…</div>
             </div>
         </div>
         <div class="col">
             <div class="glass-card p-3 text-center">
                 <div class="text-muted fs-7 mb-1">控制延遲</div>
-                <div class="fs-4 fw-bold text-info"><i class="fa-solid fa-stopwatch me-1"></i>1.2 ms</div>
+                <div class="fs-4 fw-bold text-info" id="card-control-latency"><i class="fa-solid fa-stopwatch me-1"></i>{{ hw_status.tsn_latency_ms if hw_status and hw_status.tsn_latency_ms is defined else '—' }} ms</div>
                 <div class="fs-8 text-muted">TSN Sync OK</div>
             </div>
         </div>
@@ -74,9 +74,11 @@
             <div class="col-md-3 text-center">
                 <div class="text-muted fs-7 mb-2">上線門檻檢定 (Improvement > 10%)</div>
                 {% if shadow and shadow.ready_for_production %}
-                <span class="badge bg-success fs-6 py-2 px-3"><i class="fa-solid fa-check-double me-1"></i>符合上線門檻</span>
+                <span class="badge bg-success fs-6 py-2 px-3"><i class="fa-solid fa-check-double me-1"></i>符合上線門檻 ({{ shadow.improvement_rate_pct }}%)</span>
+                {% elif shadow %}
+                <span class="badge bg-danger fs-6 py-2 px-3"><i class="fa-solid fa-xmark me-1"></i>未達上線門檻 ({{ shadow.improvement_rate_pct }}%)</span>
                 {% else %}
-                <span class="badge bg-success fs-6 py-2 px-3"><i class="fa-solid fa-check-double me-1"></i>符合上線門檻 (14.8%)</span>
+                <span class="badge bg-secondary fs-6 py-2 px-3"><i class="fa-solid fa-hourglass-half me-1"></i>尚無 Shadow 檢定資料</span>
                 {% endif %}
             </div>
         </div>
@@ -85,24 +87,89 @@
     <!-- 需關注項目列表 -->
     <div class="glass-card p-3">
         <h6 class="fw-bold mb-3"><i class="fa-solid fa-triangle-exclamation text-warning me-2"></i>工程師需關注項目 (Action Items)</h6>
-        <div class="list-group list-group-flush">
-            <div class="list-group-item bg-transparent text-light border-secondary d-flex justify-content-between align-items-center">
-                <div>
-                    <span class="badge bg-warning text-dark me-2">Model Drift</span>
-                    <span class="fw-bold">Scenario S01 之 FE_RMS 特徵發生 12% 偏移</span>
-                    <div class="fs-8 text-muted mt-1">建議檢視 Shadow 模式擬合情況，並考量微調特徵權重。</div>
-                </div>
-                <a href="{{ url_for('engineer.shadow') }}" class="btn btn-sm btn-outline-info">檢視 Shadow</a>
-            </div>
-            <div class="list-group-item bg-transparent text-light border-secondary d-flex justify-content-between align-items-center">
-                <div>
-                    <span class="badge bg-success me-2">Training Finished</span>
-                    <span class="fw-bold">訓練任務 #42 已完成 (新模型 v3.2.1 待 Promotion)</span>
-                    <div class="fs-8 text-muted mt-1">RMSE 改善率達到 14.8%，可提交至管理者核准上線。</div>
-                </div>
-                <a href="{{ url_for('engineer.models') }}" class="btn btn-sm btn-outline-success">提交 Promotion</a>
-            </div>
+        <div class="list-group list-group-flush" id="action-items-container">
+            <div class="list-group-item bg-transparent text-light border-secondary text-muted text-center py-3">載入中…</div>
         </div>
     </div>
 </div>
+
+<script>
+    const URL_SHADOW = "{{ url_for('engineer.shadow') }}";
+    const URL_MODELS = "{{ url_for('engineer.models') }}";
+
+    function renderActionItems(diagnose, shadow) {
+        const container = document.getElementById('action-items-container');
+        if (!container) return;
+        const items = [];
+
+        if (diagnose && diagnose.risk_level && diagnose.risk_level !== 'Normal') {
+            items.push(`
+                <div class="list-group-item bg-transparent text-light border-secondary d-flex justify-content-between align-items-center">
+                    <div>
+                        <span class="badge bg-warning text-dark me-2">${diagnose.risk_level}</span>
+                        <span class="fw-bold">${diagnose.root_cause || '偵測到異常，需進一步檢視'}</span>
+                        <div class="fs-8 text-muted mt-1">${diagnose.action || ''}</div>
+                    </div>
+                    <a href="${URL_SHADOW}" class="btn btn-sm btn-outline-info">檢視 Shadow</a>
+                </div>
+            `);
+        }
+
+        if (shadow && shadow.ready_for_production) {
+            items.push(`
+                <div class="list-group-item bg-transparent text-light border-secondary d-flex justify-content-between align-items-center">
+                    <div>
+                        <span class="badge bg-success me-2">Training Finished</span>
+                        <span class="fw-bold">影子模型 RMSE 改善率達 ${shadow.improvement_rate_pct}%，符合上線門檻</span>
+                        <div class="fs-8 text-muted mt-1">可提交至管理者核准上線 (Promotion)。</div>
+                    </div>
+                    <a href="${URL_MODELS}" class="btn btn-sm btn-outline-success">提交 Promotion</a>
+                </div>
+            `);
+        }
+
+        container.innerHTML = items.length ? items.join('') :
+            '<div class="list-group-item bg-transparent text-muted text-center py-3">目前無需關注項目</div>';
+    }
+
+    function updateHealthDesk() {
+        return Promise.all([
+            fetch(FASTAPI_BASE + '/api/v1/hardware/status').then(r => r.json()).catch(() => null),
+            fetch(FASTAPI_BASE + '/api/v1/fallback/stats').then(r => r.json()).catch(() => null),
+            fetch(FASTAPI_BASE + '/api/v1/diagnose').then(r => r.json()).catch(() => null),
+            fetch(FASTAPI_BASE + '/api/v1/shadow_mode').then(r => r.json()).catch(() => null),
+        ]).then(([hw, fb, diagnose, shadow]) => {
+            if (hw) {
+                document.getElementById('card-comm-status').innerHTML =
+                    `<i class="fa-solid fa-circle-check me-1"></i>${hw.connected ? '正常' : '異常'}`;
+                document.getElementById('card-comm-loss').textContent = hw.protocol || '—';
+                document.getElementById('card-control-latency').innerHTML =
+                    `<i class="fa-solid fa-stopwatch me-1"></i>${hw.tsn_latency_ms ?? '—'} ms`;
+            }
+            if (fb) {
+                const nan = fb.by_reason?.NaN_output || 0;
+                const inf = fb.by_reason?.Inf_output || 0;
+                const total = fb.total_events || 0;
+                const badRatio = total > 0 ? ((nan + inf) / total) * 100 : 0;
+                document.getElementById('card-data-quality').innerHTML =
+                    `<i class="fa-solid fa-database me-1"></i>${(100 - badRatio).toFixed(1)}%`;
+                document.getElementById('card-data-quality-detail').textContent = `NaN ${nan} 筆 / Inf ${inf} 筆`;
+                document.getElementById('card-fallback-fails').innerHTML =
+                    `<i class="fa-solid fa-shield-halved me-1"></i>${total} fail`;
+                document.getElementById('card-fallback-detail').textContent =
+                    fb.current_status === 'normal' ? 'PID 備援正常' : `狀態: ${fb.current_status}`;
+            }
+            if (diagnose) {
+                document.getElementById('card-model-status').innerHTML =
+                    `<i class="fa-solid fa-brain me-1"></i>${diagnose.risk_level || '—'}`;
+                document.getElementById('card-model-r2').textContent = `Health Index ${diagnose.health_index ?? '—'}`;
+            }
+            renderActionItems(diagnose, shadow);
+        });
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+        startHmiDynamicTimer(updateHealthDesk);
+    });
+</script>
 {% endblock %}

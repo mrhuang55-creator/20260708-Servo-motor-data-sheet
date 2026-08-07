@@ -46,6 +46,18 @@ class SLMPClient:
         self.sock.settimeout(2.0)
         self.sock.connect((self.host, self.port))
 
+    def connect_with_retry(self, max_retries=3, retry_interval_sec=3.0):
+        """選項 B：工控 SLMP 通訊斷線背景自動 3 秒 Retry 重連佇列"""
+        for attempt in range(1, max_retries + 1):
+            try:
+                self.connect()
+                print(f"[SLMP Retry Queue] ✅ 第 {attempt} 次連線成功 ({self.host}:{self.port})")
+                return True
+            except Exception as e:
+                print(f"[SLMP Retry Queue] ⚠️ 第 {attempt}/{max_retries} 次連線失敗，{retry_interval_sec} 秒後重試: {e}")
+                time.sleep(retry_interval_sec)
+        return False
+
     def close(self):
         if self.sock:
             self.sock.close()

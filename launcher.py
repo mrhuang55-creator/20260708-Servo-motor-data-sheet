@@ -27,18 +27,23 @@ if BASE_DIR not in sys.path:
 from server import app as fastapi_app
 from frontend.app import create_app as create_flask_app
 
+# 監聽位址：預設 0.0.0.0（接受外部連線），可用環境變數覆寫。
+# 綁死 127.0.0.1 只接受「本機自己」的連線 —— 單機展示沒問題，但部署到遠端伺服器
+# （含 Linux 主機）供其他使用者透過網路存取時，外部完全連不進來，等同服務對外不可見。
+BIND_HOST = os.environ.get("AI_SERVO_BIND_HOST", "0.0.0.0")
+
 def run_fastapi():
-    print("[AI SERVO PLATFORM] 啟動 FastAPI 分析後端 (Port 8000)...")
+    print(f"[AI SERVO PLATFORM] 啟動 FastAPI 分析後端 ({BIND_HOST}:8000)...")
     try:
-        uvicorn.run(fastapi_app, host="127.0.0.1", port=8000, log_level="error")
+        uvicorn.run(fastapi_app, host=BIND_HOST, port=8000, log_level="error")
     except Exception as e:
         print(f"[警告] FastAPI 後端啟動失敗: {e}")
 
 def run_flask():
-    print("[AI SERVO PLATFORM] 啟動 Flask 前端 BFF (Port 5000)...")
+    print(f"[AI SERVO PLATFORM] 啟動 Flask 前端 BFF ({BIND_HOST}:5000)...")
     try:
         flask_app = create_flask_app()
-        flask_app.run(host="127.0.0.1", port=5000, debug=False, use_reloader=False)
+        flask_app.run(host=BIND_HOST, port=5000, debug=False, use_reloader=False)
     except Exception as e:
         print(f"[警告] Flask 前端啟動失敗: {e}")
 

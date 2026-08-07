@@ -65,3 +65,14 @@ def logout():
     if request.method == "POST" or request.headers.get("X-Requested-With") == "XMLHttpRequest":
         return jsonify({"status": "success", "message": "已成功自動登出"})
     return redirect(url_for("auth.login"))
+
+@auth_bp.route("/auth/extend_session", methods=["POST"])
+@login_required
+def extend_session():
+    """高級操作 Session 無縫延長 30 分鐘 API"""
+    session.modified = True
+    return jsonify({
+        "status": "success",
+        "message": "高級操作 Session 已成功無縫延長 30 分鐘！",
+        "user": session.get("user", {}).get("username", "operator")
+    })

@@ -93,7 +93,7 @@
 
 {% block extra_js %}
 <script>
-    const API = 'http://127.0.0.1:8000';
+    const API = FASTAPI_BASE;
     let abChart = null;
 
     function loadShadowData() {
@@ -104,11 +104,11 @@
                 const cmp = d.comparison || {};
                 const gates = d.absolute_gates || {};
 
-                document.getElementById('shadow-new-algo').textContent = 'XGBoost Hybrid v3.2.1';
+                document.getElementById('shadow-new-algo').textContent = nm.algorithm || 'XGBoost Hybrid v3.2.1';
                 document.getElementById('shadow-new-rmse').textContent = nm.RMSE ?? '—';
                 document.getElementById('shadow-new-mae').textContent = nm.MAE ?? '—';
                 document.getElementById('shadow-new-r2').textContent = nm.R2 ?? '—';
-                document.getElementById('shadow-old-algo').textContent = 'RandomForest + IForest v3.2.0';
+                document.getElementById('shadow-old-algo').textContent = om.algorithm || 'RandomForest + IForest v3.2.0';
                 document.getElementById('shadow-old-rmse').textContent = om.RMSE ?? '—';
                 document.getElementById('shadow-old-mae').textContent = om.MAE ?? '—';
                 document.getElementById('shadow-old-r2').textContent = om.R2 ?? '—';

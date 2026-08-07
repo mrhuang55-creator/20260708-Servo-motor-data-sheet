@@ -273,20 +273,30 @@
                 const btnExtend = document.getElementById('btn-extend-privilege-session');
                 if (btnExtend) {
                     btnExtend.addEventListener('click', function() {
-                        fetch('/api/v1/auth/extend_session', {
+                        fetch('/auth/extend_session', {
                             method: 'POST',
                             headers: { 'Content-Type': 'application/json' },
                             body: JSON.stringify({ operator_role: '{{ user.role }}', operator_id: '{{ user.username }}' })
                         }).then(res => res.json()).then(data => {
                             if (data.status === 'success') {
                                 const warningModalEl = document.getElementById('privilegeTimeoutWarningModal');
-                                const modalInstance = bootstrap.Modal.getInstance(warningModalEl);
-                                if (modalInstance) modalInstance.hide();
+                                if (warningModalEl && typeof bootstrap !== 'undefined') {
+                                    const modalInstance = bootstrap.Modal.getInstance(warningModalEl);
+                                    if (modalInstance) modalInstance.hide();
+                                }
                                 startPrivilegeLifespanTimer();
                             }
                         }).catch(() => {
                             startPrivilegeLifespanTimer();
                         });
+                    });
+                }
+
+                // 取消/安全登出按鈕清空計時器事件
+                const warningModalEl = document.getElementById('privilegeTimeoutWarningModal');
+                if (warningModalEl) {
+                    warningModalEl.addEventListener('hidden.bs.modal', function () {
+                        // 當 Modal 被主動關閉時，若是點擊延長則已有 startPrivilegeLifespanTimer 重置
                     });
                 }
             });
@@ -501,6 +511,11 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
     <script>
+        // FastAPI 後端位址：以目前瀏覽器連線的 hostname 動態組出，而非寫死 127.0.0.1。
+        // 127.0.0.1 在瀏覽器端一律代表「使用者自己的電腦」，只有前後端同機時才會恰好正確；
+        // 一旦後端部署到遠端伺服器（含 Linux 主機），寫死的 127.0.0.1 會讓所有即時 API 請求打回用戶自己的機器而全部失敗。
+        window.FASTAPI_BASE = window.location.protocol + '//' + window.location.hostname + ':8000';
+
         // 工控通用二次確認防呆機制 (Industrial Safety Double Confirmation)
         let _confirmCallback = null;
 

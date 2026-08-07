@@ -4,6 +4,14 @@ from ..integrations.analysis_api import FastAPIClient
 
 admin_bp = Blueprint("admin", __name__, url_prefix="/admin")
 
+# 資料保留政策：集中於後端定義，避免與前端頁面顯示的天數各自寫死、政策異動時忘記同步
+RETENTION_POLICY = {
+    "telemetry_days": 30,
+    "telemetry_note": "Parquet 壓縮",
+    "audit_years": 7,
+    "audit_note": "ISO 55000 / 13374 合規永久儲存"
+}
+
 @admin_bp.route("/approvals", methods=["GET", "POST"])
 @login_required
 @permission_required("Administrator")
@@ -86,7 +94,7 @@ def audit():
 @login_required
 @permission_required("Administrator")
 def retention():
-    return render_template("admin/retention.html", user=session.get("user"))
+    return render_template("admin/retention.html", retention=RETENTION_POLICY, user=session.get("user"))
 
 @admin_bp.route("/integrations")
 @login_required

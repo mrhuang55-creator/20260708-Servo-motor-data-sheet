@@ -36,3 +36,9 @@
 *   訓練完成後，請輸出一個包含『混淆矩陣 (Confusion Matrix)』與『Recall/Precision 分析』的效能報告，並存入 `log.md`。
 *   若生成的資料存在過擬合 (Overfitting) 風險（訓練集與測試集準確率差距 > 10%），請自動調整 `max_depth` 或執行資料增強 (Data Augmentation) 並重試。
 *   請務必在流程中整合 `mr_configurator2_workflow_engine.py` 的參數提案格式，以便後續與三菱電機軟體對接。
+
+### 2.5 零二次修復強制自檢協定 (Zero-Secondary-Fix Protocol)
+為了徹底杜絕改動後出現「二次操作/二次修補」的情況，在每次完成程式碼修改、UI 調整或重新打包 `.exe` 之前，必須強制執行以下「三步自檢」，不通過驗證禁止回報 Success：
+*   **1. 前後端全鏈條對齊 (Full-Stack Data Alignment)**：修改 UI 視圖時，禁止僅在 HTML 硬編碼靜態選項。必須確認 JavaScript 已成功呼叫 REST API 並實作 DOM 動態 Populate 填充。
+*   **2. 多路徑運行相容 (Multi-Path Runtime Guarantee)**：凡涉及檔案讀寫（JSON/Parquet/DB），必須同時支援原始開發路徑與 PyInstaller `_internal` 綠色打包路徑。
+*   **3. 自動發起 HTTP API 驗證 (Silent Verification Gate)**：向使用者回報「完成」前，必須在幕後發送 HTTP 請求（如 `read_url_content`）驗證 API 回傳之 JSON 數據與畫面狀態，確認 100% 成功才可回覆。

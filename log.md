@@ -2,6 +2,43 @@
 
 ---
 
+## 📅 2026-08-07 - 前端動態/靜態稽核修復、核心演算法串接現況稽核（Demo/Simulation 模式盤點）
+
+### 1. 前端「動態被寫成靜態」稽核與修復清單
+
+| 頁面 / 檔案 | 問題 | 修復狀態 |
+| :--- | :--- | :--- |
+| `engineer/health.html` | 缺少自動輪詢（未呼叫 `startHmiDynamicTimer`），5 張健康卡片為寫死值，上線門檻判斷邏輯 bug（不論 `ready_for_production` 真假皆顯示「符合」），Action Items 為固定 2 筆假資料 | **PASS**（已補輪詢、修邏輯、卡片改綁真實 API、Action Items 改動態產生） |
+| `server.py` `/api/v1/shadow_mode` | 回傳欄位名（`current_rmse`/`improvement_pct`）與前端模板需要的欄位名（`current_model_rmse`/`improvement_rate_pct`/`ready_for_production`）不一致，導致 Shadow 殘差數字長期吃寫死 fallback 值 | **PASS**（已補齊對應欄位） |
+| `operator/cycles.html` + `server.py` `l2/trend` | 整定時間/超調量/相位裕度為前端自行硬湊公式計算，Cycle 編號寫死從 1042 倒數 | **PASS**（改由後端統一計算並回傳，前端直接讀取欄位） |
+| `operator/maintenance.html` + `server.py` | 表單提交的設備名稱與處置說明從未送到後端（只送 `item_id`），且無歷史紀錄可查閱 | **PASS**（新增 `maintenance_logs` SQLite 持久化表、`/api/v1/maintenance/submit`、`/api/v1/maintenance/logs`，並補上歷史列表） |
+| `admin/settings.html` | 「UI 數據更新頻率」下拉選單與「儲存設定」按鈕無任何 JS/API，操作無效果 | **PASS**（串接既有全域 `setHmiRefreshRate()` 機制） |
+| `admin/retention.html` | 「30 天」「7 年」保留天數寫死在 HTML | **PASS**（改由後端 `RETENTION_POLICY` 常數帶入） |
+| `admin/roles.html` | 純靜態權限矩陣，無資料來源標註 | **PASS**（加註「靜態參考文件，異動需聯繫管理員」說明） |
+
+### 2. 核心演算法串接現況稽核（重要發現，尚未修復，待規劃）
+
+- **`演算法核心.pkl` 從未被載入或呼叫**：`server.py` 僅將其當作可下載的靜態檔案（`/api/v1/system/algorithm_core` 附近），全檔沒有任何 `pickle.load()` 或 `.predict()` 呼叫；所有即時 API（`l1/realtime`、`l2/trend` 等）皆為 `random.gauss()` / 寫死值模擬。
+- **pkl 內容已用 `pickle.load()` 直接驗證**：內含 `clf_stage`、`clf_trip` 兩個已訓練 `RandomForestClassifier`，需要 158 維特徵（`feature_cols`），**其中 93 個（`extra_feature_1`~`_93`，佔 59%）在 `phm_pipeline.py` 訓練資料生成階段就是 `np.random.normal(0,1)` 純高斯雜訊**，並非真實物理量測。
+- **特徵重要度分析**：`clf_stage` 對 93 個雜訊特徵的總重要度達 33.4%，`clf_trip` 達 26.1%，顯示模型對合成雜訊有異常依賴（過擬合風險）。
+- **以 `test_repository/data/` 41 工況模擬資料做近似回測**（31 個標準格式檔案、18,600 筆樣本，因欄位格式與訓練特徵不完全對應，僅供概略健檢）：
+  - `clf_stage` 準確率 **26.7%**，低於「永遠猜多數類別」對照組 32.3%
+  - `clf_trip` 準確率 **83.7%**，低於對照組 88.4%
+  - 另發現資料集 `stage_int` 標籤有 5 類，但 `clf_stage.classes_` 只認得 4 類，label 體系版本不一致
+  - **結論：目前不建議將此 pkl 接上任何影響實際判斷的流程，需重新訓練與驗證**
+- **原始訓練資料遺失**：原始約 2 億筆 raw sensor data 因容量過大已被使用者清除，且從未受 git 版控保護（`.gitignore` 排除 `*.parquet`），確認**無法用 git 復原**；`data_sources.db`/`fallback_logs.db`/`users.db` 等根目錄資料庫則仍在 git HEAD 保留，可用 `git checkout` 復原。
+
+### 3. 待調整清單（Follow-up TODO）
+
+- [ ] 於 `server.py` 啟動時載入 `演算法核心.pkl` 為全域單例，設計即時特徵計算管線
+- [ ] 重新設計 158 維特徵集，移除 93 個雜訊佔位欄位，改用真實物理量測
+- [ ] 統一 `stage_int`（4 類 vs 5 類）label 體系版本
+- [ ] 確認 2 億筆原始訓練資料是否有任何備份；若無，規劃重新連接實體 MR-J5 收集資料
+- [ ] 讓前端「活化數據源」切換真正影響即時推論輸入，而非僅顯示名稱
+- [ ] README 已補上「Demo/Simulation 模式」聲明與三角色測試帳號，待正式上線前需移除或更新此聲明
+
+---
+
 ## 📅 2026-07-24 - v7.1.0 系統資安硬化、自動轉頁閘門、SQLite 審核持久化與全量測試庫歸檔紀錄
 
 ### 1. 本次系統功能升級與資安硬化驗證清單

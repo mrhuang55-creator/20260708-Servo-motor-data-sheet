@@ -1,18 +1,109 @@
 {% extends "base.html" %}
 {% block title %}維修回報 — AI SERVO PLATFORM{% endblock %}
 {% block content %}
-<h3 class="fw-bold mb-3"><i class="fa-solid fa-wrench text-secondary me-2"></i>維修與處置結果登錄</h3>
-<div class="glass-card p-4">
-    <form>
+<h3 class="fw-bold mb-3"><i class="fa-solid fa-wrench text-secondary me-2"></i>維修與處置結果登錄 (Maintenance Log)</h3>
+<div class="glass-card p-4 mb-4">
+    <form id="form-maintenance-submit">
         <div class="mb-3">
-            <label class="form-label text-muted fs-7">處置設備 / Scenario</label>
-            <input type="text" class="form-control bg-dark border-secondary text-light" value="MR-J5-AXIS-01 (S01)" readonly>
+            <label class="form-label text-muted fs-7">當前處置設備 / 活化數據源</label>
+            <input type="text" class="form-control bg-dark border-secondary text-light fw-bold" id="maint-device-input" value="載入中…" readonly>
         </div>
         <div class="mb-3">
-            <label class="form-label text-muted fs-7">現場處置說明</label>
-            <textarea class="form-control bg-dark border-secondary text-light" rows="3" placeholder="請輸入維修處置細節與更換零件說明..."></textarea>
+            <label class="form-label text-muted fs-7">現場處置說明與更換備件</label>
+            <textarea class="form-control bg-dark border-secondary text-light" id="maint-detail-textarea" rows="3" placeholder="請輸入維修處置細節與更換零件說明..." required></textarea>
         </div>
-        <button type="button" class="btn btn-info fw-bold" onclick="alert('已成功登記維修處置結果！')">提交處置紀錄</button>
+        <button type="submit" class="btn btn-info fw-bold" id="btn-submit-maint"><i class="fa-solid fa-floppy-disk me-1"></i>提交處置紀錄</button>
     </form>
 </div>
+
+<div class="glass-card p-4">
+    <h6 class="fw-bold mb-3"><i class="fa-solid fa-clock-rotate-left text-info me-2"></i>維修處置歷史紀錄</h6>
+    <div class="table-responsive">
+        <table class="table table-dark table-hover fs-7 align-middle mb-0">
+            <thead><tr class="text-muted"><th>時間</th><th>設備</th><th>處置說明</th><th>回報人員</th></tr></thead>
+            <tbody id="maint-logs-tbody">
+                {% for log in logs %}
+                <tr>
+                    <td class="text-muted">{{ log.created_at }}</td>
+                    <td>{{ log.device }}</td>
+                    <td>{{ log.detail }}</td>
+                    <td>{{ log.operator }}</td>
+                </tr>
+                {% else %}
+                <tr><td colspan="4" class="text-center text-muted py-3">尚無維修處置紀錄</td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<script>
+    function renderMaintLogs(logs) {
+        const tbody = document.getElementById('maint-logs-tbody');
+        if (!tbody) return;
+        if (!logs || !logs.length) {
+            tbody.innerHTML = '<tr><td colspan="4" class="text-center text-muted py-3">尚無維修處置紀錄</td></tr>';
+            return;
+        }
+        tbody.innerHTML = logs.map(l => `
+            <tr>
+                <td class="text-muted">${l.created_at}</td>
+                <td>${l.device}</td>
+                <td>${l.detail}</td>
+                <td>${l.operator}</td>
+            </tr>
+        `).join('');
+    }
+
+    function reloadMaintLogs() {
+        fetch('/operator/api/v1/maintenance/logs')
+            .then(r => r.json()).then(d => renderMaintLogs(d.logs || []))
+            .catch(() => {});
+    }
+
+    document.addEventListener('DOMContentLoaded', function() {
+        // 同源 API 載入數據源
+        fetch('/operator/api/v1/system/data_sources')
+            .then(r => r.json()).then(d => {
+                const active = d.active_source;
+                const el = document.getElementById('maint-device-input');
+                if (active && el) {
+                    el.value = `MR-J5-SERVO-01 | [${active.type === 'HARDWARE' ? '實體馬達' : '測試檔'}] ${active.name}`;
+                }
+            }).catch(() => {
+                document.getElementById('maint-device-input').value = "MR-J5-SERVO-01";
+            });
+
+        // 提交按鈕真實 API 發送（含設備名稱與處置說明，並寫入 SQLite 持久化資料庫）
+        const form = document.getElementById('form-maintenance-submit');
+        if (form) {
+            form.addEventListener('submit', function(e) {
+                e.preventDefault();
+                const btn = document.getElementById('btn-submit-maint');
+                const detailEl = document.getElementById('maint-detail-textarea');
+                const detail = detailEl.value.trim();
+                const device = document.getElementById('maint-device-input').value;
+                if (!detail) return;
+                btn.disabled = true;
+
+                fetch('/operator/api/v1/maintenance/submit', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ device: device, detail: detail })
+                }).then(r => r.json()).then(d => {
+                    if (d.status === 'success') {
+                        detailEl.value = '';
+                        reloadMaintLogs();
+                    } else {
+                        alert(`❌ 提交失敗: ${d.detail || '請確認後端服務是否正常'}`);
+                    }
+                }).catch(() => {
+                    alert('❌ 提交請求失敗，請確認後端服務離線或網路通暢。');
+                }).finally(() => {
+                    btn.disabled = false;
+                });
+            });
+        }
+    });
+</script>
 {% endblock %}

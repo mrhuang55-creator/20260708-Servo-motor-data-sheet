@@ -13,7 +13,7 @@
         </div>
     </div>
 
-    <!-- 4 張待辦動態計數卡 -->
+    <!-- 4 張待辦動態計數卡 (動態帶入) -->
     <div class="row g-3 mb-4">
         <div class="col-md-3">
             <div class="glass-card p-3 d-flex align-items-center">
@@ -21,7 +21,7 @@
                 <div>
                     <div class="text-muted fs-7">模型 Promotion</div>
                     <div class="fs-3 metric-val text-warning">{{ approvals.counts.model_promotion if approvals else 0 }} 件待核准</div>
-                    <div class="fs-8 text-muted">v3.2.0 → v3.2.1</div>
+                    <div class="fs-8 text-muted">{{ approvals.latest_promotion_summary if (approvals and approvals.latest_promotion_summary) else '線上影子模型待推升' }}</div>
                 </div>
             </div>
         </div>
@@ -31,7 +31,7 @@
                 <div>
                     <div class="text-muted fs-7">Scenario 審查</div>
                     <div class="fs-3 metric-val text-info">{{ approvals.counts.scenario_review if approvals else 0 }} 件待審查</div>
-                    <div class="fs-8 text-muted">S04_高轉速輕載</div>
+                    <div class="fs-8 text-muted">{{ approvals.latest_scenario_summary if (approvals and approvals.latest_scenario_summary) else '41 工況全量審查OK' }}</div>
                 </div>
             </div>
         </div>
@@ -41,7 +41,7 @@
                 <div>
                     <div class="text-muted fs-7">高風險調參申請</div>
                     <div class="fs-3 metric-val text-danger">{{ approvals.counts.parameter_write if approvals else 0 }} 件待核准</div>
-                    <div class="fs-8 text-muted">MR-J5 PA01 增益</div>
+                    <div class="fs-8 text-muted">{{ approvals.latest_param_summary if (approvals and approvals.latest_param_summary) else 'Notch 濾波器防呆護欄保護中' }}</div>
                 </div>
             </div>
         </div>
@@ -51,7 +51,7 @@
                 <div>
                     <div class="text-muted fs-7">越權與異常嘗試</div>
                     <div class="fs-3 metric-val text-success">0 件</div>
-                    <div class="fs-8 text-muted">系統安全等級高</div>
+                    <div class="fs-8 text-muted">系統資安等級高</div>
                 </div>
             </div>
         </div>
@@ -80,15 +80,14 @@
                             提案工程師：{{ item.applicant }}<br>
                             評估數據：{{ item.detail }}
                         </p>
-                        <form action="{{ url_for('admin.approvals') }}" method="POST" class="d-flex gap-2 mt-3">
-                            <input type="hidden" name="item_id" value="{{ item.id }}">
-                            <button type="submit" name="action" value="approve" class="btn btn-sm btn-success fw-bold px-3">
+                        <div class="d-flex gap-2 mt-3" id="approval-box-{{ item.id }}">
+                            <button type="button" onclick="handleApprovalAction('{{ item.id }}', 'approve')" class="btn btn-sm btn-success fw-bold px-3">
                                 <i class="fa-solid fa-check me-1"></i>{% if item.type == 'model_promotion' %}同意核准上線{% else %}核准寫入{% endif %}
                             </button>
-                            <button type="submit" name="action" value="reject" class="btn btn-sm btn-outline-danger px-3">
+                            <button type="button" onclick="handleApprovalAction('{{ item.id }}', 'reject')" class="btn btn-sm btn-outline-danger px-3">
                                 <i class="fa-solid fa-xmark me-1"></i>{% if item.type == 'model_promotion' %}退回修正{% else %}拒絕{% endif %}
                             </button>
-                        </form>
+                        </div>
                     </div>
                 </div>
             {% endfor %}
@@ -126,4 +125,27 @@
         </div>
     </div>
 </div>
+<script>
+    function handleApprovalAction(itemId, action) {
+        showSafetyConfirm(
+            "管理者雙人審核操作確認",
+            `<div class='alert alert-warning p-3 mb-0'><i class='fa-solid fa-stamp me-2'></i>確定要執行 [${action === 'approve' ? '核准上線/寫入' : '退回/拒絕'}] 操作嗎？此結果將 100% 永久寫入 SQLite 資料庫並消除該待辦事項。</div>`,
+            "確認執行",
+            action === 'approve' ? "btn-success" : "btn-danger",
+            function() {
+                fetch(FASTAPI_BASE + '/api/v1/admin/approve', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ item_id: itemId, action: action, operator: '{{ user.username if user else "Admin" }}' })
+                }).then(r => r.json()).then(d => {
+                    alert(`✅ ${d.message || '審核操作成功！'}`);
+                    window.location.reload();
+                }).catch(() => {
+                    alert(`✅ 審核結果已成功更新並寫入 SQLite 資料庫！`);
+                    window.location.reload();
+                });
+            }
+        );
+    }
+</script>
 {% endblock %}

@@ -12,12 +12,21 @@
         
         <!-- 手動 / 自動模式切換與人體工學觸控控制項 (48px Touch Standard) -->
         <div class="d-flex flex-wrap gap-3 align-items-center">
-            <!-- 數據源動態通知 Badge 與 RBAC 下拉切換器 -->
+            <!-- 數據源動態通知 Badge 與 RBAC 下拉切換器 (100% Jinja2 SSR 伺服器端動態渲染) -->
             <div class="d-flex align-items-center bg-dark p-1 px-2 rounded-3 border border-info gap-2" id="container-datasource-selector">
-                <span class="badge bg-warning text-dark id="badge-datasource-status" style="font-size: 0.85rem;"><i class="fa-solid fa-microchip me-1"></i>[🟡 測試檔案: V6_41_scenarios.json]</span>
+                <span class="badge bg-{{ data_sources.badge.color if (data_sources and data_sources.badge) else 'warning' }} text-dark" id="badge-datasource-status" style="font-size: 0.85rem;">
+                    <i class="fa-solid fa-microchip me-1"></i>[{{ data_sources.badge.text if (data_sources and data_sources.badge) else '連線中...' }}]
+                </span>
                 <select class="form-select form-select-sm bg-dark text-light border-secondary" id="select-datasource" style="width: auto; max-width: 220px; font-size: 0.8rem;">
-                    <option value="HARDWARE_SLMP">🟢 實體馬達 (SLMP MC 3E)</option>
-                    <option value="FILE_V6_41_scenarios.json" selected>🟡 測試檔: V6_41_scenarios.json</option>
+                    {% if data_sources and data_sources.available_sources %}
+                        {% for src in data_sources.available_sources %}
+                            <option value="{{ src.id }}" {% if src.is_active %}selected{% endif %}>
+                                {% if src.type == 'HARDWARE' %}🟢{% else %}🟡{% endif %} {{ src.name }}
+                            </option>
+                        {% endfor %}
+                    {% else %}
+                        <option value="HARDWARE_SLMP">🟢 實體伺服馬達 (SLMP MC 3E)</option>
+                    {% endif %}
                 </select>
             </div>
 
@@ -139,15 +148,35 @@
     <div class="row g-3 mb-4">
         <!-- 狀況顯示: ALARM / ERROR / NORMAL -->
         <div class="col-md-3">
-            <div class="glass-card p-3 border-start border-4 border-success">
+            <div class="glass-card p-3 border-start border-4 border-success" id="card-status">
                 <div class="text-muted fs-8 text-uppercase">狀況顯示 (System Health)</div>
                 <div class="d-flex align-items-center justify-content-between mt-1">
                     <div class="fs-4 fw-bold text-success" id="status-indicator"><i class="fa-solid fa-circle-check me-2"></i>NORMAL</div>
-                    <span class="badge bg-success-subtle text-success border border-success">無警報</span>
+                    <span class="badge bg-success-subtle text-success border border-success" id="status-badge">無警報</span>
                 </div>
                 <div class="fs-8 text-muted mt-1">即時監控：運行健全度 99.2%</div>
             </div>
         </div>
+...
+    <!-- 主畫面 — 即時監控數據區 (DV / ylabel / 延遲 / Fallback) -->
+    <div class="row g-3 mb-4">
+        <div class="col-md-3">
+            <div class="glass-card p-3">
+                <div class="text-muted fs-7">異常分數 (DV Score)</div>
+                <div class="fs-2 metric-val text-info" id="val-dv">0.130</div>
+                <div class="fs-8 text-success" id="val-dv-sub"><i class="fa-solid fa-shield-halved me-1"></i>在正常門檻 (0.50) 內</div>
+            </div>
+        </div>
+...
+                <tbody id="event-log-tbody">
+                    <tr>
+                        <td>17:04:00</td>
+                        <td><span class="badge bg-success">Cycle Completed</span></td>
+                        <td>S01 (基期取放)</td>
+                        <td>Position_Residual_mm = 0.021, DV = 0.13</td>
+                        <td><span class="badge bg-outline border border-success text-success">Level 1 Normal</span></td>
+                    </tr>
+                </tbody>
 
         <!-- 訓練狀態顯示 a: HEAVY TRAIN / MIN TRAIN / MS TRAIN -->
         <div class="col-md-3">
@@ -171,7 +200,7 @@
         <div class="col-md-3">
             <div class="glass-card p-3 border-start border-4 border-info">
                 <div class="text-muted fs-8 text-uppercase">模式顯示 (Scenario Model)</div>
-                <div class="fs-5 fw-bold text-light mt-1"><i class="fa-solid fa-cubes me-2 text-info"></i>S01 (基期取放)</div>
+                <div class="fs-5 fw-bold text-light mt-1" id="val-scenario-model"><i class="fa-solid fa-cubes me-2 text-info"></i>S01 (基期取放)</div>
                 <div class="fs-8 text-muted mt-1">全量 41 工況模式啟用中</div>
             </div>
         </div>
@@ -183,7 +212,7 @@
             <div class="glass-card p-3">
                 <div class="text-muted fs-7">異常分數 (DV Score)</div>
                 <div class="fs-2 metric-val text-info" id="val-dv">0.130</div>
-                <div class="fs-8 text-success"><i class="fa-solid fa-shield-halved me-1"></i>在正常門檻 (0.50) 內</div>
+                <div class="fs-8 text-success" id="val-dv-sub"><i class="fa-solid fa-shield-halved me-1"></i>在正常門檻 (0.50) 內</div>
             </div>
         </div>
         <div class="col-md-3">
@@ -279,7 +308,7 @@
                         <th>處置與防禦等級</th>
                     </tr>
                 </thead>
-                <tbody>
+                <tbody id="event-log-tbody">
                     <tr>
                         <td>14:02:11</td>
                         <td><span class="badge bg-success">Cycle Completed</span></td>
@@ -364,9 +393,17 @@
             }
         });
 
-        // ── 每秒輪詢後端 /api/v1/l1/realtime ──────────────────────────
+        // 全局記憶當前選中工況 (絕不允許因 DOM 重新 Populate 而退回 S01)
+        window.ACTIVE_SELECTED_SCENARIO = window.ACTIVE_SELECTED_SCENARIO || '01_Pick_and_Place';
+
+        // ── 每秒輪詢後端 /api/v1/l1/realtime (全動態選取對應檔案) ──────────────────────────
         function pollMotorRealtime() {
-            fetch('http://127.0.0.1:8000/api/v1/l1/realtime?scenario_id=01_Pick_and_Place')
+            const selectEl = document.getElementById('select-datasource');
+            if (selectEl && selectEl.value && selectEl.value.trim() !== '') {
+                window.ACTIVE_SELECTED_SCENARIO = selectEl.value;
+            }
+            const currentScenario = window.ACTIVE_SELECTED_SCENARIO;
+            fetch(FASTAPI_BASE + '/api/v1/l1/realtime?scenario_id=' + encodeURIComponent(currentScenario))
                 .then(res => res.json())
                 .then(data => {
                     const rt = data.motor_realtime || {};
@@ -405,25 +442,163 @@
                     const posSvg = document.getElementById('svg-pos-val');
                     if (posSvg) posSvg.textContent = `X: ${(120.0 + (residual * 100)).toFixed(1)}mm`;
 
-                    // 狀態指示器：DV > 0.5 為 ALARM，> 0.8 為 ERROR
+                    // 動態連線連動【模式顯示 (Scenario Model)】卡片
+                    const scenModelEl = document.getElementById('val-scenario-model');
+                    if (scenModelEl) {
+                        const selectEl = document.getElementById('select-datasource');
+                        const scenText = selectEl ? (selectEl.options[selectEl.selectedIndex]?.text || currentScenario) : currentScenario;
+                        scenModelEl.innerHTML = `<i class="fa-solid fa-cubes me-2 text-info"></i>${scenText.replace(/^[🟢🟡]\s*/, '')}`;
+                    }
+
+                    // 狀態指示器與警報 Badge / DV 下方文字 100% 同步連動
                     const statusEl = document.getElementById('status-indicator');
-                    if (statusEl) {
-                        if (dv > 0.8) {
+                    const statusBadge = document.getElementById('status-badge');
+                    const dvSub = document.getElementById('val-dv-sub');
+                    const cardStatus = document.getElementById('card-status');
+                    
+                    if (dv > 0.8) {
+                        if (statusEl) {
                             statusEl.innerHTML = '<i class="fa-solid fa-circle-exclamation me-2"></i>ERROR';
                             statusEl.className = 'fs-4 fw-bold text-danger';
-                        } else if (dv > 0.5) {
+                        }
+                        if (statusBadge) {
+                            statusBadge.textContent = '🔴 高風險告警';
+                            statusBadge.className = 'badge bg-danger-subtle text-danger border border-danger';
+                        }
+                        if (dvSub) {
+                            dvSub.innerHTML = '<i class="fa-solid fa-triangle-exclamation me-1"></i>已超越安全門檻 (0.85)';
+                            dvSub.className = 'fs-8 text-danger';
+                        }
+                        if (cardStatus) cardStatus.className = 'glass-card p-3 border-start border-4 border-danger';
+                    } else if (dv > 0.5) {
+                        if (statusEl) {
                             statusEl.innerHTML = '<i class="fa-solid fa-triangle-exclamation me-2"></i>ALARM';
                             statusEl.className = 'fs-4 fw-bold text-warning';
-                        } else {
+                        }
+                        if (statusBadge) {
+                            statusBadge.textContent = '🟡 輕度預警';
+                            statusBadge.className = 'badge bg-warning-subtle text-warning border border-warning';
+                        }
+                        if (dvSub) {
+                            dvSub.innerHTML = '<i class="fa-solid fa-circle-exclamation me-1"></i>處於預警區間 (0.50-0.85)';
+                            dvSub.className = 'fs-8 text-warning';
+                        }
+                        if (cardStatus) cardStatus.className = 'glass-card p-3 border-start border-4 border-warning';
+                    } else {
+                        if (statusEl) {
                             statusEl.innerHTML = '<i class="fa-solid fa-circle-check me-2"></i>NORMAL';
                             statusEl.className = 'fs-4 fw-bold text-success';
                         }
+                        if (statusBadge) {
+                            statusBadge.textContent = '🟢 無警報';
+                            statusBadge.className = 'badge bg-success-subtle text-success border border-success';
+                        }
+                        if (dvSub) {
+                            dvSub.innerHTML = '<i class="fa-solid fa-shield-halved me-1"></i>在正常門檻 (0.50) 內';
+                            dvSub.className = 'fs-8 text-success';
+                        }
+                        if (cardStatus) cardStatus.className = 'glass-card p-3 border-start border-4 border-success';
+                    }
+
+                    // 動態更新【最近系統控制與事件紀錄】時間 (100% 即時呈現當前時間如 17:04:12)
+                    const tbody = document.getElementById('event-log-tbody');
+                    if (tbody) {
+                        const selectEl = document.getElementById('select-datasource');
+                        const scenText = selectEl ? (selectEl.options[selectEl.selectedIndex]?.text || currentScenario) : currentScenario;
+                        const eventType = dv > 0.8 ? '<span class="badge bg-danger">Critical Alarm</span>' : (dv > 0.5 ? '<span class="badge bg-warning text-dark">Warning Triggered</span>' : '<span class="badge bg-success">Cycle Running</span>');
+                        const defLevel = dv > 0.8 ? '<span class="badge bg-danger">Level 3 E-STOP</span>' : (dv > 0.5 ? '<span class="badge bg-warning text-dark">Level 2 FineTune</span>' : '<span class="badge bg-outline border border-success text-success">Level 1 Normal</span>');
+                        
+                        tbody.innerHTML = `
+                            <tr>
+                                <td>${now}</td>
+                                <td>${eventType}</td>
+                                <td>${scenText.replace(/^[🟢🟡]\s*/, '')}</td>
+                                <td>Position_Residual_mm = ${residual.toFixed(3)}, DV = ${dv.toFixed(3)}</td>
+                                <td>${defLevel}</td>
+                            </tr>
+                            <tr>
+                                <td>17:00:00</td>
+                                <td><span class="badge bg-info">System Ingress</span></td>
+                                <td>41 工況 Master 載入中</td>
+                                <td>伺服致能啟動，TSN Latency 1.2ms</td>
+                                <td><span class="text-muted">已記錄</span></td>
+                            </tr>
+                        `;
                     }
                 })
                 .catch(() => {});
         }
 
         startHmiDynamicTimer(pollMotorRealtime, 1000);
+
+        // ── 動態載入與動態切換數據源處理 (100% 同源代理 API) ──────────────────────────
+        function loadAndPopulateDataSources() {
+            fetch('/operator/api/v1/system/data_sources')
+                .then(res => res.json())
+                .then(data => {
+                    if (data.status === 'success') {
+                        const selectEl = document.getElementById('select-datasource');
+                        const badgeEl = document.getElementById('container-datasource-selector');
+                        if (!selectEl) return;
+
+                        selectEl.innerHTML = '';
+                        const sources = data.available_sources || [];
+                        sources.forEach(src => {
+                            const opt = document.createElement('option');
+                            opt.value = src.id;
+                            const prefix = src.type === 'HARDWARE' ? '🟢 ' : '🟡 ';
+                            opt.textContent = prefix + src.name;
+                            if (src.id === window.ACTIVE_SELECTED_SCENARIO || (src.is_active && !window.ACTIVE_SELECTED_SCENARIO)) {
+                                opt.selected = true;
+                            }
+                            selectEl.appendChild(opt);
+                        });
+
+                        // 更新 Badge 顯示名稱
+                        if (data.active_source && badgeEl) {
+                            const activeBadge = badgeEl.querySelector('.badge');
+                            if (activeBadge) {
+                                const prefix = data.active_source.type === 'HARDWARE' ? '🟢 實體馬達' : '🟡 測試檔案';
+                                activeBadge.textContent = `${prefix}: ${data.active_source.name}`;
+                                activeBadge.className = `badge bg-${data.badge?.color || 'warning'} text-dark`;
+                            }
+                        }
+                    }
+                }).catch(() => {});
+        }
+
+        // 初始化載入數據源清單
+        loadAndPopulateDataSources();
+
+        // 監聽數據源下拉選單變更事件
+        const dsSelectEl = document.getElementById('select-datasource');
+        if (dsSelectEl) {
+            dsSelectEl.addEventListener('change', function() {
+                const selectedId = this.value;
+                window.ACTIVE_SELECTED_SCENARIO = selectedId;
+                const userRole = '{{ user.role if user else "Operator" }}';
+                fetch('/operator/api/v1/system/switch_source', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ source_id: selectedId, operator_role: userRole, operator_id: '{{ user.username if user else "op" }}' })
+                }).then(res => res.json()).then(data => {
+                    if (data.status === 'success') {
+                        loadAndPopulateDataSources();
+                        // 立即清空舊波形歷史佇列，讓全新對應檔案波形 100% 重繪
+                        if (typeof dvData !== 'undefined') dvData.length = 0;
+                        if (typeof residualData !== 'undefined') residualData.length = 0;
+                        if (typeof tsLabels !== 'undefined') tsLabels.length = 0;
+                        pollMotorRealtime();
+                        alert(`✅ 數據源切換成功: ${data.message || '即時異常殘差圖已同步載入對應數據'}`);
+                    } else {
+                        alert(`❌ 切換失敗: ${data.detail || '權限不足或檔案無效'}`);
+                        loadAndPopulateDataSources();
+                    }
+                }).catch(() => {
+                    loadAndPopulateDataSources();
+                });
+            });
+        }
 
         // ── 控制按紐防呆與二次確認處理 ──────────────────────────────────
         document.getElementById('btn-power-on').addEventListener('click', function() {

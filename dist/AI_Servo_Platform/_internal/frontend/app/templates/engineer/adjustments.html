@@ -61,8 +61,8 @@
                 <h6 class="fw-bold mb-3"><i class="fa-solid fa-wave-square text-warning me-2"></i>Notch 濾波器參數現況</h6>
                 <table class="table table-dark fs-7 mb-2">
                     <tbody>
-                        <tr><td class="text-muted">PA18 Notch 頻率</td><td class="fw-bold text-warning">780 Hz</td></tr>
-                        <tr><td class="text-muted">PB12 寬帶係數</td><td class="fw-bold text-info">2</td></tr>
+                        <tr><td class="text-muted">PA18 Notch 頻率</td><td class="fw-bold text-warning" id="l2-pa18-val">780 Hz</td></tr>
+                        <tr><td class="text-muted">PB12 寬帶係數</td><td class="fw-bold text-info" id="l2-pb12-val">2</td></tr>
                         <tr><td class="text-muted">微調 Epochs</td><td class="fw-bold" id="l2-epochs">—</td></tr>
                         <tr><td class="text-muted">Learning Rate</td><td class="fw-bold" id="l2-lr">—</td></tr>
                         <tr><td class="text-muted">最近更新</td><td id="l2-ts" class="text-muted">—</td></tr>
@@ -139,7 +139,7 @@
 
 {% block extra_js %}
 <script>
-    const API = 'http://127.0.0.1:8000';
+    const API = FASTAPI_BASE;
     let l2Chart = null;
 
     function loadL2Data() {
@@ -156,6 +156,10 @@
                 document.getElementById('l2-epochs').textContent = ft.epochs ?? '—';
                 document.getElementById('l2-lr').textContent = ft.learning_rate ?? '—';
                 document.getElementById('l2-ts').textContent = d.timestamp ? d.timestamp.slice(0, 19) : '—';
+                
+                // 動態帶入 PA18 與 PB12 Notch 濾波器暫存器參數
+                if (ft.notch_frequency_hz) document.getElementById('l2-pa18-val').textContent = ft.notch_frequency_hz + ' Hz';
+                if (ft.notch_bandwidth) document.getElementById('l2-pb12-val').textContent = ft.notch_bandwidth.toString();
             }).catch(() => {});
 
         // 趨勢歷史

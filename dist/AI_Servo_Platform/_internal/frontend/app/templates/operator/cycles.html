@@ -1,16 +1,64 @@
 {% extends "base.html" %}
 {% block title %}Cycle 紀錄 — AI SERVO PLATFORM{% endblock %}
 {% block content %}
-<h3 class="fw-bold mb-3"><i class="fa-solid fa-rotate text-primary me-2"></i>Cycle 運轉紀錄</h3>
-<div class="glass-card p-4">
-    <table class="table table-dark fs-7 align-middle mb-0">
-        <thead>
-            <tr><th>Cycle #</th><th>Scenario</th><th>整定時間</th><th>超調量</th><th>相位裕度</th><th>狀態</th></tr>
-        </thead>
-        <tbody>
-            <tr><td>#1042</td><td>S01</td><td>0.85s</td><td>4.2%</td><td>53.8°</td><td><span class="badge bg-success">PASS</span></td></tr>
-            <tr><td>#1041</td><td>S01</td><td>0.82s</td><td>4.0%</td><td>54.1°</td><td><span class="badge bg-success">PASS</span></td></tr>
-        </tbody>
-    </table>
+<div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2 glass-card p-3 border-info">
+    <div>
+        <h4 class="fw-bold mb-1 text-light"><i class="fa-solid fa-rotate text-primary me-2"></i>Cycle 運轉紀錄 (Cycle Controller Logs)</h4>
+        <p class="text-muted fs-7 mb-0">支援自訂時間區間篩選、即時連線查詢加工歷史與動態 Phase Margin 評估</p>
+    </div>
+    <div class="d-flex gap-2 align-items-center flex-wrap">
+        <input type="datetime-local" class="form-control form-control-sm bg-dark text-light border-secondary" id="cycle-start-time">
+        <span class="text-muted fs-7">至</span>
+        <input type="datetime-local" class="form-control form-control-sm bg-dark text-light border-secondary" id="cycle-end-time">
+        <button class="btn btn-info btn-sm fw-bold" onclick="filterCycleLogs()"><i class="fa-solid fa-filter me-1"></i>篩選歷史</button>
+    </div>
 </div>
+
+<div class="glass-card p-4">
+    <div class="table-responsive">
+        <table class="table table-dark table-hover fs-7 align-middle mb-0">
+            <thead>
+                <tr class="text-muted"><th>Cycle #</th><th>Scenario</th><th>時間戳記</th><th>整定時間 (s)</th><th>超調量 (%)</th><th>相位裕度 (°)</th><th>狀態</th></tr>
+            </thead>
+            <tbody id="cycles-tbody">
+                <tr><td colspan="7" class="text-center text-muted py-3">載入中…</td></tr>
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<script>
+    function filterCycleLogs() {
+        const start = document.getElementById('cycle-start-time').value;
+        const end = document.getElementById('cycle-end-time').value;
+        loadCycleLogs(start, end);
+    }
+
+    function loadCycleLogs(start = '', end = '') {
+        let url = FASTAPI_BASE + '/api/v1/l2/trend?scenario_id=01_Pick_and_Place&hours=24';
+        if (start && end) {
+            url += `&start_time=${encodeURIComponent(start)}&end_time=${encodeURIComponent(end)}`;
+        }
+        fetch(url)
+            .then(r => r.json()).then(data => {
+                const hist = data.finetune_history || [];
+                const tbody = document.getElementById('cycles-tbody');
+                if (hist.length) {
+                    tbody.innerHTML = hist.map((item) => `
+                        <tr>
+                            <td class="font-monospace">#${item.cycle_no}</td>
+                            <td><span class="badge bg-info">S01_Pick_and_Place</span></td>
+                            <td class="text-muted">${item.time || '即時'}</td>
+                            <td>${item.settling_time_s.toFixed(2)}s</td>
+                            <td>${item.overshoot_pct.toFixed(1)}%</td>
+                            <td>${item.phase_margin_deg.toFixed(1)}°</td>
+                            <td>${item.rollback ? '<span class="badge bg-danger">ROLLBACK</span>' : '<span class="badge bg-success">PASS</span>'}</td>
+                        </tr>
+                    `).join('');
+                }
+            }).catch(() => {});
+    }
+
+    document.addEventListener('DOMContentLoaded', () => loadCycleLogs());
+</script>
 {% endblock %}

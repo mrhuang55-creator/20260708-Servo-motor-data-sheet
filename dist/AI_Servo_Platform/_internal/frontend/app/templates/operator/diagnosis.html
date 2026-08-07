@@ -78,7 +78,7 @@
 
 {% block extra_js %}
 <script>
-    const API = 'http://127.0.0.1:8000';
+    const API = FASTAPI_BASE;
     let shapChart = null;
 
     function loadShapData() {
@@ -183,7 +183,21 @@
             });
     }
 
+    function populateShapScenarios() {
+        fetch(`${API}/api/v1/scenario-library`)
+            .then(r => r.json()).then(data => {
+                const sel = document.getElementById('shap-scenario-select');
+                if (!sel) return;
+                const scens = data.scenarios || [];
+                if (scens.length) {
+                    sel.innerHTML = scens.map(s => `<option value="${s.scenario_id}">S${s.scenario_id < 10 ? '0' + s.scenario_id : s.scenario_id}: ${s.scenario_name}</option>`).join('');
+                }
+                loadShapData();
+            }).catch(() => loadShapData());
+    }
+
     document.addEventListener('DOMContentLoaded', () => {
+        populateShapScenarios();
         startHmiDynamicTimer(loadShapData, 3000);
     });
 </script>
