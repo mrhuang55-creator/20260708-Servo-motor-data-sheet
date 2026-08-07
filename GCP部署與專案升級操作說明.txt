@@ -72,7 +72,10 @@
    source venv/bin/activate
 
 3. 在虛擬環境內安裝專案所需依賴套件：
-   pip install flask requests fastapi uvicorn pydantic pandas numpy
+   pip install flask requests httpx fastapi uvicorn pydantic pandas numpy scikit-learn joblib
+   # 2026-08-07 更新：analysis_api.py 需要 httpx，先前清單漏裝導致 phm-frontend
+   # 開機即 ModuleNotFoundError 陷入無限重啟迴圈；scikit-learn/joblib 供日後
+   # 串接 演算法核心.pkl 使用。
 
 
 【類別 4：服務檢查與手動背景測試啟動指令】

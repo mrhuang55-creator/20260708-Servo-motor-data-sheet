@@ -12,4 +12,4 @@ app = create_app()
 
 if __name__ == "__main__":
     print("[AI SERVO PLATFORM] Flask 前端 BFF 服務啟動中 (Port 5000)...")
-    app.run(host="0.0.0.0", port=5000, debug=True)
+    app.run(host="0.0.0.0", port=5000, debug=False)
