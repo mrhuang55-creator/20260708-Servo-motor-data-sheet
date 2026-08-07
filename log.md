@@ -50,6 +50,12 @@
 
 - [ ] 待使用者從外部瀏覽器完整走一次登入 → 即時監控頁 → DevTools Network 確認 API 打的是 `104.199.203.160:8000` 而非 `127.0.0.1:8000`，完整收尾今天的部署驗證
 
+### 5. README「方式 B」開發環境建置說明錯誤修正
+
+- **問題**：README 方式 B 直接叫使用者 `.\vm\Scripts\activate`，但 `vm/` 目錄內有自帶的 `vm/.gitignore`（`*` 排除全部，Python venv 標準做法），**整個 `vm/` 資料夾從未進版控**。任何人 `git clone` 這個 repo 後，`vm/` 根本不存在，方式 B 的指令會直接失敗（找不到路徑）。
+- **確認根目錄 `requirements.txt` 內容其實完整**（`flask`/`fastapi`/`httpx`/`scikit-learn`/`lightgbm`/`pandas`/`numpy`/`pyarrow`/`scipy` 等皆已列出），只是 README 沒有引導使用者用它建立全新環境——這與稍早 GCP 部署文件手動列 pip 套件清單漏掉 `httpx` 是同一類問題（清單分散在多處、沒有統一指向 `requirements.txt`）。
+- **修正**：README 方式 B 拆成「首次於新機器 / 全新 `git clone` 下建立虛擬環境」（`python -m venv vm` + `pip install -r requirements.txt`）與「已有 `vm/` 時直接開發」兩段，並加註警告說明 `vm/` 不在版控內的原因。
+
 ---
 
 ## 📅 2026-07-24 - v7.1.0 系統資安硬化、自動轉頁閘門、SQLite 審核持久化與全量測試庫歸檔紀錄

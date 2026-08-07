@@ -99,7 +99,22 @@ d:\20260708-Servo-motor-data-sheet\dist\AI_Servo_Platform\AI_Servo_Platform.exe
 *   執行後將自動於背景監聽 Port 8000 (FastAPI) 與 Port 5000 (Flask)，並自動啟動瀏覽器開啟主頁面 `http://127.0.0.1:5000/login`。
 
 ### 方式 B. 於 Python 虛擬環境中執行
-若需進行開發或修改原始碼，請使用專案內部的 `vm` 虛擬環境：
+
+> ⚠️ **`vm/` 虛擬環境資料夾不在 GitHub 版控內**（`vm/.gitignore` 排除了整個目錄，這是 Python venv 的標準做法，避免把數百 MB 的第三方套件包進 repo）。從 GitHub `git clone`/`git pull` 下來的版本**不會有 `vm/` 資料夾**，直接執行 `.\vm\Scripts\activate` 會找不到路徑而失敗。若是在原本就已建置過 `vm/` 的這台機器上開發，跳過下方「建立虛擬環境」步驟、直接啟用即可。
+
+**首次於新機器 / 全新 `git clone` 下建立虛擬環境：**
+```bash
+# 建立虛擬環境（可沿用資料夾名稱 vm，或改用習慣的 venv）
+python -m venv vm
+
+# 啟用虛擬環境
+.\vm\Scripts\activate
+
+# 安裝專案所有相依套件（requirements.txt 已含 flask/fastapi/httpx/scikit-learn 等完整清單）
+pip install -r requirements.txt
+```
+
+**已有 `vm/` 虛擬環境時，直接開發／執行：**
 ```bash
 # 啟用 vm 虛擬環境
 .\vm\Scripts\activate
